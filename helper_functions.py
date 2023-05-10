@@ -51,3 +51,19 @@ def get_at_hub_site(ag):
     at_hub = agent_at_hub(ag)
     at_site = agent_at_any_site(ag)
     return at_hub, at_site
+
+def get_dancers_by_site(ag):
+    world = ag.world
+    all_agents = world.agents
+    dancers = [0]*world.num_sites
+    for agent in agents:
+        if agent.state == 'DANCE':
+            dancers[agent.assigned_site.id] += 1
+    return dancers
+
+def get_site_from_id(ag):
+    world = ag.world
+    all_sites = world.sites
+    for site in all_sites:
+        if ag.at_site == site.id:
+            return site
