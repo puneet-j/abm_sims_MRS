@@ -6,23 +6,29 @@ class Agent(self):
     def __init__(self, pos, world):
         self.pos = pos
         self.state = 'REST'
-        self.assigned_site = world.hub
+        self.assigned_site = None
         self.dir = (0.0, 1.0)
         self.speed = 0.0
         self.prev_state = None
         self.at_site = 10000 # site number if at site, else 10000
         self.at_hub = True
+        self.world = world
 
     def step(self):
-        next_state = self.transitions.get_transition(agent)
+        self.at_hub, self.at_site = get_at_hub_site(self)
+        next_state = self.transitions.get_transition(self)
         self.prev_state = self.state.copy()
         self.state = next_state
+
         if self.state == 'TRAVEL_HOME_ASSESS' or self.state == 'TRAVEL_HOME_EXPLORE':
-            self.goHome()
+            if not agent_at_hub(self):
+                self.goHome()
         elif self.state == 'TRAVEL_SITE':
-            self.goSite()
+            if not agent_at_site(self):
+                self.goSite()
         elif self.state == 'EXPLORE':
-            self.explore()
+            if not agent_at_any_site(self):
+                self.explore()
         else:
             self.speed = 0.0
             self.dir = (0.0, 1.0)

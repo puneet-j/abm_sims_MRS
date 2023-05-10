@@ -18,9 +18,15 @@ EXPLORE_RANDOMNESS = 0.1
 EXPLORE_DIRECTION_CHANGE = np.pi/180
 
 PROB_RA = 0.05 # Rest to Travel_Site for Assess
-PROB_RE = 0.02 # Rest to Explore
-PROB_EA = 0.05 # Explore to Assess
 PROB_AD = 0.05 # Assess to Travel_Hub for Dance
-PROB_DA = 0.05 # Dance to Travel_Site for Assess
 PROB_ER = 0.005 # Explore to Travel_Hub for Rest
 PROB_DR = 0.05 # Dance to Rest
+
+# for the detachment
+base_DA = 5.0
+pwr_DA = -1.0
+
+# don't need this since other params do the trick.
+# PROB_DA = 0.05 # Dance to Travel_Site for Assess 
+# PROB_RE = 0.02 # Rest to Explore
+# PROB_EA = 0.05 # Explore to Assess

@@ -28,3 +28,26 @@ def get_explore_dir(dir):
         dir[1] += ychange 
         dir = dir/np.sum(dir)
     return dir
+
+def agent_at_site(ag):
+    if get_dist_2D(ag.pos,ag.assigned_site.pos) < SITE_SIZE:
+        return True
+    else:
+        return False
+    
+def agent_at_hub(ag):
+    if get_dist_2D(ag.pos,HUB_LOCATION) < SITE_SIZE:
+        return True
+    else:
+        return False
+
+def agent_at_any_site(ag):
+    for st in ag.world.sites:
+        if get_dist_2D(ag.pos,st.pos) < SITE_SIZE:
+            return st.id
+    return False
+
+def get_at_hub_site(ag):
+    at_hub = agent_at_hub(ag)
+    at_site = agent_at_any_site(ag)
+    return at_hub, at_site
