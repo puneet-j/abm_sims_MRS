@@ -67,3 +67,16 @@ def get_site_from_id(ag):
     for site in all_sites:
         if ag.at_site == site.id:
             return site
+        
+def get_all_agent_poses_dirs(world):
+    agents = world.agents
+    poses = []
+    dirs = []
+    states = []
+    sites = []
+    for agent in agents:
+        poses.append(agent.pos)
+        dirs.append(agent.dir)
+        states.append(agent.state)
+        sites.append(agent.assigned_site)
+    return poses, dirs, states, sites
