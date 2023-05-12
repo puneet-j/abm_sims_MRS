@@ -22,8 +22,9 @@ def main():
     sims_per_config = 2
     sims_per_distance = 2
     worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance)
-    for w in worlds:
+    for sim, w in enumerate(worlds):
         world = World(w)
         world.simulate()
+        print(sim, ' done')
 
 main()

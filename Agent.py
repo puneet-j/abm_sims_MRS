@@ -19,10 +19,10 @@ class Agent:
     def step(self):
         self.at_hub, self.at_site = get_at_hub_site(self)
         next_state, site_new = self.transitions.get_transition(self)
-        print(self.prev_state, self.state)
+        # print(self.prev_state, self.state)
         self.prev_state = self.state
         self.state = next_state
-        print(self.prev_state, self.state)
+        # print(self.prev_state, self.state)
         if site_new:
             self.assigned_site = site_new
 
