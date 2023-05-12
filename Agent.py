@@ -1,8 +1,9 @@
 import numpy as np
 from params import *
 from helper_functions import *
+from Transitions import State_Transitions
 
-class Agent(self):
+class Agent:
     def __init__(self, pos, world):
         self.pos = pos
         self.state = 'REST'
@@ -13,16 +14,19 @@ class Agent(self):
         self.at_site = 10000 # site number if at site, else 10000
         self.at_hub = True
         self.world = world
+        self.transitions = State_Transitions(self)
 
     def step(self):
         self.at_hub, self.at_site = get_at_hub_site(self)
         next_state, site_new = self.transitions.get_transition(self)
-        self.prev_state = self.state.copy()
+        print(self.prev_state, self.state)
+        self.prev_state = self.state
         self.state = next_state
+        print(self.prev_state, self.state)
         if site_new:
             self.assigned_site = site_new
 
-        if self.state == 'TRAVEL_HOME_ASSESS' or self.state == 'TRAVEL_HOME_EXPLORE':
+        if self.state == 'TRAVEL_HOME_TO_DANCE' or self.state == 'TRAVEL_HOME_TO_REST':
             if not agent_at_hub(self):
                 self.goHome()
         elif self.state == 'TRAVEL_SITE':

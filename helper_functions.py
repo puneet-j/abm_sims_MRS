@@ -56,7 +56,7 @@ def get_dancers_by_site(ag):
     world = ag.world
     all_agents = world.agents
     dancers = [0]*world.num_sites
-    for agent in agents:
+    for agent in world.agents:
         if agent.state == 'DANCE':
             dancers[agent.assigned_site.id] += 1
     return dancers
@@ -68,13 +68,12 @@ def get_site_from_id(ag):
         if ag.at_site == site.id:
             return site
         
-def get_all_agent_poses_dirs(world):
-    agents = world.agents
+def get_all_agent_poses_dirs_states_sites(world):
     poses = []
     dirs = []
     states = []
     sites = []
-    for agent in agents:
+    for agent in world.agents:
         poses.append(agent.pos)
         dirs.append(agent.dir)
         states.append(agent.state)

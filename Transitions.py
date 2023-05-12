@@ -1,49 +1,35 @@
 import numpy as np
 from params import *
 from helper_functions import *
+from getters import *
 
-class State_Transitions(self):
+class State_Transitions:
     def __init__(self, world):
         self.world = world
         self.new_site = None
     
     def get_transition(self, agent):
-        transition_probabilities = {}
+
         if agent.state == 'REST':
-            p_1 = np.random.binomial(PROB_RE,1)
-            p_5 = np.random.binomial(PROB_RA,1)
-            transition_probabilities['TRAVEL_SITE'], self.new_site = self.get_RTS(agent, p_5) # z
-            transition_probabilities['EXPLORE'] = self.get_RE(agent, p_1, transition_probabilities['TRAVEL_SITE']) # p_1(1-z)
-            transition_probabilities['REST'] = 1.0 - np.sum(transition_probabilities.values()) # self.get_RR(agent) # (1-p_1)(1-z)
+            transition_probabilities = self.transition_probabilities_rest(agent)
         
         elif agent.state == 'EXPLORE':
-            p_3 = np.random.binomial(PROB_ER,1)
-            transition_probabilities['ASSESS'], self.new_site = self.get_EA(agent) # y
-            transition_probabilities['TRAVEL_HOME_EXPLORE'] = self.get_ETH(agent, p_3, transition_probabilities['ASSESS']) # p_3(1-y)
-            transition_probabilities['EXPLORE'] = 1.0 - np.sum(transition_probabilities.values()) # self.get_EE(agent) # (1-p_3)(1-y)
+            transition_probabilities = self.transition_probabilities_explore(agent)
         
         elif agent.state == 'ASSESS':
-            p_4 = np.random.binomial(PROB_AD,1)
-            transition_probabilities['TRAVEL_HOME_ASSESS'] = self.get_ATH(agent, p_4) # p_4
-            transition_probabilities['ASSESS'] = 1.0 - np.sum(transition_probabilities.values()) # self.get_AA(agent) # 1-p_4
+            transition_probabilities = self.transition_probabilities_assess(agent)
         
         elif agent.state == 'DANCE':
-            p_2 = np.random.binomial(PROB_DR,1)
-            transition_probabilities['TRAVEL_SITE'] = self.get_DTS(agent, p_2) # p_2(x)
-            transition_probabilities['REST'] = self.get_DR(agent, p_2) # p_2(1-x)
-            transition_probabilities['DANCE'] = 1.0 - np.sum(transition_probabilities.values()) # self.get_DD(agent) # 1-p_2
+            transition_probabilities = self.transition_probabilities_dance(agent)
         
-        elif agent.state == 'TRAVEL_HOME_ASSESS':
-            transition_probabilities['DANCE'] = self.get_THA(agent) # 1 if at hub
-            transition_probabilities['TRAVEL_HOME_ASSESS'] = 1.0 - transition_probabilities['DANCE'] # 1 if not at hub
+        elif agent.state == 'TRAVEL_HOME_TO_DANCE':
+            transition_probabilities = self.transition_probabilities_travel_home_to_dance(agent)
         
-        elif agent.state == 'TRAVEL_HOME_EXPLORE':
-            transition_probabilities['REST'] = self.get_THE(agent) # 1 if at hub 
-            transition_probabilities['TRAVEL_HOME_ASSESS'] = 1.0 - transition_probabilities['REST'] # 1 if not at hub
+        elif agent.state == 'TRAVEL_HOME_TO_REST':
+            transition_probabilities = self.transition_probabilities_travel_home_to_rest(agent)
         
         elif agent.state == 'TRAVEL_SITE':
-            transition_probabilities['ASSESS'] = self.get_TSA(agent) # 1 if at assigned site
-            transition_probabilities['TRAVEL_SITE'] = 1.0 - transition_probabilities['ASSESS'] # 1 if not at site
+            transition_probabilities = self.transition_probabilities_travel_site(agent)
 
 
         new_state = np.random.choice(list(transition_probabilities.keys()), p=list(transition_probabilities.values()))
@@ -56,49 +42,55 @@ class State_Transitions(self):
             return new_state, None
 
 
-    def get_RE(self, agent, p_1, tTS):
-        return p_1*(1.0 - tTS)
+    def transition_probabilities_rest(self, agent):
+        transition_probabilities = {}
+        rest_to_explore_or_not = np.random.binomial(BINOMIAL_COEFF_REST_TO_EXPLORE, 1)
+        rest_to_assess_or_not = np.random.binomial(BINOMIAL_COEFF_REST_TO_ASSESS, 1)
+        transition_probabilities['TRAVEL_SITE'], self.new_site = get_REST_TO_TRAVEL_SITE_PROB(agent, rest_to_assess_or_not) # z
+        transition_probabilities['EXPLORE'] = get_REST_TO_EXPLORE_PROB(agent, rest_to_explore_or_not, 
+                                                            transition_probabilities['TRAVEL_SITE']) # p_1(1-z)
+        # pdb.set_trace()
+        transition_probabilities['REST'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_RR(agent) # (1-p_1)(1-z)
+        return transition_probabilities
     
-    # check dancers to get recruited
-    def get_RTS(self, agent, p_5):
-        dancers = get_dancers_by_site(agent)
-        togo = np.random.choice(agent.world.sites, p=dancers)
-        return p_5, togo
+    def transition_probabilities_explore(self, agent):
+        transition_probabilities = {}
+        explore_to_rest_or_not = np.random.binomial(BINOMIAL_COEFF_EXPLORE_TO_REST, 1)
+        transition_probabilities['ASSESS'], self.new_site = get_EXPLORE_TO_ASSESS_PROB(agent) # y
+        transition_probabilities['TRAVEL_HOME_EXPLORE'] = get_EXPLORE_TO_TRAVEL_HOME_PROB(agent, explore_to_rest_or_not, 
+                                                                        transition_probabilities['ASSESS']) # p_3(1-y)
+        transition_probabilities['EXPLORE'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_EE(agent) # (1-p_3)(1-y)
+        return transition_probabilities
 
-    # site quality assessment while exploring uses linear site quality
-    def get_EA(self, agent):
-        site = get_site_from_id(ag)
-        return site.quality, site
-
-    def get_ETH(self, agent, p_3, tA):
-        return p_3*(1.0 - tA)
-
-    # assessment for now is just a binomial random variable
-    def get_ATH(self, agent, p_4):
-        return p_4
+    def transition_probabilities_assess(self, agent):
+        transition_probabilities = {}
+        assess_to_dance_or_not = np.random.binomial(BINOMIAL_COEFF_ASSESS_TO_DANCE, 1)
+        transition_probabilities['TRAVEL_HOME_ASSESS'] = get_ASSESS_TO_TRAVEL_HOME_PROB(agent, assess_to_dance_or_not) # p_4
+        transition_probabilities['ASSESS'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_AA(agent) # 1-p_4
+        return transition_probabilities
     
-    # site quality assessment while thinking about re-assessing uses power law site quality
-    def get_DTS(self, agent, p_2):
-        return p_2*np.power(base_DA, pwr_DA * agent.assigned_site.quality) 
-            
-    def get_DR(self, agent, p_2):
-        return p_2*(1.0 - np.power(base_DA, pwr_DA * agent.assigned_site.quality))
-
-    # functions below just check if the agent has reached the hub
-    def get_TSA(self, agent):
-        if agent.assigned_site.id == agent.at_site:
-            return 1.0
-        else:
-            return 0.0
+    def transition_probabilities_dance(self, agent):
+        transition_probabilities = {}
+        dance_to_rest_or_not = np.random.binomial(BINOMIAL_COEFF_DANCE_TO_REST, 1)
+        transition_probabilities['TRAVEL_SITE'] = get_DANCE_TO_TRAVEL_SITE_PROB(agent, dance_to_rest_or_not) # p_2(x)
+        transition_probabilities['REST'] = get_DANCE_TO_REST_PROB(agent, dance_to_rest_or_not) # p_2(1-x)
+        transition_probabilities['DANCE'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_DD(agent) # 1-p_2
+        return transition_probabilities
     
-    def get_THA(self, agent):
-        if agent.at_hub:
-            return 1.0
-        else:
-            return 0.0
-        
-    def get_THE(self, agent):
-        if agent.at_hub:
-            return 1.0
-        else:
-            return 0.0
+    def transition_probabilities_travel_home_to_dance(self, agent):
+        transition_probabilities = {}
+        transition_probabilities['DANCE'] = get_TRAVEL_HOME_TO_DANCE_PROB(agent) # 1 if at hub
+        transition_probabilities['TRAVEL_HOME_ASSESS'] = 1.0 - transition_probabilities['DANCE'] # 1 if not at hub
+        return transition_probabilities
+
+    def transition_probabilities_travel_home_to_rest(self, agent):
+        transition_probabilities = {}
+        transition_probabilities['REST'] = get_TRAVEL_HOME_TO_REST_PROB(agent) # 1 if at hub 
+        transition_probabilities['TRAVEL_HOME_ASSESS'] = 1.0 - transition_probabilities['REST'] # 1 if not at hub
+        return transition_probabilities
+
+    def transition_probabilities_travel_site(self, agent):
+        transition_probabilities = {}
+        transition_probabilities['ASSESS'] = get_TRAVEL_SITE_TO_ASSESS_PROB(agent) # 1 if at assigned site
+        transition_probabilities['TRAVEL_SITE'] = 1.0 - transition_probabilities['ASSESS'] # 1 if not at site
+        return transition_probabilities
