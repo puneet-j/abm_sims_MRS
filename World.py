@@ -6,6 +6,7 @@ from helper_functions import *
 import time
 import pandas as pd 
 from random import shuffle
+import copy
 
 class World:
     def __init__(self, params):
@@ -42,7 +43,8 @@ class World:
         # pdb.set_trace()
         list_for_df = []
         agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
-        list_for_df.append([self.time, agent_poses, agent_dirs, agent_states, agent_sites])
+        to_save = [self.time, copy.deepcopy(agent_poses), copy.deepcopy(agent_dirs), copy.deepcopy(agent_states), copy.deepcopy(agent_sites)]
+        list_for_df.append(to_save[:])
         while self.time < TIME_LIMIT:
             # shuffle(self.agents)
             for agent in self.agents:
@@ -50,11 +52,12 @@ class World:
 
             self.time += 1            
             agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
-            to_save = [self.time, agent_poses, agent_dirs, agent_states, agent_sites]
-            # print(to_save)
-            list_for_df += to_save
-        pdb.set_trace()
-        
+            to_save = [self.time, copy.deepcopy(agent_poses), copy.deepcopy(agent_dirs), copy.deepcopy(agent_states), copy.deepcopy(agent_sites)]
+            list_for_df.append(to_save[:])
+            # print(list_for_df)
+            # pdb.set_trace()
+        # pdb.set_trace()
+
         df = pd.DataFrame(list_for_df, columns = self.df_cols)
         df.to_csv(self.fname)
         
