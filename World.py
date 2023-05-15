@@ -25,7 +25,6 @@ class World:
         self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents']
         self.save_metadata()
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
-        self.list_for_df = []
 
     def save_metadata(self):
         arr = [self.num_sites, tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents]
@@ -40,17 +39,22 @@ class World:
     def simulate(self):
 
         self.add_agents()
-
+        # pdb.set_trace()
+        list_for_df = []
+        agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
+        list_for_df.append([self.time, agent_poses, agent_dirs, agent_states, agent_sites])
         while self.time < TIME_LIMIT:
-            shuffle(self.agents)
+            # shuffle(self.agents)
             for agent in self.agents:
                 agent.step()
-            
+
+            self.time += 1            
             agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
-            
-            self.list_for_df.append([self.time, agent_poses, agent_dirs, agent_states, agent_sites])
-            self.time += 1
+            to_save = [self.time, agent_poses, agent_dirs, agent_states, agent_sites]
+            # print(to_save)
+            list_for_df += to_save
+        pdb.set_trace()
         
-        df = pd.DataFrame(self.list_for_df, columns = self.df_cols)
+        df = pd.DataFrame(list_for_df, columns = self.df_cols)
         df.to_csv(self.fname)
         

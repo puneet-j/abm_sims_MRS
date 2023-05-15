@@ -9,16 +9,17 @@ def get_poses(a, d):
     poses = []
     for i in range(0,a):
         poses.append([d*np.cos(angles*i),d*np.sin(angles*i)])
-    return poses
+    return list(poses)
 
 def get_home_dir(pos):
     dir = [-1.0*pos[0], -1.0*pos[1]]
-    return dir
+    dir = dir/np.sum(dir)
+    return list(dir)
 
 def get_site_dir(pos, site_pos):
     dir = [site_pos[0] - pos[0], site_pos[1] - pos[1]]
     dir = dir/np.sum(dir)
-    return dir
+    return list(dir)
 
 def get_explore_dir(dir):
     if np.random.random() > EXPLORE_RANDOMNESS:
@@ -27,7 +28,7 @@ def get_explore_dir(dir):
         dir[0] += xchange 
         dir[1] += ychange 
         dir = dir/np.sum(dir)
-    return dir
+    return list(dir)
 
 def agent_at_site(ag):
     if get_dist_2D(ag.pos,ag.assigned_site.pos) < SITE_SIZE:
@@ -77,5 +78,8 @@ def get_all_agent_poses_dirs_states_sites(world):
         poses.append(agent.pos)
         dirs.append(agent.dir)
         states.append(agent.state)
-        sites.append(agent.assigned_site)
+        if agent.assigned_site != None:
+            sites.append(agent.assigned_site.pos)
+        else:
+            sites.append(None)
     return poses, dirs, states, sites

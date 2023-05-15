@@ -46,18 +46,15 @@ class Agent:
         self.dir = get_home_dir(self.pos)
         self.pos[0] += self.speed*self.dir[0]
         self.pos[1] += self.speed*self.dir[1]
-        return
     
     def goSite(self):
         self.speed = AGENT_SPEED
         self.dir = get_site_dir(self.pos, self.assigned_site.pos)
         self.pos[0] += self.speed*self.dir[0]
         self.pos[1] += self.speed*self.dir[1]
-        return
     
     def explore(self):
         self.speed = AGENT_SPEED
         self.dir = get_explore_dir(self.dir)
         self.pos[0] += self.speed*self.dir[0]
         self.pos[1] += self.speed*self.dir[1]
-        return       

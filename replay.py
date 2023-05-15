@@ -5,7 +5,8 @@ import os
 import pdb
 from ast import literal_eval
 
-AGENT_COLORS = {'REST':'b',}
+AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm', 
+                'TRAVEL_HOME_TO_REST': 'y', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
 
 def update_line(hl, new_data):
     hl.set_xdata(new_data)
