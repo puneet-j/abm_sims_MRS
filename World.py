@@ -17,11 +17,11 @@ class World:
                       site_id, site_qual, site_pos in zip(range(0,self.num_sites), self.site_qualities, self.site_poses)]
         self.num_agents = params[3]
         self.agents = []
-        self.hub = Site(10000, 0.0, (0.0,0.0))
+        self.hub = Site(10000, 0.0, [0.0, 0.0])
         self.time = 0
         time_now = str(int(time.time()*1000000))
         self.fname = './sim_results/' + time_now + '.csv'
-        self.fname_metadata = './sim_results/' + time_now + '.csv'
+        self.fname_metadata = './sim_results/' + time_now + 'metadata.csv'
         self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents']
         self.save_metadata()
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
@@ -34,7 +34,7 @@ class World:
         return
     
     def add_agents(self):
-        self.agents += [Agent((0,0), self) for agent_id in range(0,self.num_agents)]
+        self.agents += [Agent([0.0, 0.0], self) for agent_id in range(0, self.num_agents)]
         return
 
     def simulate(self):
@@ -48,8 +48,7 @@ class World:
             
             agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
             
-            self.list_for_df.append([self.time, self.num_sites, self.site_qualities, self.site_poses, self.hub.pos, 
-                            self.num_agents, agent_poses, agent_dirs, agent_states, agent_sites])
+            self.list_for_df.append([self.time, agent_poses, agent_dirs, agent_states, agent_sites])
             self.time += 1
         
         df = pd.DataFrame(self.list_for_df, columns = self.df_cols)

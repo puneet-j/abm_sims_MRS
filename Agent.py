@@ -2,13 +2,14 @@ import numpy as np
 from params import *
 from helper_functions import *
 from Transitions import State_Transitions
+import copy 
 
 class Agent:
     def __init__(self, pos, world):
         self.pos = pos
         self.state = 'REST'
         self.assigned_site = None
-        self.dir = (0.0, 1.0)
+        self.dir = [0.0, 1.0]
         self.speed = 0.0
         self.prev_state = None
         self.at_site = 10000 # site number if at site, else 10000
@@ -19,9 +20,9 @@ class Agent:
     def step(self):
         self.at_hub, self.at_site = get_at_hub_site(self)
         next_state, site_new = self.transitions.get_transition(self)
-        # print(self.prev_state, self.state)
-        self.prev_state = self.state
-        self.state = next_state
+        # print(self.prev_state, self.state, 'got this next state: ', next_state)
+        self.prev_state = copy.deepcopy(self.state)
+        self.state = copy.deepcopy(next_state)
         # print(self.prev_state, self.state)
         if site_new:
             self.assigned_site = site_new
@@ -37,7 +38,7 @@ class Agent:
                 self.explore()
         else:
             self.speed = 0.0
-            self.dir = (0.0, 1.0)
+            self.dir = [0.0, 1.0]
         return
     
     def goHome(self):
