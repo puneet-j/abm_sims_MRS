@@ -26,6 +26,7 @@ class World:
         self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents']
         self.save_metadata()
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
+        self.threshold = 0.3
 
     def save_metadata(self):
         arr = [self.num_sites, tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents]
@@ -49,14 +50,15 @@ class World:
             # shuffle(self.agents)
             for agent in self.agents:
                 agent.step()
-
+            
             self.time += 1            
             agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
             to_save = [self.time, copy.deepcopy(agent_poses), copy.deepcopy(agent_dirs), copy.deepcopy(agent_states), copy.deepcopy(agent_sites)]
             list_for_df.append(to_save[:])
-            # print(list_for_df)
-            # pdb.set_trace()
-        # pdb.set_trace()
+            dancers = get_dancers_by_site_for_world(self)
+            if np.max(dancers) > self.threshold*self.num_agents:
+                break
+
 
         df = pd.DataFrame(list_for_df, columns = self.df_cols)
         df.to_csv(self.fname)

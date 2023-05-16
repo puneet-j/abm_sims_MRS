@@ -2,6 +2,7 @@ import numpy as np
 from params import *
 from helper_functions import *
 from getters import *
+import copy 
 
 class State_Transitions:
     def __init__(self, world):
@@ -37,9 +38,9 @@ class State_Transitions:
 
         # pdb.set_trace()
         new_state = np.random.choice(list(transition_probabilities.keys()), p=list(transition_probabilities.values()))
-        
+        # if new_state = 
         if self.new_site:
-            site_to_attach = self.new_site
+            site_to_attach = copy.deepcopy(self.new_site)
             self.new_site = None
             return new_state, site_to_attach
         else:
