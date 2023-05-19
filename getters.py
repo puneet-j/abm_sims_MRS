@@ -49,13 +49,15 @@ def get_ASSESS_TO_TRAVEL_HOME_PROB(agent, p):
 # site quality assessment while thinking about re-assessing uses power law site quality
 def get_DANCE_TO_TRAVEL_SITE_PROB(agent, p):
     if agent_at_hub(agent):
-        return p*np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS * agent.assigned_site.quality) 
+        detach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS * agent.assigned_site.quality)
+        return p*detach_prob_due_to_qual
     else:
         pdb.set_trace()
         
 def get_DANCE_TO_REST_PROB(agent, p):
     if agent_at_hub(agent):
-        return p*(1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS * agent.assigned_site.quality))
+        detach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS * agent.assigned_site.quality)
+        return p*(1.0 - detach_prob_due_to_qual)
     else:
         pdb.set_trace()
 

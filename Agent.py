@@ -11,7 +11,7 @@ class Agent:
         self.assigned_site = None
         self.dir = [0.0, 1.0]
         self.speed = 0.0
-        self.prev_state = None
+        # self.prev_state = None
         # self.at_site = 10000 # site number if at site, else 10000
         # self.at_hub = True
         self.world = world
@@ -21,7 +21,7 @@ class Agent:
         # self.at_hub, self.at_site = get_at_hub_site(self)
         next_state, site_new = self.transitions.get_transition(self)
         # print(self.prev_state, self.state, 'got this next state: ', next_state)
-        self.prev_state = copy.deepcopy(self.state)
+        # self.prev_state = copy.deepcopy(self.state)
         self.state = copy.deepcopy(next_state)
         
         # print(self.prev_state, self.state)
@@ -35,14 +35,15 @@ class Agent:
             if not agent_at_site(self):
                 self.goSite()
         elif self.state == 'EXPLORE':
-            if self.prev_state == 'REST':
-                random_value = np.random.random()*np.pi*2
-                self.dir = [np.cos(random_value), np.sin(random_value)]
+            # if self.prev_state == 'REST':
+                # random_value = np.random.random()*np.pi*2
+                # self.dir = [np.cos(random_value), np.sin(random_value)]
             if not agent_at_any_site(self):
                 self.explore()
         else:
             self.speed = 0.0
-            self.dir = [0.0, 1.0]
+            random_value = np.random.random()*np.pi*2
+            self.dir = [np.cos(random_value), np.sin(random_value)]
         return
     
     def goHome(self):

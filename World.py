@@ -23,14 +23,14 @@ class World:
         time_now = str(int(time.time()*1000000))
         self.fname = './sim_results/' + time_now + '.csv'
         self.fname_metadata = './sim_results/' + time_now + 'metadata.csv'
-        self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents']
-        self.save_metadata()
+        self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
+        self.converged_to_site = None
         self.threshold = 0.3
 
     def save_metadata(self):
-        arr = [self.num_sites, tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents]
-        df_metadata = pd.DataFrame(np.array(arr, dtype=object).reshape(1,5), columns=self.df_metadata_cols)
+        arr = [self.num_sites, tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents, self.converged_to_site, self.time]
+        df_metadata = pd.DataFrame(np.array(arr, dtype=object).reshape(1,7), columns=self.df_metadata_cols)
         df_metadata.to_csv(self.fname_metadata)
         return
     
@@ -57,9 +57,11 @@ class World:
             list_for_df.append(to_save[:])
             dancers = get_dancers_by_site_for_world(self)
             if np.max(dancers) > self.threshold*self.num_agents:
+                self.converged_to_site = self.sites[np.argmax(dancers)].quality
                 break
 
 
         df = pd.DataFrame(list_for_df, columns = self.df_cols)
         df.to_csv(self.fname)
+        self.save_metadata()
         

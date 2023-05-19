@@ -16,11 +16,11 @@ def generate_world_configs(site_configs, distances, agent_configs, sims_per_conf
     return worlds
 
 def main():
-    site_configs = [2,3,4]
+    site_configs = [2, 3, 4]
     distances = [100, 200]
-    agent_configs = [1, 5, 20, 50, 100, 200]
-    sims_per_config = 2
-    sims_per_distance = 2
+    agent_configs = [5, 20, 50, 100, 200]
+    sims_per_config = 20
+    sims_per_distance = 20
     worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance)
     for sim, w in enumerate(worlds):
         world = World(w)

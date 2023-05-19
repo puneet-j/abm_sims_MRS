@@ -12,25 +12,20 @@ from params import *
 AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm', 
                 'TRAVEL_HOME_TO_REST': 'y', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
 
-def update_line(hl, new_data):
-    hl.set_xdata(new_data)
-    hl.set_ydata(new_data)
-    # ax.autoscale_view()
-    plt.draw()
 
 folder = './sim_results/'
 files = os.listdir(folder)
 files = [file for file in files if file.endswith('.csv')]
 files = np.sort(files)
 
-df = pd.read_csv(folder+files[0])
-metadata = pd.read_csv(folder+files[1])
+df = pd.read_csv(folder+files[2])
+metadata = pd.read_csv(folder+files[3])
 
 df.agent_positions = df.agent_positions.apply(literal_eval)
 df.agent_states = df.agent_states.apply(literal_eval)
 
 metadata.site_positions = metadata.site_positions.apply(literal_eval)
-
+metadata.site_qualities = metadata.site_qualities.apply(literal_eval)
 # pdb.set_trace()
 # x_coords = [item[0] for item in df.agent_positions[0]]
 # y_coords = [item[1] for item in df.agent_positions[0]]
@@ -45,6 +40,7 @@ ax = fig.add_subplot()
 
 colorlist = [i for i in AGENT_COLORS.values()]
 statelist = [i for i in AGENT_COLORS.keys()]
+
 plot_legend_x = [350]*len(AGENT_COLORS)
 plot_legend = [400, 370, 430, 340, 470, 310, 280]
 plot_legend_colors = [330]*len(AGENT_COLORS)
@@ -56,8 +52,9 @@ for poses, states in  zip(df.agent_positions, df.agent_states):
 
     # update_line(hl, poses)
     # plt.plot()
-    for site in metadata.site_positions:
-        c = plt.Circle(site[0], radius = SITE_SIZE, fill=False)
+    # pdb.set_trace()
+    for site, qual in zip(metadata.site_positions[0], metadata.site_qualities[0]):
+        c = plt.Circle(site, radius = SITE_SIZE, edgecolor=[0,qual,0], fill = False)
         ax.add_patch(c)
     chub = plt.Circle((0,0), radius = SITE_SIZE, fill=False)
     ax.add_patch(chub)
@@ -72,6 +69,6 @@ for poses, states in  zip(df.agent_positions, df.agent_states):
 
     plt.xlim([-500, 500])
     plt.ylim([-500, 500])
-    plt.pause(0.01)
+    plt.pause(0.001)
     # pdb.set_trace()
     plt.cla()
