@@ -26,15 +26,7 @@ df.agent_states = df.agent_states.apply(literal_eval)
 
 metadata.site_positions = metadata.site_positions.apply(literal_eval)
 metadata.site_qualities = metadata.site_qualities.apply(literal_eval)
-# pdb.set_trace()
-# x_coords = [item[0] for item in df.agent_positions[0]]
-# y_coords = [item[1] for item in df.agent_positions[0]]
 
-# hl, = plt.plot(x_coords, y_coords,'.')
-# plt.show()
-# pdb.set_trace()
-# fig = plt.figure(1)
-# plt.hold()
 fig = plt.figure()
 ax = fig.add_subplot()
 
@@ -50,25 +42,19 @@ for poses, states in  zip(df.agent_positions, df.agent_states):
     y_coords = [item[1] for item in poses] 
     colors = [AGENT_COLORS[a_s] for a_s in states]
 
-    # update_line(hl, poses)
-    # plt.plot()
-    # pdb.set_trace()
     for site, qual in zip(metadata.site_positions[0], metadata.site_qualities[0]):
         c = plt.Circle(site, radius = SITE_SIZE, edgecolor=[0,qual,0], fill = False)
         ax.add_patch(c)
     chub = plt.Circle((0,0), radius = SITE_SIZE, fill=False)
     ax.add_patch(chub)
-    # plt.plot(0,0,'co',linewidth=5.0)
-    # pdb.set_trace()
+
     plt.scatter(x_coords, y_coords, c=colors)
     
     plt.scatter(plot_legend_colors, plot_legend, c=colorlist, linewidth=3.0)
     [plt.text(x, y, text) for (x, y, text) in zip(plot_legend_x, plot_legend, statelist)]
-    # ax.add_patch(c1)
-    # ax.add_patch(c2)
+
 
     plt.xlim([-500, 500])
     plt.ylim([-500, 500])
     plt.pause(0.001)
-    # pdb.set_trace()
     plt.cla()

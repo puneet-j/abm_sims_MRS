@@ -20,23 +20,12 @@ AGENT_AGENT_SENSING_DISTANCE = 20.0
 EXPLORE_RANDOMNESS = 0.1
 EXPLORE_DIRECTION_CHANGE = np.pi/30
 
-BINOMIAL_COEFF_REST_TO_ASSESS = 0.05 # Rest to Travel_Site for Assess
+BINOMIAL_COEFF_REST_TO_ASSESS = 0.1 # Rest to Travel_Site for Assess
 BINOMIAL_COEFF_ASSESS_TO_DANCE = 0.1 # Assess to Travel_Hub for Dance
-BINOMIAL_COEFF_EXPLORE_TO_REST = 0.005 # Explore to Travel_Hub for Rest
+BINOMIAL_COEFF_EXPLORE_TO_REST = 0.01 # Explore to Travel_Hub for Rest
 BINOMIAL_COEFF_DANCE_TO_REST = 0.05 # Dance to Rest
 BINOMIAL_COEFF_REST_TO_EXPLORE = 0.05 # Rest to Explore
 
 # for the detachment
-base_DANCE_TO_ASSESS = 5.0
+base_DANCE_TO_ASSESS = 10.0
 pwr_DANCE_TO_ASSESS = -1.0
-
-# don't need this since other params do the trick.
-# PROB_DA = 0.05 # Dance to Travel_Site for Assess 
-# PROB_EA = 0.05 # Explore to Assess
-
-
-# BINOMIAL_COEFF_REST_TO_ASSESS = 0.05 # Rest to Travel_Site for Assess
-# BINOMIAL_COEFF_ASSESS_TO_DANCE = 0.05 # Assess to Travel_Hub for Dance
-# BINOMIAL_COEFF_EXPLORE_TO_REST = 0.005 # Explore to Travel_Hub for Rest
-# BINOMIAL_COEFF_DANCE_TO_REST = 0.05 # Dance to Rest
-# BINOMIAL_COEFF_REST_TO_EXPLORE = 0.02 # Rest to Explore
