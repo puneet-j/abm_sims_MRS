@@ -7,12 +7,12 @@ import multiprocessing
 def generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance):
     worlds = []
     for sim in range(0,sims_per_config):
-        for distance in distances:
-            for sim_dist in range(0,sims_per_distance):
-                for sites in site_configs:
-                    qualities = list(np.random.random(sites))
-                    poses = get_poses(sites, distance)
-                    for agents in agent_configs:
+        for sites in site_configs:
+            qualities = list(np.random.random(sites))
+            for agents in agent_configs:
+                for distance in distances:
+                    for sim_dist in range(0,sims_per_distance):
+                        poses = get_poses(sites, distance)
                         worlds.append([sites, qualities, poses, agents])
     return worlds
 
@@ -23,9 +23,9 @@ def simulate_world(sim, world):
 if __name__ == '__main__':
     site_configs = [2, 3, 4]
     distances = [100, 200]
-    agent_configs = [5, 20, 50, 100, 200]
-    sims_per_config = 20
-    sims_per_distance = 20
+    agent_configs = [50, 100, 200] #[5, 20, 50, 100, 200]
+    sims_per_config = 5 #20
+    sims_per_distance = 5 #20
     worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance)
     manager = multiprocessing.Manager()
     lock = manager.Lock()

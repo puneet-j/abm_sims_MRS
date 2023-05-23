@@ -33,4 +33,4 @@ metadata_concat['max_qual'] = metadata_concat.site_qualities.apply(lambda x: np.
 metadata_concat['success'] = (metadata_concat.max_qual - metadata_concat.site_converged) < 0.000001
 # pdb.set_trace()
 
-metadata_concat.to_csv(folder+'combined_results_metadata.csv')
+metadata_concat.to_csv(folder+'combined_results_metadata_longsim.csv')
