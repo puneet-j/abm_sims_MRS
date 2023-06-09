@@ -67,7 +67,7 @@ def get_dancers_by_site_for_world(world):
 
 def get_dancers_by_site(ag):
     world = ag.world
-    all_agents = world.agents
+    # all_agents = world.agents
     dancers = [0]*world.num_sites
     for agent in world.agents:
         if agent.state == 'DANCE':

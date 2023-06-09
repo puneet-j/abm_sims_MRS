@@ -15,33 +15,65 @@ AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm',
 
 AGENT_NUM_COLORS = {5:'k', 20: 'b', 50: 'm', 100: 'r', 200: 'y'}#, 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'
 
+SITE_NUM_SHAPES = {2:'o', 3:'v', 4:'s'}
+
 df = pd.read_csv('./sim_results/combined_results_metadata_longsim.csv')
 
 df.site_qualities = df.site_qualities.apply(literal_eval)
-df['success_01'] = df.success.apply(lambda x: int(x))
-pdb.set_trace()
+df.site_positions = df.site_positions.apply(literal_eval)
 
-df2 = df.groupby(by=['site_qualities'], as_index=False).agg(lambda x: x.tolist())
+df['success_01'] = df.success.apply(lambda x: int(x))
+df['distances'] = df.site_positions.apply(lambda x: tuple(np.round(np.sqrt(np.power(np.array(x)[:,0],2) + np.power(np.array(x)[:,1],2)),-1)))
+df['qual_diff'] = df.site_qualities.apply(lambda x: np.max(x) - np.sort(x)[-2])
+
+# pdb.set_trace()
+df = df.groupby(by=['qual_diff', 'distances', 'num_agents', 'num_sites'], as_index=False).agg(lambda x: x.tolist())
+# df = df.groupby(by=['site_qualities', 'num_agents', 'distances'], as_index=False).agg(lambda x: x.tolist())
 # plt.plot()
 df['meanSuccess'] = df.success_01.apply(lambda x: np.mean(x))
-df['qual_diff'] = df.site_qualities.apply(lambda x: np.max(x) - np.sort(x)[-2])
 df['meanTime'] = df.time_converged.apply(lambda x: np.mean(x))
+df['distances'] = df['distances'].apply(lambda x: x[0])
+df = df.drop(df[df.meanTime==35000].index)
 # df['num_a']
 
+df = df.reset_index()
+
+# df = df.groupby(by=['site_qualities', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
+
+# pdb.set_trace()
+
 plt.figure(1)
-for i in df.num_agents:
+for i, na in enumerate(df.num_agents):
     print(i)
-    plt.plot(df.qual_diff[i], df.meanSuccess[i], str(i)+'.')
-    plt.title('mean success vs qual diff')
+    # pdb.set_trace()
+    plt.plot(df.qual_diff[i], df.meanSuccess[i], AGENT_NUM_COLORS[na]+SITE_NUM_SHAPES[df.num_sites[i]], 
+             markersize=df.distances[i]/10.0, alpha=100.0/df.distances[i])
+    plt.xlabel('quality difference')
+    plt.ylabel('mean success')
+    plt.title('colors denote agents, size denotes distance (100, 200)')
     plt.xlim([-0.1, 1.1])
     plt.ylim([-0.1, 1.1])
+    markers = [plt.Line2D([0,0],[0,0],color=color, marker='o', linestyle='') for color in AGENT_NUM_COLORS.values()]
+    # plt.legend(markers, AGENT_NUM_COLORS.keys(), numpoints=1, loc='lower right')
+
 
 plt.figure(2)
-for i in df.num_agents:
-    plt.plot(df.qual_diff[i], df.meanTime[i], str(i)+'.')
-    plt.title('mean time vs qual diff')
+for i, na in enumerate(df.num_agents):
+    plt.plot(df.qual_diff[i], np.log(df.meanTime[i]), AGENT_NUM_COLORS[na]+SITE_NUM_SHAPES[df.num_sites[i]], 
+             markersize=df.distances[i]/10.0, alpha=100.0/df.distances[i])
+    plt.xlabel('quality difference')
+    plt.ylabel('mean time')
+    plt.title('colors denote agents, size denotes distance (100, 200)')
     plt.xlim([-0.1, 1.1])
-    plt.ylim([-10, 10000])
-
+    plt.ylim([-200, 1550.0]) #plt.ylim([-500, 35500])
+    markers = [plt.Line2D([0,0],[0,0],color=color, marker='o', linestyle='') for color in AGENT_NUM_COLORS.values()]
+    for s, m in SITE_NUM_SHAPES.items():
+        markers.append(plt.Line2D([0,0],[0,0], marker=m, linestyle=''))
+    # legend = []
+    keys1 = [key for key in AGENT_NUM_COLORS.keys()]
+    keys2 = [key for key in SITE_NUM_SHAPES.keys()]
+    # pdb.set_trace()
+    legend = keys1 + keys2
+    # plt.legend(markers, legend, numpoints=1)
 
 plt.show()

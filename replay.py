@@ -10,7 +10,7 @@ from params import *
 # import pylab as pl
 
 AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm', 
-                'TRAVEL_HOME_TO_REST': 'y', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
+                'TRAVEL_HOME_TO_REST': 'c', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
 
 
 folder = './sim_results/'
@@ -43,7 +43,8 @@ for poses, states in  zip(df.agent_positions, df.agent_states):
     colors = [AGENT_COLORS[a_s] for a_s in states]
 
     for site, qual in zip(metadata.site_positions[0], metadata.site_qualities[0]):
-        c = plt.Circle(site, radius = SITE_SIZE, edgecolor=[0,qual,0], fill = False)
+        # pdb.set_trace()
+        c = plt.Circle(site, radius = SITE_SIZE, edgecolor=[1.0,qual,0], fill = False)
         ax.add_patch(c)
     chub = plt.Circle((0,0), radius = SITE_SIZE, fill=False)
     ax.add_patch(chub)

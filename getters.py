@@ -1,6 +1,7 @@
 import numpy as np
 from helper_functions import *
 from params import *
+import copy 
 
 def get_REST_TO_EXPLORE_PROB(agent, p, toTravelSite):
     if agent_at_hub(agent):
@@ -8,6 +9,7 @@ def get_REST_TO_EXPLORE_PROB(agent, p, toTravelSite):
     else:
         return 0.0
 
+# changed to not include binomial p in calculations. 
 # check dancers to get recruited
 def get_REST_TO_TRAVEL_SITE_PROB(agent, p):
     if agent_at_hub(agent):
@@ -16,12 +18,12 @@ def get_REST_TO_TRAVEL_SITE_PROB(agent, p):
         if np.sum(dancers) != 0:
             dancers = dancers/np.sum(dancers)
             togo = np.random.choice(agent.world.sites, p=dancers)
-            prob = 1
+            prob = copy.deepcopy(dancers[togo.ID])
         else:
             prob = 0
             togo = None
         
-        return prob*p, togo
+        return prob, togo #return prob*p, togo
     else:
         return 0.0, None
 
@@ -34,7 +36,7 @@ def get_EXPLORE_TO_ASSESS_PROB(ag):
         return 0.0, None
 
 def get_EXPLORE_TO_TRAVEL_HOME_PROB(agent, p, toAssess):
-    if not (agent_at_any_site(agent) or agent_at_hub(agent)):
+    if not (agent_at_any_site(agent)) and  not(agent_at_hub(agent)):
         return p*(1.0 - toAssess)
     else:
         return 0
