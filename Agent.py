@@ -25,24 +25,24 @@ class Agent:
         self.state = copy.deepcopy(next_state)
         
         # print(self.prev_state, self.state)
-        if site_new:
-            self.assigned_site = site_new
+        if not(site_new is None):
+            self.assigned_site = copy.deepcopy(site_new)
 
         if self.state == 'TRAVEL_HOME_TO_DANCE' or self.state == 'TRAVEL_HOME_TO_REST':
             if not agent_at_hub(self):
                 self.goHome()
         elif self.state == 'TRAVEL_SITE':
-            if not agent_at_site(self):
+            if not agent_at_assigned_site(self):
                 self.goSite()
         elif self.state == 'EXPLORE':
             # if self.prev_state == 'REST':
                 # random_value = np.random.random()*np.pi*2
                 # self.dir = [np.cos(random_value), np.sin(random_value)]
-            if not agent_at_any_site(self):
+            if agent_at_any_site(self) is None:
                 self.explore()
         else:
             self.speed = 0.0
-            random_value = np.random.random()*np.pi*2
+            random_value = np.random.random()*np.pi*2.0
             self.dir = [np.cos(random_value), np.sin(random_value)]
         return
     
@@ -55,7 +55,7 @@ class Agent:
     
     def goSite(self):
         self.speed = AGENT_SPEED
-        if self.assigned_site == None:
+        if self.assigned_site is None:
             pdb.set_trace()
         self.dir = get_site_dir(self.pos, self.assigned_site.pos)
         self.pos[0] += self.speed*self.dir[0]

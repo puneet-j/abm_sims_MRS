@@ -26,7 +26,7 @@ class World:
         self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
         self.converged_to_site = None
-        self.threshold = 0.3
+        self.threshold = COMMIT_THRESHOLD
 
     def save_metadata(self):
         arr = [self.num_sites, tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents, self.converged_to_site, self.time]

@@ -37,9 +37,12 @@ class State_Transitions:
             pdb.set_trace()
 
         # pdb.set_trace()
-        new_state = np.random.choice(list(transition_probabilities.keys()), p=list(transition_probabilities.values()))
+        try:
+            new_state = np.random.choice(list(transition_probabilities.keys()), p=list(transition_probabilities.values()))
+        except:
+            pdb.set_trace()
         # if new_state = 
-        if self.new_site:
+        if not(self.new_site is None):
             site_to_attach = copy.deepcopy(self.new_site)
             self.new_site = None
             return new_state, site_to_attach
@@ -49,8 +52,11 @@ class State_Transitions:
 
     def transition_probabilities_rest(self, agent):
         transition_probabilities = {}
+        dancers = get_dancers_by_site(agent)
+        rest_to_assess_or_not =  np.random.binomial(np.sum(dancers), BINOMIAL_COEFF_REST_TO_ASSESS_PER_DANCER)
+        # pdb.set_trace()
+        # rest_to_assess_or_not = (1 - BINOMIAL_COEFF_REST_TO_ASSESS_PER_DANCER)**np.sum(dancers) #np.random.binomial(np.sum(dancers), 1.0 - BINOMIAL_COEFF_REST_TO_ASSESS_PER_DANCER)/np.sum(dancers)
         rest_to_explore_or_not = np.random.binomial(1, BINOMIAL_COEFF_REST_TO_EXPLORE)
-        rest_to_assess_or_not = np.random.binomial(1, BINOMIAL_COEFF_REST_TO_ASSESS)
         transition_probabilities['TRAVEL_SITE'], self.new_site = get_REST_TO_TRAVEL_SITE_PROB(agent, rest_to_assess_or_not) # z
         transition_probabilities['EXPLORE'] = get_REST_TO_EXPLORE_PROB(agent, rest_to_explore_or_not, 
                                                             transition_probabilities['TRAVEL_SITE']) # p_1(1-z)
@@ -59,9 +65,13 @@ class State_Transitions:
         return transition_probabilities
     
     def transition_probabilities_explore(self, agent):
+        ''' TODO: For future work, make this so you can get probability of rediscovery from the arc ratio of the site at the hub'''
         transition_probabilities = {}
         explore_to_rest_or_not = np.random.binomial(1, BINOMIAL_COEFF_EXPLORE_TO_REST)
+        # try:
         transition_probabilities['ASSESS'], self.new_site = get_EXPLORE_TO_ASSESS_PROB(agent) # y
+        # except:
+        #     pdb.set_trace()
         transition_probabilities['TRAVEL_HOME_TO_REST'] = get_EXPLORE_TO_TRAVEL_HOME_PROB(agent, explore_to_rest_or_not, 
                                                                         transition_probabilities['ASSESS']) # p_3(1-y)
         transition_probabilities['EXPLORE'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_EE(agent) # (1-p_3)(1-y)
@@ -80,6 +90,10 @@ class State_Transitions:
         transition_probabilities['TRAVEL_SITE'] = get_DANCE_TO_TRAVEL_SITE_PROB(agent, dance_to_rest_or_not) # p_2(x)
         transition_probabilities['REST'] = get_DANCE_TO_REST_PROB(agent, dance_to_rest_or_not) # p_2(1-x)
         transition_probabilities['DANCE'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_DD(agent) # 1-p_2
+        # for val in transition_probabilities.values():
+        #     if val < 0.0:
+        #         pdb.set_trace()
+        # print(transition_probabilities)
         return transition_probabilities
     
     def transition_probabilities_travel_home_to_dance(self, agent):
