@@ -83,17 +83,13 @@ class State_Transitions:
         transition_probabilities['TRAVEL_HOME_TO_DANCE'] = get_ASSESS_TO_TRAVEL_HOME_PROB(agent, assess_to_dance_or_not) # p_4
         transition_probabilities['ASSESS'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_AA(agent) # 1-p_4
         return transition_probabilities
-    
+
     def transition_probabilities_dance(self, agent):
         transition_probabilities = {}
         dance_to_rest_or_not = np.random.binomial(1, BINOMIAL_COEFF_DANCE_TO_REST)
-        transition_probabilities['TRAVEL_SITE'] = get_DANCE_TO_TRAVEL_SITE_PROB(agent, dance_to_rest_or_not) # p_2(x)
-        transition_probabilities['REST'] = get_DANCE_TO_REST_PROB(agent, dance_to_rest_or_not) # p_2(1-x)
-        transition_probabilities['DANCE'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_DD(agent) # 1-p_2
-        # for val in transition_probabilities.values():
-        #     if val < 0.0:
-        #         pdb.set_trace()
-        # print(transition_probabilities)
+        transition_probabilities['TRAVEL_SITE'] = get_DANCE_TO_TRAVEL_SITE_PROB(agent, dance_to_rest_or_not) # gamma*(1 - p_2x)
+        transition_probabilities['REST'] = get_DANCE_TO_REST_PROB(agent, dance_to_rest_or_not) # (1 - gamma)(1-p_2x)
+        transition_probabilities['DANCE'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_DD(agent) # p_2x
         return transition_probabilities
     
     def transition_probabilities_travel_home_to_dance(self, agent):
@@ -113,3 +109,17 @@ class State_Transitions:
         transition_probabilities['ASSESS'] = get_TRAVEL_SITE_TO_ASSESS_PROB(agent) # 1 if at assigned site
         transition_probabilities['TRAVEL_SITE'] = 1.0 - transition_probabilities['ASSESS'] # 1 if not at site
         return transition_probabilities
+    
+    '''old ignore'''    
+    # def transition_probabilities_dance(self, agent):
+    #     transition_probabilities = {}
+    #     dance_to_rest_or_not = np.random.binomial(1, BINOMIAL_COEFF_DANCE_TO_REST)
+    #     transition_probabilities['TRAVEL_SITE'] = get_DANCE_TO_TRAVEL_SITE_PROB(agent, dance_to_rest_or_not) # p_2(x)
+    #     transition_probabilities['REST'] = get_DANCE_TO_REST_PROB(agent, dance_to_rest_or_not) # p_2(1-x)
+    #     transition_probabilities['DANCE'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_DD(agent) # 1-p_2
+    #     # for val in transition_probabilities.values():
+    #     #     if val < 0.0:
+    #     #         pdb.set_trace()
+    #     # print(transition_probabilities)
+    #     return transition_probabilities
+    

@@ -104,17 +104,18 @@ def get_ASSESS_TO_TRAVEL_HOME_PROB(agent, p):
 def get_DANCE_TO_TRAVEL_SITE_PROB(agent, p):
     if agent_at_hub(agent):
         ''' squash function of q through sigmoid and then compute the expected number of cycles for max and min q'''
-        stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS * (agent.assigned_site.quality + 0.2))
+        stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS * (agent.assigned_site.quality))
         # print(stay_attach_prob_due_to_qual) np.exp(agent.assigned_site.quality)/np.exp(1.0)  #
         # return stay_attach_prob_due_to_qual 
-        return (1.0 - p)*stay_attach_prob_due_to_qual
+        return stay_attach_prob_due_to_qual*(1.0 - p*agent.assigned_site.quality) #(1.0 - p)*stay_attach_prob_due_to_qual
+        # return 
     else:
         pdb.set_trace()
         
 def get_DANCE_TO_REST_PROB(agent, p):
     if agent_at_hub(agent):
-        stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS *( agent.assigned_site.quality + 0.2))
-        return 1.0 - stay_attach_prob_due_to_qual
+        stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS *( agent.assigned_site.quality))
+        return (1.0 - stay_attach_prob_due_to_qual)*(1.0 - p*agent.assigned_site.quality) #1.0 - stay_attach_prob_due_to_qual
         # return p*(1.0 - stay_attach_prob_due_to_qual) np.exp(agent.assigned_site.quality)/np.exp(1.0)   #
     else:
         pdb.set_trace()
