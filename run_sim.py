@@ -34,15 +34,15 @@ if __name__ == '__main__':
     worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance)
     
     '''comment this for testing'''
-    manager = multiprocessing.Manager()
-    lock = manager.Lock()
-    pool = multiprocessing.Pool()
-    results = [pool.apply_async(simulate_world, args=(sim, World(w))) for sim, w in enumerate(worlds)]
-    pool.close()
-    pool.join()
+    # manager = multiprocessing.Manager()
+    # lock = manager.Lock()
+    # pool = multiprocessing.Pool()
+    # results = [pool.apply_async(simulate_world, args=(sim, World(w))) for sim, w in enumerate(worlds)]
+    # pool.close()
+    # pool.join()
 
     '''uncomment this for testing'''
-    # for sim, w in enumerate(worlds):
-    #     world = World(w)
-    #     world.simulate()
-    #     print(sim, ' done')
+    for sim, w in enumerate(worlds):
+        world = World(w)
+        world.simulate()
+        print(sim, ' done')

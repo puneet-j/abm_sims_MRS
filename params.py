@@ -26,13 +26,13 @@ SITE_QUALITY_ASSESS_THRESHOLD = 0.25
 BINOMIAL_COEFF_REST_TO_ASSESS_PER_DANCER = 0.1 # Rest to Travel_Site for Assess
 BINOMIAL_COEFF_ASSESS_TO_DANCE = 0.1 # Assess to Travel_Hub for Dance
 BINOMIAL_COEFF_EXPLORE_TO_REST = 0.02 # Explore to Travel_Hub for Rest
-BINOMIAL_COEFF_DANCE_TO_REST = 0.9 # Dance to Rest
+BINOMIAL_COEFF_DANCE_TO_REST = 0.999 # Dance to Rest
 BINOMIAL_COEFF_REST_TO_EXPLORE = 0.01 # Rest to Explore
 
 # for the detachment
 base_DANCE_TO_ASSESS = 10.0
-pwr_DANCE_TO_ASSESS = -1.0
-
+pwr_DANCE_TO_ASSESS = -2.0
+MULTIPLIER_DANCE_QUAL = -10.0
 
 qualities2 = [[0.01, 1.0], [0.05, 0.7], [0.1, 1.0], [0.2, 1.0], [0.3, 1.0], [0.4, 1.0], [0.5, 1.0], 
               [0.6, 1.0], [0.7, 1.0], [0.8, 1.0], [0.9, 1.0], 
