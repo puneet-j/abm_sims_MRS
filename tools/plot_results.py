@@ -25,7 +25,7 @@ def get_mean_no_inf(x):
     result = [np.mean(x) if np.sum(x)!=0 else 0]
     return result[0]
 
-df = pd.read_csv('./sim_results/combined_results_metadata_longsim.csv')
+df = pd.read_csv('../sim_results/combined_results_metadata_longsim.csv')
 
 df.site_qualities = df.site_qualities.apply(literal_eval)
 df.site_positions = df.site_positions.apply(literal_eval)

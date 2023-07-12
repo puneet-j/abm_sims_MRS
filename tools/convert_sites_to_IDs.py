@@ -20,7 +20,7 @@ def getSitesFromPoses(siteList, site_pos_list):
     return siteIDList
 
 def main():
-    folder = './sim_results/random_test/'
+    folder = '../sim_results/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv')]
     files = np.sort(files)

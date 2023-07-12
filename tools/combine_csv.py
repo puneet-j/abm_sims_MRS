@@ -13,7 +13,7 @@ AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm',
                 'TRAVEL_HOME_TO_REST': 'y', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
 
 
-folder = './sim_results/'
+folder = '../sim_results/'
 files = os.listdir(folder)
 files = [file for file in files if file.endswith('.csv')]
 files = np.sort(files)

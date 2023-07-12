@@ -44,7 +44,7 @@ def get_current_state(astate, asite):
 
 
 def main():
-    folder = './sim_results/'
+    folder = '../sim_results/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)

@@ -9,7 +9,7 @@ import copy
 
 
 def main():
-    folder = './sim_results/node_edges/'
+    folder = '../sim_results/node_edges/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)

@@ -21,8 +21,8 @@ class World:
         self.hub = Site(10000, 0.0, [0.0, 0.0])
         self.time = 0
         time_now = str(int(time.time()*1000000))
-        self.fname = './sim_results/' + time_now + '.csv'
-        self.fname_metadata = './sim_results/' + time_now + 'metadata.csv'
+        self.fname = '../sim_results/' + time_now + '.csv'
+        self.fname_metadata = '../sim_results/' + time_now + 'metadata.csv'
         self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
         self.converged_to_site = None
