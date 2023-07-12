@@ -6,6 +6,7 @@ import pdb
 from ast import literal_eval
 import time 
 import matplotlib.patches as pat
+sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 from params import *
 # import pylab as pl
 
