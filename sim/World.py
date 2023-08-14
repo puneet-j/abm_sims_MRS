@@ -7,12 +7,16 @@ import time
 import pandas as pd 
 from random import shuffle
 import copy
+# import sys, os
+# sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 
 class World:
     def __init__(self, params):
         # params = (num_sites, site_quals, site_poses, num_agents)
         self.num_sites = params[0]
         self.site_qualities = params[1]
+        if self.num_sites != len(self.site_qualities):
+            pdb.set_trace()
         self.site_poses = params[2]
         self.sites = [Site(site_id, site_qual, site_pos) for 
                       site_id, site_qual, site_pos in zip(range(0,self.num_sites), self.site_qualities, self.site_poses)]
@@ -21,8 +25,8 @@ class World:
         self.hub = Site(10000, 0.0, [0.0, 0.0])
         self.time = 0
         time_now = str(int(time.time()*1000000))
-        self.fname = '../sim_results/' + time_now + '.csv'
-        self.fname_metadata = '../sim_results/' + time_now + 'metadata.csv'
+        self.fname = './sim_results/' + time_now + '.csv'
+        self.fname_metadata = './sim_results/' + time_now + 'metadata.csv'
         self.df_metadata_cols = ['num_sites', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
         self.converged_to_site = None

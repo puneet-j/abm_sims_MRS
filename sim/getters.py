@@ -25,50 +25,6 @@ def get_REST_TO_TRAVEL_SITE_PROB(agent, p):
         return prob, togo #return prob*p, togo
     else:
         return 0.0, None
-    
-# def get_REST_TO_TRAVEL_SITE_PROB(agent, p):
-#     if agent_at_hub(agent):
-#         dancers = get_dancers_by_site(agent)
-#         if p != 0:
-            
-#         if np.sum(dancers) != 0:
-#             for id, d in enumerate(dancers): 
-#                 if d != 0:
-#                     prob = np.random.binomial(1, BINOMIAL_COEFF_REST_TO_ASSESS_PER_DANCER)
-#                     # pdb.set_trace()
-#                     if prob > 0:
-#                         togo = agent.world.sites[id]
-#                         break
-#                     else:
-#                         togo = None
-#         else:
-#             prob = 0.0
-#             togo = None
-        
-#         return prob, togo #return prob*p, togo
-#     else:
-#         return 0.0, None
-# # changed to not include binomial p in calculations. 
-# # check dancers to get recruited
-# def get_REST_TO_TRAVEL_SITE_PROB(agent, p):
-#     # BINOMIAL_COEFF_EXPLORE_TO_REST
-#     if agent_at_hub(agent):
-#         dancers = get_dancers_by_site(agent)
-#         # pdb.set_trace()
-#         if np.sum(dancers) != 0:
-#             for d in dancers: 
-#             d_morphed = [d**1.0 for d in dancers]
-#             dancers_norm = copy.deepcopy(d_morphed/np.sum(d_morphed))
-#             togo = np.random.choice(agent.world.sites, p=dancers_norm)
-#             # pdb.set_trace()
-#             prob = copy.deepcopy(1 - p)
-#         else:
-#             prob = 0.0
-#             togo = None
-        
-#         return prob, togo #return prob*p, togo
-#     else:
-#         return 0.0, None
 
 # site quality assessment while exploring uses linear site quality
 def get_EXPLORE_TO_ASSESS_PROB(ag):
@@ -104,10 +60,11 @@ def get_ASSESS_TO_TRAVEL_HOME_PROB(agent, p):
 def get_DANCE_TO_TRAVEL_SITE_PROB(agent, p):
     if agent_at_hub(agent):
         ''' squash function of q through sigmoid and then compute the expected number of cycles for max and min q'''
-        stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS*agent.assigned_site.quality)
+        # stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS*agent.assigned_site.quality)
+        stay_attach_prob_due_to_qual = agent.assigned_site.quality**pwr_DANCE_TO_TS
         # print(stay_attach_prob_due_to_qual) np.exp(agent.assigned_site.quality)/np.exp(1.0)  #
         # return stay_attach_prob_due_to_qual 
-        dance_qual_factor = 1.0/(1.0 + np.exp(MULTIPLIER_DANCE_QUAL*agent.assigned_site.quality))
+        dance_qual_factor = ADD_DANCE_QUAL/(ADD_DANCE_QUAL + np.exp(MULTIPLIER_DANCE_QUAL*agent.assigned_site.quality))
         return stay_attach_prob_due_to_qual*(1.0 - p*dance_qual_factor) #(1.0 - p)*stay_attach_prob_due_to_qual
         # return 
     else:
@@ -115,9 +72,10 @@ def get_DANCE_TO_TRAVEL_SITE_PROB(agent, p):
         
 def get_DANCE_TO_REST_PROB(agent, p):
     if agent_at_hub(agent):
-        stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS*agent.assigned_site.quality)
-        dance_qual_factor = 1.0/(1.0 + np.exp(MULTIPLIER_DANCE_QUAL*agent.assigned_site.quality))
-        return (1.0 - stay_attach_prob_due_to_qual)*(1.0 - p*dance_qual_factor) #1.0 - stay_attach_prob_due_to_qual
+        # stay_attach_prob_due_to_qual = 1.0 - np.power(base_DANCE_TO_ASSESS, pwr_DANCE_TO_ASSESS*agent.assigned_site.quality)
+        stay_attach_prob_due_to_qual = agent.assigned_site.quality**pwr_DANCE_TO_TS
+        # dance_qual_factor = ADD_DANCE_QUAL/(ADD_DANCE_QUAL + np.exp(MULTIPLIER_DANCE_QUAL*agent.assigned_site.quality))
+        return (1.0 - stay_attach_prob_due_to_qual)*(1.0 - p*stay_attach_prob_due_to_qual) #1.0 - stay_attach_prob_due_to_qual
         # return p*(1.0 - stay_attach_prob_due_to_qual) np.exp(agent.assigned_site.quality)/np.exp(1.0)   #
     else:
         pdb.set_trace()

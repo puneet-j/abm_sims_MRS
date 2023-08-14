@@ -6,6 +6,7 @@ import pdb
 from ast import literal_eval
 import time 
 import matplotlib.patches as pat
+import sys, os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 from params import *
 # import pylab as pl
@@ -14,7 +15,7 @@ AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm',
                 'TRAVEL_HOME_TO_REST': 'y', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
 
 
-folder = '../sim_results/'
+folder = './sim_results/'
 files = os.listdir(folder)
 files = [file for file in files if file.endswith('.csv')]
 files = np.sort(files)
