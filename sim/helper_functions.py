@@ -1,10 +1,65 @@
 import numpy as np
 from params import *
 
-def get_valid_qualities_fixed(num_configs):
+
+def get_agent_inits(agents, site_poses, site_quals):
+    agent_dict_list = []
+    agent_dict_list.append(get_all_rest(agents))
+    agent_dict_list.append(get_half_explore(agents))
+    agent_dict_list.append(get_10perc_dancing_bad(agents, site_quals))
+    return agent_dict_list
+
+def get_all_rest(agents):
+    new_list = []
+    for a in range(0,agents):
+        new_dict = {}
+        new_list.append(new_dict)
+    return new_list
+
+def get_half_explore(agents):
+    new_list = []
+    prob_explore = 0.5
+    for a in range(0,agents):
+        new_dict = {}
+        if np.random.random() < prob_explore:
+            new_dict['pose'] = [2000.0 * np.random.random() - 1000.0, 2000.0 * np.random.random() - 1000.0]
+            new_dict['state'] = 'EXPLORE'
+            new_dict['speed'] = AGENT_SPEED
+            new_dict['site'] = None
+            dirs = [np.random.random(), np.random.random()]
+            new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+        else:
+            new_dict['pose'] = [0.0, 0.0]
+            new_dict['state'] = 'REST'
+            new_dict['speed'] = 0.0
+            new_dict['site'] = None
+            new_dict['dir'] = [0.0, 1.0]
+        new_list.append(new_dict)
+    return new_list
+
+def get_10perc_dancing_bad(agents, site_quals):
+    new_list = []
+    prob_dancing_bad = 0.1
+    for a in range(0,agents):
+        new_dict = {}
+        if np.random.random() < prob_dancing_bad:
+            new_dict['pose'] = [0.0, 0.0]
+            new_dict['state'] = 'DANCE'
+            new_dict['speed'] = 0.0
+            bad_site = np.argmin(site_quals)
+            new_dict['site'] = bad_site
+            new_dict['dir'] = [0.0, 1.0]
+        else:
+            new_dict['pose'] = [0.0, 0.0]
+            new_dict['state'] = 'REST'
+            new_dict['speed'] = 0.0
+            new_dict['site'] = None
+            new_dict['dir'] = [0.0, 1.0]
+        new_list.append(new_dict)
+    return new_list
+
+def get_valid_qualities_fixed_2(num_configs):
     quals = qualities2[:num_configs]
-    # while np.max(quals) < 0.5:
-    #     quals = np.random.random(num_sites)
     return quals
 
 def get_valid_qualities(num_sites, num_configs):

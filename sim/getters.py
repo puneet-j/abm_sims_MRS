@@ -2,6 +2,7 @@ import numpy as np
 from helper_functions import *
 from params import *
 import copy 
+import pandas as pd 
 
 def get_REST_TO_EXPLORE_PROB(agent, p, toTravelSite):
     if agent_at_hub(agent):

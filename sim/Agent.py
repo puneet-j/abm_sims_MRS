@@ -5,19 +5,21 @@ from Transitions import State_Transitions
 import copy 
 
 class Agent:
-    def __init__(self, pos, world):
-        self.pos = pos
-        self.state = 'REST'
-        self.assigned_site = None
-        self.dir = [0.0, 1.0]
-        self.speed = 0.0
+    def __init__(self, world, init_pos=[0.0, 0.0], init_state='REST', init_site=None, init_speed=0.0, init_dir=[0.0, 1.0]):
+        self.pos = copy.deepcopy(init_pos)
+        self.state = copy.deepcopy(init_state) #'REST'
+        self.assigned_site = copy.deepcopy(init_site)
+        self.dir = copy.deepcopy(init_dir) #[0.0, 1.0]
+        self.speed = copy.deepcopy(init_speed) #0.0
         # self.prev_state = None
         # self.at_site = 10000 # site number if at site, else 10000
         # self.at_hub = True
         self.world = world
-        self.transitions = State_Transitions(self)
+        self.transitions = State_Transitions()
 
     def step(self):
+        # for ag_temp in self.world.agents:
+        #     print('in agent start: ', ag_temp.pos, ag_temp.state)
         # self.at_hub, self.at_site = get_at_hub_site(self)
         next_state, site_new = self.transitions.get_transition(self)
         # print(self.prev_state, self.state, 'got this next state: ', next_state)
@@ -27,6 +29,8 @@ class Agent:
         # print(self.prev_state, self.state)
         if not(site_new is None):
             self.assigned_site = copy.deepcopy(site_new)
+        # for ag_temp in self.world.agents:
+        #     print('in agent after transition: ', ag_temp.pos, ag_temp.state)
 
         if self.state == 'TRAVEL_HOME_TO_DANCE' or self.state == 'TRAVEL_HOME_TO_REST':
             if not agent_at_hub(self):
@@ -35,15 +39,16 @@ class Agent:
             if not agent_at_assigned_site(self):
                 self.goSite()
         elif self.state == 'EXPLORE':
-            # if self.prev_state == 'REST':
-                # random_value = np.random.random()*np.pi*2
-                # self.dir = [np.cos(random_value), np.sin(random_value)]
             if agent_at_any_site(self) is None:
                 self.explore()
         else:
             self.speed = 0.0
             random_value = np.random.random()*np.pi*2.0
             self.dir = [np.cos(random_value), np.sin(random_value)]
+        # for ag_temp in self.world.agents:
+        #     print('in agent end: ', ag_temp.pos, ag_temp.state)
+        # if self.state != 'REST':
+        #     pdb.set_trace()
         return
     
     def goHome(self):
@@ -62,7 +67,15 @@ class Agent:
         self.pos[1] += self.speed*self.dir[1]
     
     def explore(self):
+        # for ag_temp in self.world.agents:
+            # print('in explore start: ', ag_temp.pos, ag_temp.state)
         self.speed = AGENT_SPEED
         self.dir = get_explore_dir(self.dir)
+        # for ag_temp in self.world.agents:
+        #     print('in explore after getting dir: ', ag_temp.pos, ag_temp.state, ag_temp.dir)
         self.pos[0] += self.speed*self.dir[0]
+        # for ag_temp in self.world.agents:
+        #     print('in explore after updating X: ', ag_temp.pos, ag_temp.state, ag_temp.dir)
         self.pos[1] += self.speed*self.dir[1]
+        # for ag_temp in self.world.agents:
+        #     print('in explore end: ', ag_temp.pos, ag_temp.state)

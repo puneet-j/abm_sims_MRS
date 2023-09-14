@@ -3,10 +3,10 @@ from params import *
 from helper_functions import *
 from getters import *
 import copy 
+import pandas as pd 
 
 class State_Transitions:
-    def __init__(self, world):
-        self.world = world
+    def __init__(self):
         self.new_site = None
     
     def get_transition(self, agent):

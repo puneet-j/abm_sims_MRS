@@ -9,7 +9,8 @@ import copy
 
 
 def main():
-    folder = '../sim_results/node_edges/'
+    # cur_dir = os.getcwd()
+    folder = './sim_results/node_edges/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)
@@ -21,7 +22,7 @@ def main():
     for dat_file in zip(data_files):
         graph_edges_with_weights = {}
         dat = pd.read_csv(folder + dat_file)
-        metadat = pd.read_csv(folder + metadat_file)
+        # metadat = pd.read_csv(folder + metadat_file)
         prev_state = None
         # dat.agent_sites = dat.agent_sites.apply(literal_eval)
         # metadat.num_sites = metadat.num_sites.apply(literal_eval)

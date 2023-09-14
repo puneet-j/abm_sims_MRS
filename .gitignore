@@ -1,3 +1,6 @@
 .DS_Store
 sim_results/
 replay/
+results_for_graphs/
+graphs/
+misc/

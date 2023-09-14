@@ -44,7 +44,7 @@ def get_current_state(astate, asite):
 
 
 def main():
-    folder = '../sim_results/'
+    folder = './sim_results/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)
@@ -77,8 +77,9 @@ def main():
                 prev_state = copy.deepcopy(cs)
         
         df = pd.DataFrame.from_dict(data=graph_edges_with_weights, orient='index')
-        pdb.set_trace()
-        df['feature'] = np.array([[metadat.site_qualities.values], [metadat.site_positions.values]]).repeat(len(df))
+        # pdb.set_trace()
+        df['quals'] = np.array([metadat.site_qualities.values]).repeat(len(df))
+        df['poses'] = np.array([metadat.site_positions.values]).repeat(len(df))
         df.to_csv(folder+'node_edges/'+dat_file, header=False)
 
 main()
