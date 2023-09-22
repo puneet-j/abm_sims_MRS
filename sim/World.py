@@ -11,7 +11,7 @@ import copy
 # sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 
 class World:
-    def __init__(self, params):
+    def __init__(self, params, fold_name):
         # params = (num_sites, site_quals, site_poses, num_agents)
         self.num_sites = params[0]
         self.site_qualities = params[1]
@@ -26,8 +26,8 @@ class World:
         self.hub = Site(10000, 0.0, [0.0, 0.0])
         self.time = 0
         self.file_time = str(int(time.time()*1000000))
-        self.fname = './results_for_graphs/' + self.file_time + '.csv'
-        self.fname_metadata = './results_for_graphs/metadata.csv'
+        self.fname = './' + fold_name + '/' + self.file_time + '.csv'
+        self.fname_metadata = './' + fold_name + '/' + 'metadata.csv'
         self.df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
         self.converged_to_site = None
@@ -77,17 +77,21 @@ class World:
             self.time += 1            
             agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
             # print('after getting all agent poses dirs: ', agent.pos, agent.state)
+            if np.any([a == 'EXPLORE' and (b is not None) for a,b in zip(agent_states, agent_sites)]):
+                pdb.set_trace()
+            if np.any([a == 'ASSESS' and (b is None) for a,b in zip(agent_states, agent_sites)]):
+                pdb.set_trace()
             to_save = [self.time, copy.deepcopy(agent_poses), copy.deepcopy(agent_dirs), copy.deepcopy(agent_states), copy.deepcopy(agent_sites)]
             self.list_for_df.append(to_save[:])
             # print('after appending to list: ', agent.pos, agent.state)
-            dancers = get_dancers_by_site_for_world(self)
-            # print('after getting dancers: ', agent.pos, agent.state)
-            if np.max(dancers) > self.threshold*self.num_agents:
-                self.converged_to_site = self.sites[np.argmax(dancers)].quality
+            RECRUITrs = get_RECRUITrs_by_site_for_world(self)
+            # print('after getting RECRUITrs: ', agent.pos, agent.state)
+            if np.max(RECRUITrs) > self.threshold*self.num_agents:
+                self.converged_to_site = self.sites[np.argmax(RECRUITrs)].quality
                 break
 
 
         df = pd.DataFrame(self.list_for_df, columns = self.df_cols)
-        df.to_csv(self.fname)
+        df.to_csv(self.fname, chunksize=7000)
         self.save_metadata()
         

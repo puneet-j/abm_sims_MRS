@@ -7,7 +7,7 @@ import pandas as pd
 import pdb
 from ast import literal_eval
 import copy
-STATES = {'REST':0, 'DANCE':1, 'ASSESS':2, 'TRAVEL_SITE':3, 'TRAVEL_HOME_TO_DANCE':4}
+STATES = {'OBSERVE':0, 'RECRUIT':1, 'ASSESS':2, 'TRAVEL_SITE':3, 'TRAVEL_HOME_TO_RECRUIT':4}
 
 def getSiteID(site):
     if site == 'H':
@@ -24,13 +24,13 @@ def getSiteID(site):
 def get_current_state(astate, asite):
     current_state = np.zeros((10, 5))
     for site, state in zip(asite, astate):
-        if state == 'DANCE':
+        if state == 'RECRUIT':
             current_state[0, STATES[state]] += 1
         else:
-            if state == 'EXPLORE' or state == 'TRAVEL_HOME_TO_REST':
+            if state == 'EXPLORE' or state == 'TRAVEL_HOME_TO_OBSERVE':
                 continue
 
-            elif state == 'REST':
+            elif state == 'OBSERVE':
                 current_state[0, STATES[state]] += 1
 
             elif not(site is None):

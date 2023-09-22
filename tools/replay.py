@@ -11,8 +11,8 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 from params import *
 # import pylab as pl
 
-AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm', 
-                'TRAVEL_HOME_TO_REST': 'c', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
+AGENT_COLORS = {'OBSERVE':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'RECRUIT': 'm', 
+                'TRAVEL_HOME_TO_OBSERVE': 'c', 'TRAVEL_HOME_TO_RECRUIT': 'y', 'TRAVEL_SITE': 'y'}
 
 
 folder = './replay/'
@@ -43,7 +43,7 @@ for t, (poses, states) in  enumerate(zip(df.agent_positions, df.agent_states)):
     x_coords = [item[0] for item in poses]
     y_coords = [item[1] for item in poses] 
     colors = [AGENT_COLORS[a_s] for a_s in states]
-    dancers = np.sum([1 for x in states if x=='DANCE'])
+    RECRUITrs = np.sum([1 for x in states if x=='RECRUIT'])
     # pdb.set_trace()
     for site, qual in zip(metadata.site_positions[0], metadata.site_qualities[0]):
         # pdb.set_trace()
@@ -57,7 +57,7 @@ for t, (poses, states) in  enumerate(zip(df.agent_positions, df.agent_states)):
     plt.scatter(plot_legend_colors, plot_legend, c=colorlist, linewidth=3.0)
     [plt.text(x, y, text) for (x, y, text) in zip(plot_legend_x, plot_legend, statelist)]
     plt.text(-10,450,'TIME: '+str(t))
-    plt.text(-20,400,'DANCERS: '+str(dancers))
+    plt.text(-20,400,'RECRUITRS: '+str(RECRUITrs))
 
 
     plt.xlim([-500, 500])

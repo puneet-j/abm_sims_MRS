@@ -11,8 +11,8 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 from params import *
 # import pylab as pl
 
-AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm', 
-                'TRAVEL_HOME_TO_REST': 'y', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
+AGENT_COLORS = {'OBSERVE':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'RECRUIT': 'm', 
+                'TRAVEL_HOME_TO_OBSERVE': 'y', 'TRAVEL_HOME_TO_RECRUIT': 'y', 'TRAVEL_SITE': 'y'}
 
 
 folder = './sim_results/'

@@ -4,12 +4,12 @@ from params import *
 
 def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
-    agent_dict_list.append(get_all_rest(agents))
+    agent_dict_list.append(get_all_OBSERVE(agents))
     agent_dict_list.append(get_half_explore(agents))
     agent_dict_list.append(get_10perc_dancing_bad(agents, site_quals))
     return agent_dict_list
 
-def get_all_rest(agents):
+def get_all_OBSERVE(agents):
     new_list = []
     for a in range(0,agents):
         new_dict = {}
@@ -30,7 +30,7 @@ def get_half_explore(agents):
             new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
         else:
             new_dict['pose'] = [0.0, 0.0]
-            new_dict['state'] = 'REST'
+            new_dict['state'] = 'OBSERVE'
             new_dict['speed'] = 0.0
             new_dict['site'] = None
             new_dict['dir'] = [0.0, 1.0]
@@ -44,14 +44,14 @@ def get_10perc_dancing_bad(agents, site_quals):
         new_dict = {}
         if np.random.random() < prob_dancing_bad:
             new_dict['pose'] = [0.0, 0.0]
-            new_dict['state'] = 'DANCE'
+            new_dict['state'] = 'RECRUIT'
             new_dict['speed'] = 0.0
             bad_site = np.argmin(site_quals)
             new_dict['site'] = bad_site
             new_dict['dir'] = [0.0, 1.0]
         else:
             new_dict['pose'] = [0.0, 0.0]
-            new_dict['state'] = 'REST'
+            new_dict['state'] = 'OBSERVE'
             new_dict['speed'] = 0.0
             new_dict['site'] = None
             new_dict['dir'] = [0.0, 1.0]
@@ -128,22 +128,25 @@ def agent_at_any_site(ag):
 #     at_hub = agent_at_hub(ag)
 #     at_site = agent_at_any_site(ag)
 #     return at_hub, at_site
-def get_dancers_by_site_for_world(world):
+def get_RECRUITrs_by_site_for_world(world):
     all_agents = world.agents
-    dancers = [0]*world.num_sites
+    RECRUITrs = [0]*world.num_sites
     for agent in world.agents:
-        if agent.state == 'DANCE':
-            dancers[agent.assigned_site.id] += 1
-    return dancers
+        if agent.state == 'RECRUIT':
+            RECRUITrs[agent.assigned_site.id] += 1
+    return RECRUITrs
 
-def get_dancers_by_site(ag):
+def get_RECRUITrs_by_site(ag):
     world = ag.world
     # all_agents = world.agents
-    dancers = [0]*world.num_sites
+    RECRUITrs = [0]*world.num_sites
     for agent in world.agents:
-        if agent.state == 'DANCE':
-            dancers[agent.assigned_site.id] += 1
-    return dancers
+        if agent.state == 'RECRUIT':
+            if agent.assigned_site:
+                RECRUITrs[agent.assigned_site.id] += 1
+            else:
+                pdb.set_trace()
+    return RECRUITrs
 
 # def get_site_from_id(ag):
 #     world = ag.world

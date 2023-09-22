@@ -30,21 +30,23 @@ def simulate_world(sim, world):
 if __name__ == '__main__':
     site_configs = [2]#[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
     distances = [100, 200]#, 300]#, 300]
-    agent_configs = [20] #[5, 20, 50, 100, 200]
-    sims_per_config = 10 #20
-    sims_per_distance = 10 #20
-    sim_repeats = 20
-    fname_metadata = './results_for_graphs/metadata.csv'
+    agent_configs = [5] #[5, 20, 50, 100, 200]
+    sims_per_config = 5 #20
+    sims_per_distance = 5 #20
+    sim_repeats = 5
+    fold_name = 'results_for_graphs'
+    fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
     empty = pd.DataFrame([], columns=df_metadata_cols)
     empty.to_csv(fname_metadata)
     worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats)
     # pdb.set_trace()
+
     '''comment this for testing'''
     manager = multiprocessing.Manager()
     lock = manager.Lock()
     pool = multiprocessing.Pool()
-    results = [pool.apply_async(simulate_world, args=(sim, World(w))) for sim, w in enumerate(worlds)]
+    results = [pool.apply_async(simulate_world, args=(sim, World(w,fold_name))) for sim, w in enumerate(worlds)]
     pool.close()
     pool.join()
 

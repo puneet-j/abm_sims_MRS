@@ -30,7 +30,7 @@ plt.plot(x, z, 'r.')
 # plt.figure(2)
 
 # plt.xlabel("x")
-plt.ylabel("Power (Blue) = TS vs Rest and Sigmoid (Red) = (Dance Time)")
+plt.ylabel("Power (Blue) = TS vs OBSERVE and Sigmoid (Red) = (RECRUIT Time)")
 
 plt.title("Power Blue and Sigmoid Red")
   

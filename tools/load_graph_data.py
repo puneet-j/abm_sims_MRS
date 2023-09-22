@@ -42,9 +42,9 @@ for row in metadata.iterrows():
     fname = str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
     num_neighbors_sampling = [5] * 2
     train_percent = 0.8
-    data = GraphDataset(folder + fname,  train_percent, num_neighbors_sampling)
+    dataloader = GraphDataset(folder + fname,  train_percent, num_neighbors_sampling)
 pdb.set_trace()
-dataloader = DataLoader(data, batch_size=4,shuffle=True, num_workers=0)
+# dataloader = DataLoader(data, batch_size=4,shuffle=True, num_workers=0)
 
 
 # class SAGE(torch.nn.Module):

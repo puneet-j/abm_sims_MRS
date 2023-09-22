@@ -12,10 +12,10 @@ from params import *
 # import pylab as pl
 # 5, 20, 50, 100, 200
 
-AGENT_COLORS = {'REST':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'DANCE': 'm', 
-                'TRAVEL_HOME_TO_REST': 'y', 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'}
+AGENT_COLORS = {'OBSERVE':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'RECRUIT': 'm', 
+                'TRAVEL_HOME_TO_OBSERVE': 'y', 'TRAVEL_HOME_TO_RECRUIT': 'y', 'TRAVEL_SITE': 'y'}
 
-AGENT_NUM_COLORS = {5:'k', 20: 'b', 50: 'm', 100: 'r', 200: 'y'}#, 'TRAVEL_HOME_TO_DANCE': 'y', 'TRAVEL_SITE': 'y'
+AGENT_NUM_COLORS = {5:'k', 20: 'b', 50: 'm', 100: 'r', 200: 'y'}#, 'TRAVEL_HOME_TO_RECRUIT': 'y', 'TRAVEL_SITE': 'y'
 
 SITE_NUM_SHAPES = {2:'o', 3:'v', 4:'s'}
 

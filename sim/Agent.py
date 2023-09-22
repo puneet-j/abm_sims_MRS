@@ -5,9 +5,9 @@ from Transitions import State_Transitions
 import copy 
 
 class Agent:
-    def __init__(self, world, init_pos=[0.0, 0.0], init_state='REST', init_site=None, init_speed=0.0, init_dir=[0.0, 1.0]):
+    def __init__(self, world, init_pos=[0.0, 0.0], init_state='OBSERVE', init_site=None, init_speed=0.0, init_dir=[0.0, 1.0]):
         self.pos = copy.deepcopy(init_pos)
-        self.state = copy.deepcopy(init_state) #'REST'
+        self.state = copy.deepcopy(init_state) #'OBSERVE'
         self.assigned_site = copy.deepcopy(init_site)
         self.dir = copy.deepcopy(init_dir) #[0.0, 1.0]
         self.speed = copy.deepcopy(init_speed) #0.0
@@ -22,17 +22,20 @@ class Agent:
         #     print('in agent start: ', ag_temp.pos, ag_temp.state)
         # self.at_hub, self.at_site = get_at_hub_site(self)
         next_state, site_new = self.transitions.get_transition(self)
-        # print(self.prev_state, self.state, 'got this next state: ', next_state)
+        # if next_state == 'RECRUIT':
+        #     print(self.state, 'got this next state and site: ', next_state, site_new)
+        #     if site_new is None:
+        #         pdb.set_trace()
         # self.prev_state = copy.deepcopy(self.state)
         self.state = copy.deepcopy(next_state)
         
         # print(self.prev_state, self.state)
-        if not(site_new is None):
-            self.assigned_site = copy.deepcopy(site_new)
+        # if not(site_new is None):
+        self.assigned_site = copy.deepcopy(site_new)
         # for ag_temp in self.world.agents:
         #     print('in agent after transition: ', ag_temp.pos, ag_temp.state)
 
-        if self.state == 'TRAVEL_HOME_TO_DANCE' or self.state == 'TRAVEL_HOME_TO_REST':
+        if self.state == 'TRAVEL_HOME_TO_RECRUIT' or self.state == 'TRAVEL_HOME_TO_OBSERVE':
             if not agent_at_hub(self):
                 self.goHome()
         elif self.state == 'TRAVEL_SITE':
@@ -47,7 +50,7 @@ class Agent:
             self.dir = [np.cos(random_value), np.sin(random_value)]
         # for ag_temp in self.world.agents:
         #     print('in agent end: ', ag_temp.pos, ag_temp.state)
-        # if self.state != 'REST':
+        # if self.state != 'OBSERVE':
         #     pdb.set_trace()
         return
     
