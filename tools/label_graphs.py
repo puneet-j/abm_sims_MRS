@@ -79,8 +79,8 @@ def fix_non_full(TO, TA, TR, A, R, sq, nA):
     lenTO = len(TO)
     lenTA = len(TA)
     lenTR = len(TR)
-    lenA = len(A)
-    lenR = len(R)
+    # lenA = len(A)
+    # lenR = len(R)
     for i in range(0, nA - lenTO):
         TO.append([TIME_LIMIT/TIME_LIMIT])
 
@@ -90,11 +90,11 @@ def fix_non_full(TO, TA, TR, A, R, sq, nA):
     for i in range(0, nA - lenTR):
         TR.append([oneHotSiteVector(len(sq), -1), TIME_LIMIT/TIME_LIMIT])
 
-    for i in range(0, l - lenA):
-        A.append([oneHotSiteVector(len(sq), lenA+i), sq[lenA-1+i], 0])
+    # for i in range(0, l - lenA):
+    #     A.append([oneHotSiteVector(len(sq), lenA+i), sq[lenA-1+i], 0])
 
-    for i in range(0, l - lenR):
-        R.append([oneHotSiteVector(len(sq), lenR+i), sq[lenR-1+i], 0])
+    # for i in range(0, l - lenR):
+    #     R.append([oneHotSiteVector(len(sq), lenR+i), sq[lenR-1+i], 0])
     
     return TO, TA, TR, A, R 
 
@@ -171,74 +171,101 @@ def get_unique_IDs(fl):
         dict_new[states_unique[i]] = i
     return dict_new
 
+# def get_converged_nodes(graph):
+#     for n in graph.nodes['x']:
+#         if n
+
 # def get_qual_from_string(st):_TO_ASSESS
 #     new = st.replace("(","").replace(")","").replace("[","").replace("]","").replace(",","").split()
 #     pdb.set_trace()
 # # def update_edge()
 
+def get_start_state(which_state, q):
+    q0 = q[0]
+    q1 = q[1]
+    if which_state == 0:
+        return (0.5, 0.0, 1.0)
+    elif which_state == 1:
+        return (0.5, 0.5, 0.5)
+    elif which_state == 2:
+        return (0.5, 0.0, 0.9)
+        # return     [0.5, 0.0, 1.0, 
+        #             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+        #             1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 
+        #             1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0,
+        #             0,1,0,q0,0.0, 1,0,0, q1, 0.0,
+        #             0,1,0,q0,0.0, 1,0,0, q1, 0.0]
 def main():
-    folder = './test_results/'
+    folder = './graphs/new/'
     files = os.listdir(folder)
-    files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
+    files = [file for file in files if file.endswith('.pickle')]
     files = np.sort(files)
-    # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph = './graphs/random_test/'
-    new_metadata_file = folder_graph + 'metadata.csv'
-    # df_new_metadata = pd.DataFrame([], columns=['qualities', 'positions', 'agents'])
-    meta_arr = []
-    metadata = pd.read_csv(metadata_file) 
-    metadata.site_qualities=metadata.site_qualities.apply(literal_eval)
-    metadata.site_positions=metadata.site_positions.apply(literal_eval)
+    metadata = pd.read_csv(metadata_file)
     # pdb.set_trace()
-    metadata.site_positions=metadata.site_positions.apply(lambda x: tuple([tuple(a) for a in x]))
-    # pdb.set_trace()
-    df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
-    
-    for entry in df.iterrows():
-        print(entry)
-        graph = nx.Graph()
-        for fileName in entry[1][3]:
+    metadata.qualities=metadata.qualities.apply(literal_eval)
+    # metadata.site_positions=metadata.site_positions.apply(literal_eval)
+    # metadata.site_positions=metadata.site_positions.apply(lambda x: tuple([tuple(a) for a in x]))
+    # df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
+
+
+    '''
+    # [COMMIT_THRESHOLD, explorers*1.0/numAg, observers*1.0/numAg, TO, TA, TR, A, R]
+
+    [0.5, 0.0, 1.0, 
+    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+    1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0,
+    1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0,
+    0,1,0,q0,0.0, 1,0,0, q1, 0.0,
+    0,1,0,q0,0.0, 1,0,0, q1, 0.0]
+
+    {'x': (0.5, 0.0, 0.0, 
+           0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
+           0, 0, 1, 0.0, 0, 0, 1, 0.0, 0, 0, 1, 0.0, 0, 0, 1, 0.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 
+           0, 0, 1, 0.0, 0, 0, 1, 0.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 
+           0, 1, 0, 0.01, 0.0, 0, 0, 1, 0.55, 0.0, 
+           0, 1, 0, 0.01, 0.0, 0, 0, 1, 0.55, 0.0)}
+    '''
+
+
+    for id, row in enumerate(metadata.iterrows()):
+        if id == 0:
+            continue 
+        else:
+            # pdb.set_trace()
+            fname = str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
+            fil =  open(folder+fname, 'rb')
+            graph = pickle.load(fil)
+            fil.close()
+            qual = row[1][1]
+            node_to_color = tuple(get_start_state(0,qual))
+            id_to_color = [tuple((z, y['x'][:3],node_to_color)) for z,y in graph.nodes(data=True) if y['x'][:3] == node_to_color]
+            all_ids_start = [tuple((z, y['x'][:3])) for z,y in graph.nodes(data=True)]# if y['x'][:3] == node_to_color]
+            colors = 'r'#['r' for i in range(len(graph.nodes))]
+            nx.set_node_attributes(graph, colors, 'colors')
+            try:
+                graph.nodes[id_to_color[0][0]]['colors'] = 'k'
+            except:
+                # print(Exception)
+                pdb.set_trace()
+            # id_to_color = [tuple((y['x'][:3],node_to_color)) for z,y in graph.nodes(data=True)]
+            # pdb.set_trace()
+            id_of_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-1] >= y['x'][0] or y['x'][-6] >= y['x'][0])]
+            all_ids_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True)]# if (y['x'][-1] >= y['x'][0] or y['x'][-6] >= y['x'][0])]
+
+            # id_of_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-1] >= 0.5 or y['x'][-6] >= 0.5)]
+
+            for node in id_of_goal:
+                graph.nodes[node[0]]['colors'] = 'b'
+            
+
+            pdb.set_trace()
+
+            fil =  open(folder+fname, 'wb')
+            pickle.dump(graph, fil)   
+            fil.close()
             ''' TEMP BREAK'''
             # break
-            print(fileName)
-            # pdb.set_trace()
-            fl = pd.read_csv(folder + fileName)
-            fl.agent_states = fl.agent_states.apply(literal_eval)
-            fl.agent_sites = fl.agent_sites.apply(literal_eval)
-            fl.agent_positions = fl.agent_positions.apply(literal_eval)
-            # pdb.set_trace()
-            fl['currentState'] = fl.apply(lambda x: get_current_state_long(x.agent_states, x.agent_sites, x.agent_positions, entry[1][1], entry[1][0], int(entry[1][2])), axis=1)
-            IDLookup = get_unique_IDs(fl)
-            for nodePos, nodeID in IDLookup.items():
-                # pdb.set_trace()
-                graph.add_node(nodeID, x=nodePos)
-            fl['stateIDs'] = fl.apply(lambda x: IDLookup[round_function(x.currentState, 2)], axis=1)
-            fl['currentState'] = fl['currentState'].apply(lambda x: list(x))
-            # pdb.set_trace()
-            # prev_state = copy.deepcopy(fl.currentState.values[0])
-            prev_state_id = 0
-            for csid in fl.stateIDs.values:             
-            # for id, (cs, csid) in enumerate(zip(fl.currentState.values, fl.stateIDs.values)):
-                if graph.has_edge(prev_state_id, csid):
-                    graph[prev_state_id][csid]['weight'] += 1.0
-                else:
-                    graph.add_edge(prev_state_id, csid, weight=1.0)
-                # prev_state = copy.deepcopy(cs)
-                prev_state_id = copy.deepcopy(csid)
-        
-        fname = str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2]) + '.pickle'
-
-        meta_arr.append([entry[1][0], entry[1][1], entry[1][2], entry[1][6], list(np.nan_to_num(entry[1][5], nan=0.0, posinf=1.0, neginf=0.0))])
-        ''' PUNEET: TODO: TEST'''
-        fil =  open(folder_graph+fname, 'wb')
-        pickle.dump(graph, fil)   
-        fil.close() 
-        ''' TEMP BREAK'''
-        # break
-        # fil2 = open(new_metadata_file, 'wb')
-    df_new_metadata = pd.DataFrame(meta_arr, columns=['qualities', 'positions', 'agents', 'time_converged', 'site_converged'])
-    df_new_metadata.to_csv(new_metadata_file)
 
 
 main()

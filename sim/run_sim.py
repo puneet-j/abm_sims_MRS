@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from helper_functions import *
 import multiprocessing
-
+import os
 
 def generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats):
     worlds = []
@@ -30,15 +30,19 @@ def simulate_world(sim, world):
 if __name__ == '__main__':
     site_configs = [2]#[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
     distances = [100, 200]#, 300]#, 300]
-    agent_configs = [5] #[5, 20, 50, 100, 200]
-    sims_per_config = 5 #20
-    sims_per_distance = 5 #20
-    sim_repeats = 5
-    fold_name = 'results_for_graphs'
+    agent_configs = [5, 10, 20] #[5, 20, 50, 100, 200]
+    sims_per_config = 20 #20
+    sims_per_distance = 1 #20
+    sim_repeats = 20
+    fold_name = 'test_results'
     fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
     empty = pd.DataFrame([], columns=df_metadata_cols)
-    empty.to_csv(fname_metadata)
+    file_exists = os.path.exists(fname_metadata)
+    if file_exists:
+        empty.to_csv(fname_metadata, mode='a', header=False, index=False)
+    else:
+        empty.to_csv(fname_metadata, index=False)
     worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats)
     # pdb.set_trace()
 
