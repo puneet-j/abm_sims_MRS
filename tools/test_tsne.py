@@ -107,7 +107,7 @@ for row in metadata.iterrows():
             sampled_graph = dat
             # pos = nx.spring_layout(sampled_graph)#, pos=positions)
             # pos = nx.nx_pydot.graphviz_layout(sampled_graph)
-            
+            ''' NEATO'''
             fil_pos = open('poses_test.pickle', 'rb')
             pos = pickle.load(fil_pos)
             fil_pos.close()
