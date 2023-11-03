@@ -67,7 +67,9 @@ def get_flattened_state(arr):
                                     flat_arr.append(d)
                                 else:
                                     pdb.set_trace()
-    
+    # return np.hstack([np.array(a).flatten() if isinstance(a, (np.ndarray, list)) else a for a in arr])
+
+
     # if len(flat_arr)!=203:
     # pdb.set_trace()
     # else:
@@ -163,18 +165,39 @@ def round_function(x, d):
     # pdb.set_trace()
     return tuple(new)
 
-def get_unique_IDs(fl):
+def get_unique_IDs(fl, dict_old, nodeSize):
     states_unique = np.unique(fl.currentState.apply(lambda x: round_function(x, 2)))
     # pdb.set_trace()
-    dict_new = {}
+    # dict_new = copy.deepcopy(dict_old)
     for i in range(len(states_unique)):
-        dict_new[states_unique[i]] = i
-    return dict_new
+        if states_unique[i] in dict_old:
+                nodeSize[states_unique[i]] += 1.0
+        else:
+            # pdb.set_trace()
+            dict_old[states_unique[i]] = len(dict_old)
+            nodeSize[states_unique[i]] = 1.0
+    return dict_old, nodeSize
 
 # def get_qual_from_string(st):_TO_ASSESS
 #     new = st.replace("(","").replace(")","").replace("[","").replace("]","").replace(",","").split()
 #     pdb.set_trace()
 # # def update_edge()
+
+def get_edges(fl, IDLookup, get_edges_with):
+    fl['stateIDs'] = fl.apply(lambda x: IDLookup[round_function(x.currentState, 2)], axis=1)
+    fl['currentState'] = fl['currentState'].apply(lambda x: list(x))
+    # pdb.set_trace()
+    # prev_state = copy.deepcopy(fl.currentState.values[0])
+    # prev_state_id = 0
+    for id, csid in enumerate(fl.stateIDs.values):
+        if id+1 == len(fl.stateIDs.values):
+            break
+        if csid in get_edges_with:
+            get_edges_with[csid].append(fl.stateIDs.values[id+1])
+        else:
+            get_edges_with[csid] = [fl.stateIDs.values[id+1]]
+
+    return get_edges_with
 
 def main():
     folder = './test_results/'
@@ -183,7 +206,7 @@ def main():
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph = './graphs/random_test/'
+    folder_graph = './graphs/random_test2/'
     new_metadata_file = folder_graph + 'metadata.csv'
     # df_new_metadata = pd.DataFrame([], columns=['qualities', 'positions', 'agents'])
     meta_arr = []
@@ -195,47 +218,61 @@ def main():
     # pdb.set_trace()
     df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
     
-    for entry in df.iterrows():
+    for some_id, entry in enumerate(df.iterrows()):
+        if some_id == 0:
+            continue
         print(entry)
         graph = nx.Graph()
+        IDLookup = dict()
+        nodeSize = dict()
+        has_edges_with = dict()
         for fileName in entry[1][3]:
             ''' TEMP BREAK'''
             # break
-            print(fileName)
-            # pdb.set_trace()
+            # print(fileName)
+
             fl = pd.read_csv(folder + fileName)
             fl.agent_states = fl.agent_states.apply(literal_eval)
             fl.agent_sites = fl.agent_sites.apply(literal_eval)
             fl.agent_positions = fl.agent_positions.apply(literal_eval)
             # pdb.set_trace()
             fl['currentState'] = fl.apply(lambda x: get_current_state_long(x.agent_states, x.agent_sites, x.agent_positions, entry[1][1], entry[1][0], int(entry[1][2])), axis=1)
-            IDLookup = get_unique_IDs(fl)
-            for nodePos, nodeID in IDLookup.items():
-                # pdb.set_trace()
-                graph.add_node(nodeID, x=nodePos)
-            fl['stateIDs'] = fl.apply(lambda x: IDLookup[round_function(x.currentState, 2)], axis=1)
-            fl['currentState'] = fl['currentState'].apply(lambda x: list(x))
-            # pdb.set_trace()
-            # prev_state = copy.deepcopy(fl.currentState.values[0])
-            prev_state_id = 0
-            for csid in fl.stateIDs.values:             
-            # for id, (cs, csid) in enumerate(zip(fl.currentState.values, fl.stateIDs.values)):
-                if graph.has_edge(prev_state_id, csid):
-                    graph[prev_state_id][csid]['weight'] += 1.0
-                else:
-                    graph.add_edge(prev_state_id, csid, weight=1.0)
-                # prev_state = copy.deepcopy(cs)
-                prev_state_id = copy.deepcopy(csid)
-        
-        fname = str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2]) + '.pickle'
+            IDLookup, nodeSize = get_unique_IDs(fl, IDLookup, nodeSize)
+            # print(len(IDLookup))
+            # print(len(nodeSize))
+            # get_edges(IDLo)
+            # if fileName=='1695410459226961.csv':
+            #     pdb.set_trace()
+            
+            has_edges_with = get_edges(fl, IDLookup, has_edges_with)
+            # print(len(has_edges_with))
 
+        # pdb.set_trace()        
+        ''' ADD NODES, NODE SIZES, and EDGES WITH WEIGHTS'''
+        for nodePos, nodeID in IDLookup.items():
+            # pdb.set_trace()
+            graph.add_node(nodeID, x=nodePos, sz=nodeSize[nodePos])
+
+        # for nS, nodeID in nodeSize.items():
+        #     graph.nodes[nodeID]['size'] = nS
+
+        for node,value in has_edges_with.items():
+            for edge_to in value:
+                if graph.has_edge(node, edge_to):
+                    graph[node][edge_to]['weight'] += 1.0
+                else:
+                    graph.add_edge(node, edge_to, weight=1.0)
+
+        # pdb.set_trace()
+        fname = str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2]) + '.pickle'
+        # pdb.set_trace()
         meta_arr.append([entry[1][0], entry[1][1], entry[1][2], entry[1][6], list(np.nan_to_num(entry[1][5], nan=0.0, posinf=1.0, neginf=0.0))])
         ''' PUNEET: TODO: TEST'''
         fil =  open(folder_graph+fname, 'wb')
         pickle.dump(graph, fil)   
         fil.close() 
         ''' TEMP BREAK'''
-        # break
+        break
         # fil2 = open(new_metadata_file, 'wb')
     df_new_metadata = pd.DataFrame(meta_arr, columns=['qualities', 'positions', 'agents', 'time_converged', 'site_converged'])
     df_new_metadata.to_csv(new_metadata_file)

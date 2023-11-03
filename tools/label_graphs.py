@@ -180,15 +180,13 @@ def get_unique_IDs(fl):
 #     pdb.set_trace()
 # # def update_edge()
 
-def get_start_state(which_state, q):
-    q0 = q[0]
-    q1 = q[1]
+def get_start_state(which_state):
     if which_state == 0:
-        return (0.5, 0.0, 1.0)
+        return (0.0, 1.0)
     elif which_state == 1:
-        return (0.5, 0.5, 0.5)
+        return (0.5, 0.5)
     elif which_state == 2:
-        return (0.5, 0.0, 0.9)
+        return (0.0, 0.9)
         # return     [0.5, 0.0, 1.0, 
         #             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 
         #             1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 1,1,0,1.0, 
@@ -196,7 +194,7 @@ def get_start_state(which_state, q):
         #             0,1,0,q0,0.0, 1,0,0, q1, 0.0,
         #             0,1,0,q0,0.0, 1,0,0, q1, 0.0]
 def main():
-    folder = './graphs/new/'
+    folder = './graphs/random_test2/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.pickle')]
     files = np.sort(files)
@@ -229,18 +227,23 @@ def main():
 
 
     for id, row in enumerate(metadata.iterrows()):
-        if id == 0:
-            continue 
+        if id == 10:
+            pass
+            # continue 
         else:
             # pdb.set_trace()
             fname = str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
-            fil =  open(folder+fname, 'rb')
-            graph = pickle.load(fil)
-            fil.close()
+            try:
+                fil =  open(folder+fname, 'rb')
+                graph = pickle.load(fil)
+                fil.close()
+            except:
+                continue
             qual = row[1][1]
-            node_to_color = tuple(get_start_state(0,qual))
-            id_to_color = [tuple((z, y['x'][:3],node_to_color)) for z,y in graph.nodes(data=True) if y['x'][:3] == node_to_color]
-            all_ids_start = [tuple((z, y['x'][:3])) for z,y in graph.nodes(data=True)]# if y['x'][:3] == node_to_color]
+            node_to_color = [tuple(get_start_state(0)), tuple(get_start_state(1)), tuple(get_start_state(2))]
+            id_to_color = [tuple((z, y['x'][1:3],node_to_color)) for z,y in graph.nodes(data=True) if y['x'][1:3] in node_to_color]
+            # id_to_color = [tuple((z, y['x'][1:3],(0.0, 1.0))) for z,y in graph.nodes(data=True) if y['x'][1:3] == (0.0, 1.0)]
+            # all_ids_start = [tuple((z, y['x'][1:3])) for z,y in graph.nodes(data=True)]# if y['x'][:3] == node_to_color]
             colors = 'r'#['r' for i in range(len(graph.nodes))]
             nx.set_node_attributes(graph, colors, 'colors')
             try:
@@ -248,20 +251,27 @@ def main():
             except:
                 # print(Exception)
                 pdb.set_trace()
+
+
+
+            
             # id_to_color = [tuple((y['x'][:3],node_to_color)) for z,y in graph.nodes(data=True)]
             # pdb.set_trace()
-            id_of_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-1] >= y['x'][0] or y['x'][-6] >= y['x'][0])]
-            all_ids_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True)]# if (y['x'][-1] >= y['x'][0] or y['x'][-6] >= y['x'][0])]
+            id_of_goal1 = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-1] >= y['x'][0])]
+            # all_ids_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True)]# if (y['x'][-1] >= y['x'][0] or y['x'][-6] >= y['x'][0])]
 
             # id_of_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-1] >= 0.5 or y['x'][-6] >= 0.5)]
+            id_of_goal2 = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-6] >= y['x'][0])]
 
-            for node in id_of_goal:
+            for node in id_of_goal1:
                 graph.nodes[node[0]]['colors'] = 'b'
-            
+            for node in id_of_goal2:
+                graph.nodes[node[0]]['colors'] = 'g'      
 
+            print(fname)
             pdb.set_trace()
 
-            fil =  open(folder+fname, 'wb')
+            fil =  open(folder+'_'+fname, 'wb')
             pickle.dump(graph, fil)   
             fil.close()
             ''' TEMP BREAK'''

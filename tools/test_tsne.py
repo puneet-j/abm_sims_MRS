@@ -38,7 +38,7 @@ import plotly.express as px
 from collections import Counter
 from torch_geometric.utils import to_networkx
 
-folder = './graphs/new/'
+folder = './graphs/random_test2/'
 print(os.listdir('.'))
 files = os.listdir(folder)
 files = [file for file in files if file.endswith('.pickle')]
@@ -80,13 +80,13 @@ from params import *
 
 counter = 0
 for row in metadata.iterrows():
-    if counter == 0:
-        counter += 1
+    if counter == 10:
+        # counter += 1
         continue
         
     else:        
         # pdb.set_trace()
-        fname = folder + str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
+        fname = folder +'_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
         fil =  open(fname, 'rb')
         dat = pickle.load(fil)
         fil.close()
@@ -102,17 +102,37 @@ for row in metadata.iterrows():
             print('2')
             # k = 1000
             # sampled_nodes = random.sample(list(dat.nodes), k)
+            # dat = dat.subgraph(sampled_nodes)
+            # pdb.set_trace()
             sampled_graph = dat
-            pos = nx.nx_pydot.graphviz_layout(sampled_graph)
+            # pos = nx.spring_layout(sampled_graph)#, pos=positions)
+            # pos = nx.nx_pydot.graphviz_layout(sampled_graph)
+            
+            fil_pos = open('poses_test.pickle', 'rb')
+            pos = pickle.load(fil_pos)
+            fil_pos.close()
             print('3')
-            nx.draw_networkx(sampled_graph, pos, with_labels=False, node_size = 50.0) #pos=nx.spring_layout(sampled_graph),
+            sizes_ = [10.0*a for a in nx.get_node_attributes(sampled_graph, 'sz').values()]
+            positions = [a for a in nx.get_node_attributes(sampled_graph, 'x').values()]
+            colors_ = [a for a in nx.get_node_attributes(sampled_graph, 'colors').values()]
+            alphas = [0.1 if a=='r' else 1.0 for a in colors_]
+            sizes_ = [s*0.1 if r=='r' else s for s,r in zip(sizes_, colors_)]
+            sizes_ = [s*10.0 if r=='g' else s for s,r in zip(sizes_, colors_)]
+            # plt.figure(0)
+            # pdb.set_trace()
+            try:
+                nx.draw_networkx_nodes(sampled_graph, pos, node_size=sizes_, node_color=colors_, alpha=alphas) #pos=nx.spring_layout(sampled_graph),
+            except:
+                pdb.set_trace()
             for edge in sampled_graph.edges(data='weight'):
-                nx.draw_networkx_edges(sampled_graph, pos, edgelist=[edge], width=edge[2])
-            plt.savefig("filename4.png")
+                nx.draw_networkx_edges(sampled_graph, pos, edgelist=[edge], width=0.2*edge[2])
+            plt.savefig("test_random2.png")
             print(sampled_graph.number_of_edges())
-        # pdb.set_trace()
+        pdb.set_trace()
         data = GraphDataset(fname,  train_percent, num_neighbors_sampling).pyg_graph
-        
+        fil =  open(folder+fname+'_', 'wb')
+        pickle.dump(graph, fil)   
+        fil.close()
         # break
 
     #     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
