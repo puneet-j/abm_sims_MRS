@@ -92,9 +92,7 @@ for row in metadata.iterrows():
         fil.close()
         num_neighbors_sampling = [5] * 2
         train_percent = 0.8
-        # k = 1000
-        # sampled_nodes = random.sample(list(self.dat.nodes), k)
-        # dat = dat.subgraph(sampled_nodes)
+
         draw = False
         print('1')
         
@@ -118,6 +116,7 @@ for row in metadata.iterrows():
         alphas = [0.2 if a=='r' else 1.0 for a in colors_]
         sizes_ = [s*0.1 if r=='r' else s for s,r in zip(sizes_, colors_)]
         sizes_ = [s*10.0 if r=='g' else s for s,r in zip(sizes_, colors_)]
+        colors_plotly = ['rgb(255, 0, 0)' if r=='r' else 'rgb(0, 0, 255)' if r=='b' else 'rgb(0, 0, 0)' for r in colors_]
         # plt.figure(0)
         # pdb.set_trace()
         if draw:
@@ -133,65 +132,16 @@ for row in metadata.iterrows():
         
         # pdb.set_trace()
         data = GraphDataset(fname,  train_percent, num_neighbors_sampling).pyg_graph
-        # fil =  open(folder+fname+'_', 'wb')
-        # pickle.dump(graph, fil)   
-        # fil.close()
-        # break
-
-    #     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    #     data = data.to(device, 'x', 'edge_index')
-    #     # print('using device', device)
-    #     model = GraphSAGE(
-    #         in_channels=len(data.x[0]),
-    #         hidden_channels=128,
-    #         num_layers=2,
-    #         out_channels=OUTPUT_DIM,
-    #     ).to(device)
-
-    #     # model = GraphSAGE()
-    #     model.load_state_dict(torch.load('./models/' + str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pt'))
-
-    #     # Print model's state_dict
-    #     print("Model's state_dict:")
-    #     for param_tensor in model.state_dict():
-    #         print(param_tensor, "\t", model.state_dict()[param_tensor].size())
-
-
-    
-
-        # embeddings = test()
-        # # pdb.set_trace()
-        # print(len(embeddings))
-        # tsne = TSNE(2)
-        # two_d = tsne.fit_transform(embeddings)
-        # c = Counter(zip(two_d[:,0],two_d[:,1]))
-        # weights = [100 + 0.01*c[(i,j)] for i,j in zip(two_d[:,0],two_d[:,1])]
-        # # pdb.set_trace()
-        # fig1 = px.scatter(x=two_d[:,0], y=two_d[:,1], size= weights)
-        # fig1.write_html('./figures/'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
-        # plt.figure()
-        # plt.scatter(two_d[:, 0], two_d[:, 1], s=weights, alpha=0.4)
-        # # plt.savefig('./figures/'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.fig')
-        # plt.savefig('./figures/'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.png')
-        
+ 
         # print(len(data))
         tsne2 = TSNE(2)
         two_d2 = tsne2.fit_transform(data.x)
         # # pdb.set_trace()
         c = Counter(zip(two_d2[:,0],two_d2[:,1]))
         weights = [100 + 0.01*c[(i,j)] for i,j in zip(two_d2[:,0],two_d2[:,1])]
-        # plt.figure()
-        # fig2 = px.scatter(x=two_d2[:,0], y=two_d2[:,1], size=weights)
-        # fig2.write_html('original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
-        # plt.figure()
-        import plotly.express as px
-        fig = px.scatter(x=two_d2[:, 0], y=two_d2[:, 1],  size=sizes_, opacity=alphas, color=colors_)
-        
-        # # plt.savefig('./figures/original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.fig')
+        fig = px.scatter(x=two_d2[:, 0], y=two_d2[:, 1],  size=sizes_, opacity=alphas)#, color=colors_plotly)
         fig.write_html('original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
-        # plt.savefig('original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.png')
-
+        '''
         x=tuple(data.edge_index.numpy())
         start = x[0]
         end = x[1]
@@ -199,12 +149,10 @@ for row in metadata.iterrows():
         nodes = two_d2
         # try:
         lines = [tuple((nodes[e[0]], nodes[e[1]], e[2])) for e in edges]
-        # except:
-            # pdb.set_trace()
+
         lines2 = []
         for line in lines:
             if np.all([l1==l2 for l1,l2 in zip(line[0],line[1])]):
-                # print(line[0],line[1])
                 continue
             else:
                 lenline = np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2)
@@ -214,25 +162,11 @@ for row in metadata.iterrows():
 
                 # print('len line:', np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2))
         print(len(lines2))
-        # pdb.set_trace()
-        # lines3 = np.array(lines2[:9946])
+
         for line in lines2:
             # pdb.set_trace()
             fig.add_trace(px.line(line[:2], line[2:4], width=10+line[4]).data[0])
-        # fig.update_traces(opacity=.2)
-            # plt.plot([line[0][0],line[1][0]],[line[0][1], line[1][1]], 'r', linewidth=line[2]/10.0, alpha=0.4)
-        # plt.show()
-        # g2 = nx.Graph()
-        # g2.add_nodes_from(two_d2[0])
-        # g2.add_weighted_edges_from(new)
-        # # pdb.set_trace()
-        # pos2 = nx.planar_layout(g2)
-        # plt.figure()
-        # nx.draw_networkx(g2, pos2, with_labels=False, node_size = 50.0)
-        # plt.savefig('only_nodes.png')
-        # for edge in g2.edges(data='weight'):
-        #     # pdb.set_trace()
-        #     nx.draw_networkx_edges(g2, pos2, edgelist=[edge], width=edge[2])
+
         fig.write_html('with_edges_original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
-        # plt.savefig("with_edges.png")
-        pdb.set_trace()
+        # plt.savefig("with_edges.png") '''
+        # pdb.set_trace()

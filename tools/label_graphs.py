@@ -269,7 +269,7 @@ def main():
                 graph.nodes[node[0]]['colors'] = 'g'      
 
             print(fname)
-            pdb.set_trace()
+            # pdb.set_trace()
 
             fil =  open(folder+'_'+fname, 'wb')
             pickle.dump(graph, fil)   
