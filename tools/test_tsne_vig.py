@@ -132,82 +132,62 @@ for row in metadata.iterrows():
 
 
         # print(len(data))
-        tsne2 = TSNE(n_components=3)
+        tsne2 = TSNE(n_components=2)
         two_d2 = tsne2.fit_transform(data.x)
-        # pdb.set_trace()
-        # c = Counter(zip(two_d2[:,0],two_d2[:,1]))
-        # weights = [100 + 0.01*c[(i,j)] for i,j in zip(two_d2[:,0],two_d2[:,1])]
-        dict_twod = {'x': list(two_d2[:,0]), 'y': list(two_d2[:,1]), 'z': list(two_d2[:,2]), 'colors': colors_plotly}
-        # from bokeh.transform import factor_cmap
-        # color_map = factor_cmap('colors', palette=['red', 'green', 'blue'], factors=dict_twod['colors'])
+        tsne3 = TSNE(n_components=3)
+        d3Trans = tsne3.fit_transform(data.x)
+        dict_twod = {'x': list(two_d2[:,0]), 'y': list(two_d2[:,1]), 'colors': colors_plotly}
+        dict_3d = {'x': list(d3Trans[:,0]), 'y': list(d3Trans[:,1]), 'z': list(d3Trans[:,2]), 'colors': colors_plotly}
 
-        # bokeh code
-
-        # plot = figure(title="Networkx Integration Demonstration")
-        # # pdb.set_trace()
-        # plot.circle('x', 'y', 'z', size=20, source=dict_twod, color='colors')
-        # show(plot)
-        # output_file("interactive_plot.html")
-        # save(plot)
-
-        # plt.plot3d(dict_twod['x'], dict_twod['y'], dict_twod['z'], scale_factor=1)
-        # mlab.savefig('my_mayavi_plot.png')
-        # mlab.show()
         from mpl_toolkits.mplot3d import Axes3D
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
         # Scatter plot
-        scatter = ax.scatter(dict_twod['x'], dict_twod['y'], dict_twod['z'], c=dict_twod['colors'], alpha=alphas_, s=sizes_)
+        scatter = ax.scatter(dict_3d['x'], dict_3d['y'], dict_3d['z'], c=dict_3d['colors'], alpha=alphas_, s=sizes_)
 
         # Labeling axes
         ax.set_xlabel('X axis')
         ax.set_ylabel('Y axis')
         ax.set_zlabel('Z axis')
-        plt.axis('off')
+        # plt.axis('off')
 
         # Show plot
         plt.show()
-        plt.pause(10)
-        # plt.savefig("3d.png")
-        # graph_renderer = from_networkx(sampled_graph, positions_)
-        # graph_renderer.node_renderer.glyph.size = 'sizes_'  
-        # graph_renderer.node_renderer.glyph.fill_color = 'colors_' 
-        # plot.renderers.append(graph_renderer)
-        # hover = HoverTool(tooltips=[("index", "@index")])  
-        # plot.add_tools(hover)
-        # show(plot)
+        # plt.pause(10)
+    
         
-        # fig = px.scatter(x=two_d2[:, 0], y=two_d2[:, 1],  size=sizes_, opacity=alphas, color=colors_plotly)
-        # fig.write_html('original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
-        # fig.write_image('original_' + str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.png')
-        '''
         x=tuple(data.edge_index.numpy())
         start = x[0]
         end = x[1]
         edges = [tuple((a,b,c)) for a,b,c in zip(start,end, data.weight.numpy())]
-        nodes = two_d2
+        nodes = d3Trans
+        pdb.set_trace()
         # try:
-        lines = [tuple((nodes[e[0]], nodes[e[1]], e[2])) for e in edges]
+        lines = [[[nodes[e[0]][0], nodes[e[1]][0]],
+                        [nodes[e[0]][1], nodes[e[1]][1]],
+                           [nodes[e[0]][2], nodes[e[1]][2]]] for e in edges]
 
-        lines2 = []
-        for line in lines:
-            if np.all([l1==l2 for l1,l2 in zip(line[0],line[1])]):
-                continue
-            else:
-                lenline = np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2)
-                if lenline > 1:
-                    # print(line)
-                    lines2.append(np.array([line[0][0], line[1][0], line[0][1], line[1][1], line[2]]))
+        # lines2 = []
+        # for line in lines:
+        #     if np.all([l1==l2 for l1,l2 in zip(line[0],line[1])]):
+        #         continue
+        #     else:
+        #         lenline = np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2)
+        #         if lenline > 1:
+        #             # print(line)
+        #             lines2.append(np.array([line[0][0], line[1][0], line[0][1], line[1][1], line[2]]))
 
                 # print('len line:', np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2))
-        print(len(lines2))
+        # print(len(lines2))
 
-        for line in lines2:
+        for line in lines:
             # pdb.set_trace()
-            fig.add_trace(px.line(line[:2], line[2:4], width=10+line[4]).data[0])
+            ax.plot(line[0], line[1], line[2], color='g', alpha=0.1)
+            # fig.add_trace(plt.plot(line[:2], line[2:4], width=10+line[4]).data[0])
 
-        fig.write_html('with_edges_original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
-        # plt.savefig("with_edges.png") '''
+        # fig.write_html('with_edges_original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
+        plt.show()
+        plt.savefig("with_edges_3d.png") 
         # pdb.set_trace()
