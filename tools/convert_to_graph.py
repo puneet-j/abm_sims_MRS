@@ -68,12 +68,6 @@ def get_flattened_state(arr):
                                 else:
                                     pdb.set_trace()
     # return np.hstack([np.array(a).flatten() if isinstance(a, (np.ndarray, list)) else a for a in arr])
-
-
-    # if len(flat_arr)!=203:
-    # pdb.set_trace()
-    # else:
-    #     print(len(flat_arr))
     return flat_arr
 
 def fix_non_full(TO, TA, TR, A, R, sq, nA):
@@ -110,8 +104,7 @@ def get_current_state_long(astate, asite, apose, sitePoses, siteQuals, numAg):
     A = []
     R = []
     # pdb.set_trace()
-    # sitePoses=get_qual_from_string(sitePoses)
-    # siteQuals=get_qual_from_string(siteQuals)
+
     for site, state, pose in zip(asite, astate, apose):
         if state == 'EXPLORE':
             explorers += 1
@@ -127,13 +120,9 @@ def get_current_state_long(astate, asite, apose, sitePoses, siteQuals, numAg):
     for site in range(len(siteQuals)):
         R.append(get_assessors_or_recruiters(site, astate, asite, 'RECRUIT', siteQuals))
         A.append(get_assessors_or_recruiters(site, astate, asite, 'ASSESS', siteQuals))
-    # R.append([oneHotSiteVector(len(sitePoses), site), siteQuals[site], get_assessors_or_recruiters(site, astate, asite, 'DANCE')*1.0/numAg])
-    # A.append([oneHotSiteVector(len(sitePoses), site), siteQuals[site], get_assessors_or_recruiters(site, astate, asite, 'ASSESS')*1.0/numAg])
     TO, TA, TR, A, R = fix_non_full(TO, TA, TR, A, R, siteQuals, numAg)
     # pdb.set_trace()
     current_state = get_flattened_state([COMMIT_THRESHOLD, explorers*1.0/numAg, observers*1.0/numAg, TO, TA, TR, A, R])
-    # print(np.shape(current_state))
-    # pdb.set_trace()
     return tuple(current_state)#.reshape(np.shape(current_state)[0]*np.shape(current_state)[1]*np.shape(current_state)[2]))
 
 
@@ -166,38 +155,47 @@ def round_function(x, d):
     return tuple(new)
 
 def get_unique_IDs(fl, dict_old, nodeSize):
-    states_unique = np.unique(fl.currentState.apply(lambda x: round_function(x, 2)))
-    # pdb.set_trace()
-    # dict_new = copy.deepcopy(dict_old)
+    states_unique = np.unique(fl.currentState.apply(lambda x: round_function(x, 3)))
+
     for i in range(len(states_unique)):
         if states_unique[i] in dict_old:
-                nodeSize[states_unique[i]] += 1.0
+            nodeSize[states_unique[i]] += 1.0
         else:
             # pdb.set_trace()
             dict_old[states_unique[i]] = len(dict_old)
             nodeSize[states_unique[i]] = 1.0
     return dict_old, nodeSize
 
-# def get_qual_from_string(st):_TO_ASSESS
-#     new = st.replace("(","").replace(")","").replace("[","").replace("]","").replace(",","").split()
-#     pdb.set_trace()
-# # def update_edge()
 
-def get_edges(fl, IDLookup, get_edges_with):
-    fl['stateIDs'] = fl.apply(lambda x: IDLookup[round_function(x.currentState, 2)], axis=1)
-    fl['currentState'] = fl['currentState'].apply(lambda x: list(x))
-    # pdb.set_trace()
-    # prev_state = copy.deepcopy(fl.currentState.values[0])
-    # prev_state_id = 0
-    for id, csid in enumerate(fl.stateIDs.values):
+def get_edges_success_time(fl, IDLookup, get_edges_with, success_dict, time_dict, success, time_conv):
+    fl['stateIDs'] = fl.apply(lambda x: IDLookup[round_function(x.currentState, 3)], axis=1)
+    # fl['currentState'] = fl['currentState'].apply(lambda x: list(x))
+    # tempstate =  fl.apply(lambda x: round_function(x.currentState, 3), axis=1)
+    # for st in tempstate:
+    #     if st == (0.5, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 0, 0, 1, 0.001, 0, 0, 1, 0.001, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 0, 1, 0, 0.016, 0.0, 0, 0, 1, 0.98, 0.2, 0, 1, 0, 0.016, 0.0, 0, 0, 1, 0.98, 0.6):
+    #         pdb.set_trace()
+    for id, (csid, time_val) in enumerate(zip(fl.stateIDs.values, fl.time.values)):
+        if csid in time_dict:
+            time_dict[csid].append(time_conv - time_val)
+        else:
+            time_dict[csid] = [time_conv - time_val]
+
+        if csid in success_dict:
+            success_dict[csid].append(success)
+        else:
+            success_dict[csid] = [success]
+        
         if id+1 == len(fl.stateIDs.values):
             break
         if csid in get_edges_with:
             get_edges_with[csid].append(fl.stateIDs.values[id+1])
         else:
             get_edges_with[csid] = [fl.stateIDs.values[id+1]]
+        # if csid == 88:
+        #     pdb.set_trace()
 
-    return get_edges_with
+
+    return get_edges_with, success_dict, time_dict
 
 def main():
     folder = './test_results/'
@@ -208,14 +206,11 @@ def main():
     metadata_file = folder + 'metadata.csv'
     folder_graph = './graphs/random_test2/'
     new_metadata_file = folder_graph + 'metadata.csv'
-    # df_new_metadata = pd.DataFrame([], columns=['qualities', 'positions', 'agents'])
     meta_arr = []
     metadata = pd.read_csv(metadata_file) 
     metadata.site_qualities=metadata.site_qualities.apply(literal_eval)
     metadata.site_positions=metadata.site_positions.apply(literal_eval)
-    # pdb.set_trace()
     metadata.site_positions=metadata.site_positions.apply(lambda x: tuple([tuple(a) for a in x]))
-    # pdb.set_trace()
     df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
     
     for some_id, entry in enumerate(df.iterrows()):
@@ -226,35 +221,27 @@ def main():
         IDLookup = dict()
         nodeSize = dict()
         has_edges_with = dict()
-        for fileName in entry[1][3]:
+        success_dict = dict()
+        time_dict = dict()
+        for fileName, site_conv, time_conv in zip(entry[1][3], entry[1][5], entry[1][6]):
             ''' TEMP BREAK'''
-            # break
-            # print(fileName)
-
+            quals = entry[1][0]
             fl = pd.read_csv(folder + fileName)
             fl.agent_states = fl.agent_states.apply(literal_eval)
             fl.agent_sites = fl.agent_sites.apply(literal_eval)
             fl.agent_positions = fl.agent_positions.apply(literal_eval)
             # pdb.set_trace()
+            success_now = 1 if site_conv == max(quals) else 0
+            
+            # pdb.set_trace()
             fl['currentState'] = fl.apply(lambda x: get_current_state_long(x.agent_states, x.agent_sites, x.agent_positions, entry[1][1], entry[1][0], int(entry[1][2])), axis=1)
             IDLookup, nodeSize = get_unique_IDs(fl, IDLookup, nodeSize)
-            # print(len(IDLookup))
-            # print(len(nodeSize))
-            # get_edges(IDLo)
-            # if fileName=='1695410459226961.csv':
-            #     pdb.set_trace()
-            
-            has_edges_with = get_edges(fl, IDLookup, has_edges_with)
-            # print(len(has_edges_with))
 
-        # pdb.set_trace()        
+            has_edges_with, success_dict, time_dict = get_edges_success_time(fl, IDLookup, has_edges_with, success_dict, time_dict, success_now, time_conv)
+        # pdb.set_trace()
         ''' ADD NODES, NODE SIZES, and EDGES WITH WEIGHTS'''
         for nodePos, nodeID in IDLookup.items():
-            # pdb.set_trace()
-            graph.add_node(nodeID, x=nodePos, sz=nodeSize[nodePos])
-
-        # for nS, nodeID in nodeSize.items():
-        #     graph.nodes[nodeID]['size'] = nS
+            graph.add_node(nodeID, x=nodePos, sz=nodeSize[nodePos], success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID]))
 
         for node,value in has_edges_with.items():
             for edge_to in value:
