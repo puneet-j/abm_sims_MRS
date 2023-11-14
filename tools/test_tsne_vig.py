@@ -134,8 +134,10 @@ for row in metadata.iterrows():
         # print(len(data))
         tsne2 = TSNE(n_components=2)
         two_d2 = tsne2.fit_transform(data.x)
+
         tsne3 = TSNE(n_components=3)
         d3Trans = tsne3.fit_transform(data.x)
+
         dict_twod = {'x': list(two_d2[:,0]), 'y': list(two_d2[:,1]), 'colors': colors_plotly}
         dict_3d = {'x': list(d3Trans[:,0]), 'y': list(d3Trans[:,1]), 'z': list(d3Trans[:,2]), 'colors': colors_plotly}
 
@@ -154,10 +156,29 @@ for row in metadata.iterrows():
         # plt.axis('off')
 
         # Show plot
-        plt.show()
+        # plt.show()
         # plt.pause(10)
-    
+        # pdb.set_trace()
+        nodes_to_plot_edges = []
+        # plot all edges between blue nodes. 
+        for k, (x,y,z,c) in enumerate(zip(dict_3d['x'],dict_3d['y'],dict_3d['z'], dict_3d['colors'])):
+            if c == 'blue':
+                nodes_to_plot_edges.append(tuple([x,y,z]))
+        # pdb.set_trace()
+
+        edges_to_plot = set()
+        for i in range(len(nodes_to_plot_edges)):
+            for j in range(i+1, len(nodes_to_plot_edges)):
+                edges_to_plot.add(tuple([nodes_to_plot_edges[i], nodes_to_plot_edges[j]]))
+
+
+        for point in edges_to_plot:
+            # for point2 in edges_to_plot[point1]:
+                ax.plot([point[0][0], point[1][0]], [point[0][1], point[1][1]], [point[0][2], point[1][2]], 'k--', alpha=0.1)
+        plt.show()
         
+        '''
+        # this plots all edges..?
         x=tuple(data.edge_index.numpy())
         start = x[0]
         end = x[1]
@@ -168,7 +189,7 @@ for row in metadata.iterrows():
         lines = [[[nodes[e[0]][0], nodes[e[1]][0]],
                         [nodes[e[0]][1], nodes[e[1]][1]],
                            [nodes[e[0]][2], nodes[e[1]][2]]] for e in edges]
-
+        # filter out lines by length
         # lines2 = []
         # for line in lines:
         #     if np.all([l1==l2 for l1,l2 in zip(line[0],line[1])]):
@@ -189,5 +210,5 @@ for row in metadata.iterrows():
 
         # fig.write_html('with_edges_original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
         plt.show()
-        plt.savefig("with_edges_3d.png") 
+        plt.savefig("with_edges_3d.png") '''
         # pdb.set_trace()

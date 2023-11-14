@@ -30,11 +30,11 @@ def simulate_world(sim, world):
 if __name__ == '__main__':
     site_configs = [2]#[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
     distances = [100, 200]#, 300]#, 300]
-    agent_configs = [5, 10, 20] #[5, 20, 50, 100, 200]
-    sims_per_config = 20 #20
+    agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
+    sims_per_config = 10 #20
     sims_per_distance = 1 #20
-    sim_repeats = 20
-    fold_name = 'test_results'
+    sim_repeats = 10
+    fold_name = 'new_results'
     fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
     empty = pd.DataFrame([], columns=df_metadata_cols)

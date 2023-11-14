@@ -1,6 +1,6 @@
 import numpy as np
 from params import *
-
+import random
 
 def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
@@ -19,9 +19,12 @@ def get_all_OBSERVE(agents):
 def get_half_explore(agents):
     new_list = []
     prob_explore = 0.5
-    for a in range(0,agents):
+    agents_explore = int(np.floor(0.5*agents))
+    explore_and_observe = [1]*agents_explore + [0]*(agents - agents_explore)
+    random.shuffle(explore_and_observe)
+    for a in explore_and_observe:
         new_dict = {}
-        if np.random.random() < prob_explore:
+        if a==1:
             new_dict['pose'] = [2000.0 * np.random.random() - 1000.0, 2000.0 * np.random.random() - 1000.0]
             new_dict['state'] = 'EXPLORE'
             new_dict['speed'] = AGENT_SPEED
@@ -39,10 +42,12 @@ def get_half_explore(agents):
 
 def get_10perc_dancing_bad(agents, site_quals):
     new_list = []
-    prob_dancing_bad = 0.1
-    for a in range(0,agents):
+    agents_dancing_bad = int(np.floor(0.1*agents))
+    dancing_and_other = [1]*agents_dancing_bad + [0]*(agents - agents_dancing_bad)
+    random.shuffle(dancing_and_other)
+    for a in dancing_and_other:
         new_dict = {}
-        if np.random.random() < prob_dancing_bad:
+        if a==1:
             new_dict['pose'] = [0.0, 0.0]
             new_dict['state'] = 'RECRUIT'
             new_dict['speed'] = 0.0

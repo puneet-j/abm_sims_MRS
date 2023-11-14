@@ -198,13 +198,13 @@ def get_edges_success_time(fl, IDLookup, get_edges_with, success_dict, time_dict
     return get_edges_with, success_dict, time_dict
 
 def main():
-    folder = './test_results/'
+    folder = './new_results/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph = './graphs/random_test2/'
+    folder_graph = './graphs/new_test/'
     new_metadata_file = folder_graph + 'metadata.csv'
     meta_arr = []
     metadata = pd.read_csv(metadata_file) 
@@ -214,7 +214,7 @@ def main():
     df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
     
     for some_id, entry in enumerate(df.iterrows()):
-        if some_id == 0:
+        if entry[1][2] != 10:# or some_id==0:
             continue
         print(entry)
         graph = nx.Graph()
@@ -259,7 +259,7 @@ def main():
         pickle.dump(graph, fil)   
         fil.close() 
         ''' TEMP BREAK'''
-        break
+        # break
         # fil2 = open(new_metadata_file, 'wb')
     df_new_metadata = pd.DataFrame(meta_arr, columns=['qualities', 'positions', 'agents', 'time_converged', 'site_converged'])
     df_new_metadata.to_csv(new_metadata_file)
