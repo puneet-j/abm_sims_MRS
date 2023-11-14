@@ -29,14 +29,14 @@ def simulate_world(sim, world):
 
 if __name__ == '__main__':
     site_configs = [2]#[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
-    distances = [100, 200]#, 300]#, 300]
+    distances = [200]#, 300]#, 300]
     agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 10 #20
     sims_per_distance = 1 #20
-    sim_repeats = 10
+    sim_repeats = 1
     fold_name = 'new_results'
     fname_metadata = './' + fold_name + '/metadata.csv'
-    df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
+    df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state']
     empty = pd.DataFrame([], columns=df_metadata_cols)
     file_exists = os.path.exists(fname_metadata)
     if file_exists:
@@ -47,15 +47,15 @@ if __name__ == '__main__':
     # pdb.set_trace()
 
     '''comment this for testing'''
-    manager = multiprocessing.Manager()
-    lock = manager.Lock()
-    pool = multiprocessing.Pool()
-    results = [pool.apply_async(simulate_world, args=(sim, World(w,fold_name))) for sim, w in enumerate(worlds)]
-    pool.close()
-    pool.join()
+    # manager = multiprocessing.Manager()
+    # lock = manager.Lock()
+    # pool = multiprocessing.Pool()
+    # results = [pool.apply_async(simulate_world, args=(sim, World(w,fold_name))) for sim, w in enumerate(worlds)]
+    # pool.close()
+    # pool.join()
 
     '''uncomment this for testing'''
-    # for sim, w in enumerate(worlds):
-    #     world = World(w)
-    #     world.simulate()
-    #     print(sim, ' done')
+    for sim, w in enumerate(worlds):
+        world = World(w, fold_name)
+        world.simulate()
+        print(sim, ' done')

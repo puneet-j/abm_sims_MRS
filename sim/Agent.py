@@ -27,8 +27,10 @@ class Agent:
         #     if site_new is None:
         #         pdb.set_trace()
         # self.prev_state = copy.deepcopy(self.state)
+        if site_new == 0 or site_new == 1:#self.assigned_site == 0 or self.assigned_site == 1:
+            pdb.set_trace()
         self.state = copy.deepcopy(next_state)
-        
+
         # print(self.prev_state, self.state)
         # if not(site_new is None):
         self.assigned_site = copy.deepcopy(site_new)

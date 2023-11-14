@@ -28,15 +28,16 @@ class World:
         self.file_time = str(int(time.time()*1000000))
         self.fname = './' + fold_name + '/' + self.file_time + '.csv'
         self.fname_metadata = './' + fold_name + '/' + 'metadata.csv'
-        self.df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged']
+        self.df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state']
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
         self.converged_to_site = None
         self.threshold = COMMIT_THRESHOLD
         self.list_for_df = []
 
     def save_metadata(self):
-        arr = [self.file_time + '.csv', tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents, self.converged_to_site, self.time]
-        df_metadata = pd.DataFrame(np.array(arr, dtype=object).reshape(1,7), columns=self.df_metadata_cols)
+        arr = [self.file_time + '.csv', tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents, 
+               self.converged_to_site, self.time, self.agent_configs_init]
+        df_metadata = pd.DataFrame(np.array(arr, dtype=object).reshape(1,8), columns=self.df_metadata_cols)
         df_metadata.to_csv(self.fname_metadata, header=False, mode='a', index=False)
         return
     
@@ -45,7 +46,7 @@ class World:
             if len(config) > 1:
                 # print('got agent config')
                 ag = Agent(self, init_pos=config['pose'], init_state=config['state'], 
-                            init_site=config['site'], init_speed=config['speed'], init_dir=config['dir'])  
+                            init_site=self.sites(config['site']), init_speed=config['speed'], init_dir=config['dir'])  
             else:
                 # print('default agent config')
                 ag = Agent(self)
@@ -60,7 +61,11 @@ class World:
 
         # pdb.set_trace()
         # print(self.agents[0].pos is self.agents[1].pos)
-        agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
+        try:
+            agent_poses, agent_dirs, agent_states, agent_sites = get_all_agent_poses_dirs_states_sites(self)
+        except:
+            pdb.set_trace()
+        
         to_save = [self.time, copy.deepcopy(agent_poses), copy.deepcopy(agent_dirs), copy.deepcopy(agent_states), copy.deepcopy(agent_sites)]
         self.list_for_df.append(to_save[:])
         while self.time < TIME_LIMIT:
