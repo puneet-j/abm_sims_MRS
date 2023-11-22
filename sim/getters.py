@@ -63,7 +63,7 @@ def get_RECRUIT_TO_TRAVEL_SITE_PROB(agent, p):
     if agent_at_hub(agent):
         ''' squash function of q through sigmoid and then compute the expected number of cycles for max and min q'''
         # stay_attach_prob_due_to_qual = 1.0 - np.power(base_RECRUIT_TO_ASSESS, pwr_RECRUIT_TO_ASSESS*agent.assigned_site.quality)
-        stay_attach_prob_due_to_qual = agent.assigned_site.quality**pwr_RECRUIT_TO_TS
+        stay_attach_prob_due_to_qual = agent.assigned_site.quality**PWR_RECRUIT_TO_TS
         # print(stay_attach_prob_due_to_qual) np.exp(agent.assigned_site.quality)/np.exp(1.0)  #
         # return stay_attach_prob_due_to_qual 
         RECRUIT_qual_factor = ADD_RECRUIT_QUAL/(ADD_RECRUIT_QUAL + np.exp(MULTIPLIER_RECRUIT_QUAL*agent.assigned_site.quality))
@@ -75,7 +75,7 @@ def get_RECRUIT_TO_TRAVEL_SITE_PROB(agent, p):
 def get_RECRUIT_TO_OBSERVE_PROB(agent, p):
     if agent_at_hub(agent):
         # stay_attach_prob_due_to_qual = 1.0 - np.power(base_RECRUIT_TO_ASSESS, pwr_RECRUIT_TO_ASSESS*agent.assigned_site.quality)
-        stay_attach_prob_due_to_qual = agent.assigned_site.quality**pwr_RECRUIT_TO_TS
+        stay_attach_prob_due_to_qual = agent.assigned_site.quality**PWR_RECRUIT_TO_TS
         # RECRUIT_qual_factor = ADD_RECRUIT_QUAL/(ADD_RECRUIT_QUAL + np.exp(MULTIPLIER_RECRUIT_QUAL*agent.assigned_site.quality))
         return (1.0 - stay_attach_prob_due_to_qual)*(1.0 - p*stay_attach_prob_due_to_qual) #1.0 - stay_attach_prob_due_to_qual
         # return p*(1.0 - stay_attach_prob_due_to_qual) np.exp(agent.assigned_site.quality)/np.exp(1.0)   #

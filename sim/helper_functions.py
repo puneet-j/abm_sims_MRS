@@ -63,9 +63,9 @@ def get_10perc_dancing_bad(agents, site_quals):
         new_list.append(new_dict)
     return new_list
 
-def get_valid_qualities_fixed_2(num_configs):
-    quals = qualities2[:num_configs]
-    return quals
+# def get_valid_qualities_fixed_2(num_configs):
+#     quals = qualities2[:num_configs]
+#     return quals
 
 def get_valid_qualities(num_sites, num_configs):
     qual_arr = []
@@ -147,7 +147,7 @@ def get_RECRUITrs_by_site(ag):
     RECRUITrs = [0]*world.num_sites
     for agent in world.agents:
         if agent.state == 'RECRUIT':
-            if agent.assigned_site:
+            if agent.assigned_site is not None:
                 RECRUITrs[agent.assigned_site.id] += 1
             else:
                 pdb.set_trace()

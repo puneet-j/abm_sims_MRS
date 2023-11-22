@@ -22,10 +22,10 @@ class Agent:
         #     print('in agent start: ', ag_temp.pos, ag_temp.state)
         # self.at_hub, self.at_site = get_at_hub_site(self)
         next_state, site_new = self.transitions.get_transition(self)
-        # if next_state == 'RECRUIT':
-        #     print(self.state, 'got this next state and site: ', next_state, site_new)
-        #     if site_new is None:
-        #         pdb.set_trace()
+        if next_state == 'RECRUIT' and site_new is None:
+            print(self.state, 'got this next state and site: ', next_state, site_new)
+            # if site_new is None:
+            pdb.set_trace()
         # self.prev_state = copy.deepcopy(self.state)
         if site_new == 0 or site_new == 1:#self.assigned_site == 0 or self.assigned_site == 1:
             pdb.set_trace()

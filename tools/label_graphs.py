@@ -194,7 +194,7 @@ def get_start_state(which_state):
         #             0,1,0,q0,0.0, 1,0,0, q1, 0.0,
         #             0,1,0,q0,0.0, 1,0,0, q1, 0.0]
 def main():
-    folder = './graphs/random_test2/'
+    folder = './graphs/new_test/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.pickle')]
     files = np.sort(files)
@@ -239,15 +239,17 @@ def main():
                 fil.close()
             except:
                 continue
-            qual = row[1][1]
+            # qual = row[1][1]
             node_to_color = [tuple(get_start_state(0)), tuple(get_start_state(1)), tuple(get_start_state(2))]
             id_to_color = [tuple((z, y['x'][1:3],node_to_color)) for z,y in graph.nodes(data=True) if y['x'][1:3] in node_to_color]
             # id_to_color = [tuple((z, y['x'][1:3],(0.0, 1.0))) for z,y in graph.nodes(data=True) if y['x'][1:3] == (0.0, 1.0)]
             # all_ids_start = [tuple((z, y['x'][1:3])) for z,y in graph.nodes(data=True)]# if y['x'][:3] == node_to_color]
+            # pdb.set_trace()
             colors = 'r'#['r' for i in range(len(graph.nodes))]
             nx.set_node_attributes(graph, colors, 'colors')
             try:
-                graph.nodes[id_to_color[0][0]]['colors'] = 'k'
+                for node_c in id_to_color:
+                    graph.nodes[node_c[0]]['colors'] = 'k'
             except:
                 # print(Exception)
                 pdb.set_trace()

@@ -17,11 +17,12 @@ from params import *
 
 class GraphDataset(torch.utils.data.Dataset):
       'Characterizes a dataset for PyTorch'
-      def __init__(self, file_name, train, neighbors_list):
+      def __init__(self, data, train, neighbors_list):
             'Initialization'
-            fil =  open(file_name, 'rb')
-            self.dat = pickle.load(fil)
-            fil.close()
+            # fil =  open(file_name, 'rb')
+            # self.dat = pickle.load(fil)
+            # fil.close()
+            self.dat = data
             draw = False
             shorten_graph_for_test = False
             if shorten_graph_for_test:

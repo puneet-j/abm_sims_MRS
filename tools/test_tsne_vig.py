@@ -43,7 +43,7 @@ from bokeh.plotting import figure, save, output_file
 from mayavi import mlab
 
 
-folder = './graphs/random_test2/'
+folder = './graphs/new_test/'
 print(os.listdir('.'))
 files = os.listdir(folder)
 files = [file for file in files if file.endswith('.pickle')]
@@ -75,7 +75,7 @@ counter = 0
 for row in metadata.iterrows():
     if counter == 10:
         # counter += 1
-        continue
+        pass
 
     else:        
         # pdb.set_trace()
@@ -86,34 +86,41 @@ for row in metadata.iterrows():
         num_neighbors_sampling = [5] * 2
         train_percent = 0.8
 
-        draw = False
         print('1')
-
 
         # k = 1000
         # sampled_nodes = random.sample(list(dat.nodes), k)
         # dat = dat.subgraph(sampled_nodes)
         # pdb.set_trace()
         sampled_graph = dat
-        # pos = nx.spring_layout(sampled_graph)#, pos=positions)
-        # pos = nx.nx_pydot.graphviz_layout(sampled_graph)
-        ''' NEATO'''
-        fil_pos = open('poses_test.pickle', 'rb')
-        pos = pickle.load(fil_pos)
-        fil_pos.close()
 
         # positions_ = nx.spring_layout(sampled_graph)  
-
+        # green_counter = np.sum()
         sizes_ = [10.0*a for a in nx.get_node_attributes(sampled_graph, 'sz').values()]
         positions_ = [a for a in nx.get_node_attributes(sampled_graph, 'x').values()]
         colors_ = [a for a in nx.get_node_attributes(sampled_graph, 'colors').values()]
         alphas_ = [0.2 if color=='r' else 1.0 for color in colors_]
         sizes_ = [size * 0.1 if color == 'r' else size * 10.0 if color == 'g' else size for size, color in zip(sizes_, colors_)]
+        print('sum of green: ', np.sum(1 if color=='g' else 0 for color in colors_))
+
 
         colors_plotly = ['red' if color=='r' else 'blue' if color=='b' else 'green' if color=='g' else 'black' for color in colors_]
         # plt.figure(0)
         # pdb.set_trace()
+        draw = False
+
         if draw:
+    
+            pos = nx.spring_layout(sampled_graph)#, pos=positions)
+            # # pos = nx.nx_agraph.graphviz_layout(sampled_graph)
+            # ''' NEATO'''
+            # fil_pos = open('poses_test.pickle', 'rb')
+            # # pos = pickle.load(fil_pos)
+            # # fil_pos.close()
+            fil_pos = open(folder +'_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '_poses.pickle', 'wb')
+            pickle.dump(pos,fil_pos)
+            # # pos = pickle.load(fil_pos)
+            fil_pos.close()
             plt.figure()
             try:
                 nx.draw_networkx_nodes(sampled_graph, pos, node_size=sizes_, node_color=colors_, alpha=alphas_) #pos=nx.spring_layout(sampled_graph),
@@ -121,7 +128,7 @@ for row in metadata.iterrows():
                 pdb.set_trace()
             for edge in sampled_graph.edges(data='weight'):
                 nx.draw_networkx_edges(sampled_graph, pos, edgelist=[edge], width=0.2*edge[2])
-            plt.savefig("test_random2.png")
+            plt.savefig(str(row[1][1]) + str(row[1][2]) + str(row[1][3]) +'.png')
             print(sampled_graph.number_of_edges())
 
         # pdb.set_trace()
@@ -155,16 +162,15 @@ for row in metadata.iterrows():
         ax.set_zlabel('Z axis')
         # plt.axis('off')
 
-        # Show plot
-        # plt.show()
-        # plt.pause(10)
         # pdb.set_trace()
         nodes_to_plot_edges = []
+        nodes_to_plot_green_edges = []
         # plot all edges between blue nodes. 
         for k, (x,y,z,c) in enumerate(zip(dict_3d['x'],dict_3d['y'],dict_3d['z'], dict_3d['colors'])):
             if c == 'blue':
                 nodes_to_plot_edges.append(tuple([x,y,z]))
-        # pdb.set_trace()
+            if c == 'green':
+                nodes_to_plot_green_edges.append(tuple([x,y,z]))
 
         edges_to_plot = set()
         for i in range(len(nodes_to_plot_edges)):
@@ -172,43 +178,23 @@ for row in metadata.iterrows():
                 edges_to_plot.add(tuple([nodes_to_plot_edges[i], nodes_to_plot_edges[j]]))
 
 
+        edges_to_plot_green = set()
+        for i in range(len(nodes_to_plot_green_edges)):
+            for j in range(i+1, len(nodes_to_plot_green_edges)):
+                edges_to_plot_green.add(tuple([nodes_to_plot_green_edges[i], nodes_to_plot_green_edges[j]]))
+
+
         for point in edges_to_plot:
             # for point2 in edges_to_plot[point1]:
                 ax.plot([point[0][0], point[1][0]], [point[0][1], point[1][1]], [point[0][2], point[1][2]], 'k--', alpha=0.1)
-        plt.show()
         
-        '''
-        # this plots all edges..?
-        x=tuple(data.edge_index.numpy())
-        start = x[0]
-        end = x[1]
-        edges = [tuple((a,b,c)) for a,b,c in zip(start,end, data.weight.numpy())]
-        nodes = d3Trans
-        pdb.set_trace()
-        # try:
-        lines = [[[nodes[e[0]][0], nodes[e[1]][0]],
-                        [nodes[e[0]][1], nodes[e[1]][1]],
-                           [nodes[e[0]][2], nodes[e[1]][2]]] for e in edges]
-        # filter out lines by length
-        # lines2 = []
-        # for line in lines:
-        #     if np.all([l1==l2 for l1,l2 in zip(line[0],line[1])]):
-        #         continue
-        #     else:
-        #         lenline = np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2)
-        #         if lenline > 1:
-        #             # print(line)
-        #             lines2.append(np.array([line[0][0], line[1][0], line[0][1], line[1][1], line[2]]))
+        for point in edges_to_plot_green:
+            # for point2 in edges_to_plot[point1]:
+                ax.plot([point[0][0], point[1][0]], [point[0][1], point[1][1]], [point[0][2], point[1][2]], 'k--', alpha=0.1)
+        
+        ax.set_aspect('equal', adjustable='box')
+        
+        plt.savefig(str(row[1][1]) + str(row[1][2]) + str(row[1][3]) +'_3d.png')
 
-                # print('len line:', np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2))
-        # print(len(lines2))
-
-        for line in lines:
-            # pdb.set_trace()
-            ax.plot(line[0], line[1], line[2], color='g', alpha=0.1)
-            # fig.add_trace(plt.plot(line[:2], line[2:4], width=10+line[4]).data[0])
-
-        # fig.write_html('with_edges_original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
         plt.show()
-        plt.savefig("with_edges_3d.png") '''
-        # pdb.set_trace()
+        # exit()

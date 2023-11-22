@@ -36,16 +36,17 @@ class State_Transitions:
         else:
             pdb.set_trace()
 
-        # pdb.set_trace()
         try:
             new_state = np.random.choice(list(transition_probabilities.keys()), p=list(transition_probabilities.values()))
         except:
             pdb.set_trace()
+
         if new_state == agent.state:
             self.new_site = agent.assigned_site
-        # if new_state == 'ASSESS'
+
         if new_state == 'EXPLORE' or new_state == 'TRAVEL_HOME_TO_OBSERVE' or new_state == 'OBSERVE':
             self.new_site = None
+
         if not(self.new_site is None):
             site_to_attach = copy.deepcopy(self.new_site)
             self.new_site = None
@@ -92,7 +93,7 @@ class State_Transitions:
 
     def transition_probabilities_RECRUIT(self, agent):
         transition_probabilities = {}
-        RECRUIT_to_OBSERVE_or_not = np.random.binomial(1, BINOMIAL_COEFF_RECRUIT_TO_OBSERVE)
+        RECRUIT_to_OBSERVE_or_not = np.random.binomial(1, BINOMIAL_COEFF_RECRUIT_TO_RECRUIT)
         transition_probabilities['TRAVEL_SITE'], self.new_site = get_RECRUIT_TO_TRAVEL_SITE_PROB(agent, RECRUIT_to_OBSERVE_or_not) # gamma*(1 - p_2x)
         transition_probabilities['OBSERVE'] = get_RECRUIT_TO_OBSERVE_PROB(agent, RECRUIT_to_OBSERVE_or_not) # (1 - gamma)(1-p_2x)
         transition_probabilities['RECRUIT'] = 1.0 - np.sum(list(transition_probabilities.values())) # self.get_DD(agent) # p_2x
@@ -101,7 +102,7 @@ class State_Transitions:
     def transition_probabilities_travel_home_to_RECRUIT(self, agent):
         transition_probabilities = {}
         transition_probabilities['RECRUIT'], self.new_site  = get_TRAVEL_HOME_TO_RECRUIT_PROB(agent) # 1 if at hub
-        transition_probabilities['TRAVEL_HOME_TO_RECRUIT']= 1.0 - transition_probabilities['RECRUIT'] # 1 if not at hub
+        transition_probabilities['TRAVEL_HOME_TO_RECRUIT'] = 1.0 - transition_probabilities['RECRUIT'] # 1 if not at hub
         return transition_probabilities
 
     def transition_probabilities_travel_home_to_OBSERVE(self, agent):

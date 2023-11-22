@@ -36,17 +36,20 @@ class World:
 
     def save_metadata(self):
         arr = [self.file_time + '.csv', tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents, 
-               self.converged_to_site, self.time, self.agent_configs_init]
+               self.converged_to_site, self.time, tuple([tuple([conf['state'],conf['site']]) for conf in self.agent_configs_init if len(conf)>1])]
         df_metadata = pd.DataFrame(np.array(arr, dtype=object).reshape(1,8), columns=self.df_metadata_cols)
         df_metadata.to_csv(self.fname_metadata, header=False, mode='a', index=False)
         return
     
     def add_agents(self):
+        # pdb.set_trace()
         for config in self.agent_configs_init:
             if len(config) > 1:
+                
+                site_to_attach_init = None if config['site'] is None else self.sites[config['site']]
                 # print('got agent config')
                 ag = Agent(self, init_pos=config['pose'], init_state=config['state'], 
-                            init_site=self.sites(config['site']), init_speed=config['speed'], init_dir=config['dir'])  
+                            init_site=site_to_attach_init, init_speed=config['speed'], init_dir=config['dir'])  
             else:
                 # print('default agent config')
                 ag = Agent(self)
