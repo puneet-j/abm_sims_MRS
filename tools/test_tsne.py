@@ -72,7 +72,8 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 from params import *
 
 counter = 0
-combined_data = []
+combined_data = np.array([])
+# Allcols = []
 for row in metadata.iterrows():
     if counter == 10:
         # counter += 1
@@ -80,10 +81,13 @@ for row in metadata.iterrows():
 
     else:        
         # pdb.set_trace()
-        fname = folder +'_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
-        fil =  open(fname, 'rb')
-        dat = pickle.load(fil)
-        fil.close()
+        try:
+            fname = folder +'_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
+            fil =  open(fname, 'rb')
+            dat = pickle.load(fil)
+            fil.close()
+        except:
+            continue
         num_neighbors_sampling = [5] * 2
         train_percent = 0.8
 
@@ -100,19 +104,22 @@ for row in metadata.iterrows():
         sizes_ = [10.0*a for a in nx.get_node_attributes(sampled_graph, 'sz').values()]
         positions_ = [a for a in nx.get_node_attributes(sampled_graph, 'x').values()]
         colors_ = [a for a in nx.get_node_attributes(sampled_graph, 'colors').values()]
-        alphas_ = [0.1 if color=='r' else 1.0 for color in colors_]
-        sizes_ = [size * 0.1 if color == 'r' else size * 10.0 for size, color in zip(sizes_, colors_)]
+        alphas_ = [0.1 if color=='b' else 1.0 for color in colors_]
+        sizes_ = [size * 0.1 if color == 'b' else size * 10.0 for size, color in zip(sizes_, colors_)]
         sum_green = np.sum(1 if color=='g' else 0 for color in colors_)
         sum_black = np.sum(1 if color=='k' else 0 for color in colors_)
-        print('sum of green: ', sum_green)
-        print('sum of black: ', sum_black)
+        sum_red = np.sum(1 if color=='r' else 0 for color in colors_)
 
-        if sum_black < 3:
-             pdb.set_trace()
-        if sum_green == 0:
+        # print('sum of green: ', sum_green)
+        # print('sum of black: ', sum_black)
+
+        # if sum_black < 3:
+        #      pdb.set_trace()
+        if sum_red == 0:
+            #  pass
              continue
             #  pass
-        colors_plotly = ['red' if color=='r' else 'blue' if color=='b' else 'green' if color=='g' else 'black' for color in colors_]
+        # colors_plotly = ['red' if color=='r' else 'blue' if color=='b' else 'green' if color=='g' else 'black' for color in colors_]
         
         # plt.figure(0)
         # pdb.set_trace()
@@ -141,13 +148,28 @@ for row in metadata.iterrows():
             print(sampled_graph.number_of_edges())
 
         # pdb.set_trace()
-        # if combined_data is not None:
-            # combined_data.
-        data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
-        combined_data.append(data.x)
-        print('data loaded')
-        pdb.set_trace()
 
+        data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
+        # pdb.set_trace()
+        if len(combined_data)<1:# is None:
+            combined_data = data.x.numpy()
+            Allcols = colors_
+        else:
+            combined_data = np.concatenate([combined_data, data.x.numpy()], axis=0)
+            print(len(combined_data), 'dat len')
+            # pdb.set_trace()
+            Allcols += colors_
+            print(len(Allcols), 'col len')
+        # pdb.set_trace()
+        print('data loaded')
+# pdb.set_trace()
+fil_concat = open(folder +'all_combined_graphs_poses.pickle', 'wb')
+pickle.dump(combined_data,fil_concat)
+fil_concat.close()
+fil_concat2 = open(folder +'all_combined_graphs_colors.pickle', 'wb')
+pickle.dump(Allcols,fil_concat2)
+fil_concat2.close()
+print('file_saved')
 
 '''
         # Should we not do the embedding again for each simulation???

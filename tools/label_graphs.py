@@ -240,13 +240,11 @@ def main():
             except:
                 continue
             # qual = row[1][1]
-            node_to_color = [tuple(get_start_state(0)), tuple(get_start_state(1)), tuple(get_start_state(2))]
-            id_to_color = [tuple((z, y['x'][1:3],node_to_color)) for z,y in graph.nodes(data=True) if y['x'][1:3] in node_to_color]
-            # id_to_color = [tuple((z, y['x'][1:3],(0.0, 1.0))) for z,y in graph.nodes(data=True) if y['x'][1:3] == (0.0, 1.0)]
-            # all_ids_start = [tuple((z, y['x'][1:3])) for z,y in graph.nodes(data=True)]# if y['x'][:3] == node_to_color]
-            # pdb.set_trace()
-            colors = 'r'#['r' for i in range(len(graph.nodes))]
+            colors = 'b'
             nx.set_node_attributes(graph, colors, 'colors')
+            node_to_color_black = [tuple(get_start_state(0)), tuple(get_start_state(1))]
+            id_to_color = [tuple((z, y['x'][1:3],node_to_color_black)) for z,y in graph.nodes(data=True) if y['x'][1:3] in node_to_color_black]
+            
             try:
                 for node_c in id_to_color:
                     graph.nodes[node_c[0]]['colors'] = 'k'
@@ -254,21 +252,34 @@ def main():
                 # print(Exception)
                 pdb.set_trace()
 
-
-
+            node_to_color_cyan = [tuple(get_start_state(2))]
+            id_to_color = [tuple((z, y['x'][1:3],node_to_color_cyan)) for z,y in graph.nodes(data=True) if y['x'][1:3] in node_to_color_cyan]
+            try:
+                for node_c in id_to_color:
+                    graph.nodes[node_c[0]]['colors'] = 'c'
+            except:
+                # print(Exception)
+                pdb.set_trace()
+            # sum_
+            # if sum_red == 0:
+            #     #  pass
+            #         continue
             
             # id_to_color = [tuple((y['x'][:3],node_to_color)) for z,y in graph.nodes(data=True)]
             # pdb.set_trace()
-            id_of_goal1 = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-1] >= y['x'][0])]
+
+            # pdb.set_trace()
+            goal1, goal2 = (-1, -6 )if graph.nodes[0]['x'][-2] > graph.nodes[0]['x'][-7] else (-6, -1)
+            id_of_goal1 = [tuple((z, y['x'][goal1], y['x'][goal2], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][goal1] >= y['x'][0])]
             # all_ids_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True)]# if (y['x'][-1] >= y['x'][0] or y['x'][-6] >= y['x'][0])]
 
             # id_of_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-1] >= 0.5 or y['x'][-6] >= 0.5)]
-            id_of_goal2 = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][-6] >= y['x'][0])]
+            id_of_goal2 = [tuple((z, y['x'][goal1], y['x'][goal2], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][goal2] >= y['x'][0])]
 
             for node in id_of_goal1:
-                graph.nodes[node[0]]['colors'] = 'b'
+                graph.nodes[node[0]]['colors'] = 'g'
             for node in id_of_goal2:
-                graph.nodes[node[0]]['colors'] = 'g'      
+                graph.nodes[node[0]]['colors'] = 'r'      
 
             print(fname)
             # pdb.set_trace()
