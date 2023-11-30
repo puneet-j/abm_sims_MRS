@@ -87,7 +87,7 @@ for row in metadata.iterrows():
         train_percent = 0.8
 
         draw = False
-        print('1')
+        # print('1')
 
 
         # k = 1000
@@ -109,8 +109,12 @@ for row in metadata.iterrows():
         colors_ = [a for a in nx.get_node_attributes(sampled_graph, 'colors').values()]
         alphas_ = [0.2 if color=='r' else 1.0 for color in colors_]
         sizes_ = [size * 0.1 if color == 'r' else size * 10.0 if color == 'g' else size for size, color in zip(sizes_, colors_)]
-        pdb.set_trace()
-        colors_plotly = ['red' if color=='r' else 'blue' if color=='b' else 'green' if color=='g' else 'black' for color in colors_]
+        colors_plotly = colors_
+        sum_red = np.sum(1 if color=='r' else 0 for color in colors_)
+        if sum_red == 0:
+             continue
+        # pdb.set_trace()
+        # colors_plotly = ['red' if color=='r' else 'blue' if color=='b' else 'green' if color=='g' else 'black' for color in colors_]
         # plt.figure(0)
         # pdb.set_trace()
         # if draw:
@@ -126,7 +130,7 @@ for row in metadata.iterrows():
 
         # pdb.set_trace()
 
-        data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
+        # data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
         # data = GraphDataset(fname,  train_percent, num_neighbors_sampling).pyg_graph
         print('data loaded')
 
@@ -134,14 +138,54 @@ for row in metadata.iterrows():
 
 
         # print(len(data))
-        tsne2 = TSNE(n_components=2)
-        two_d2 = tsne2.fit_transform(data.x)
+        # tsne2 = TSNE(n_components=2)
+        # two_d2 = tsne2.fit_transform(data.x)
 
-        tsne3 = TSNE(n_components=3)
-        d3Trans = tsne3.fit_transform(data.x)
+        # tsne3 = TSNE(n_components=3, n_jobs=20)
+        # d3Trans = tsne3.fit_transform(data.x)
 
-        dict_twod = {'x': list(two_d2[:,0]), 'y': list(two_d2[:,1]), 'colors': colors_plotly}
+        # fil_tsne3 = open(folder +'single_tsne_for_dbscan.pickle', 'wb')
+        # pickle.dump(d3Trans,fil_tsne3)
+        # fil_tsne3.close()
+                
+        fil_tsne3 = open(folder +'single_tsne_for_dbscan.pickle', 'rb')
+        d3Trans = pickle.load(fil_tsne3)
+        fil_tsne3.close()
+
+        # dict_twod = {'x': list(two_d2[:,0]), 'y': list(two_d2[:,1]), 'colors': colors_plotly}
         dict_3d = {'x': list(d3Trans[:,0]), 'y': list(d3Trans[:,1]), 'z': list(d3Trans[:,2]), 'colors': colors_plotly}
+        dict_3d_PoI = dict_3d
+        
+        
+        colors = [
+                    (0, 0, 1),       # Blue
+                    (0, 0.5, 0),     # Green
+                    (1, 0, 0),       # Red
+                    (0, 0.75, 0.75), # Cyan
+                    (1, 0, 1),       # Magenta
+                    (1, 1, 0),       # Yellow
+                    (0, 0, 0),       # Black
+                    (1, 1, 1),       # White
+                    (0.5, 0.5, 0.5), # Gray
+                    (0.8, 0.8, 0.8), # Light Gray
+                    (0, 0, 0.5),     # Navy Blue
+                    (0.53, 0.81, 0.98), # Sky Blue
+                    (0, 0.98, 0.6),  # Lime Green
+                    (0.94, 0.5, 0.5), # Light Coral
+                    (1, 0.84, 0),     # Gold
+                    (0.5, 0, 0.5),   # Purple
+                    (1, 0.75, 0.8),   # Pink
+                    (1, 0.65, 0),     # Orange
+                    (0.59, 0.27, 0.08), # Brown
+                    (0.5, 0.5, 0),    # Olive
+                    (0, 0.5, 0.5),    # Teal
+                    (0.86, 0.44, 0.58), # Orchid
+                    (0.18, 0.55, 0.34), # Sea Green
+                    (0.12, 0.56, 1),   # Dodger Blue
+                    (0.18, 0.31, 0.31), # Dark Slate Gray
+                    (0.29, 0, 0.51),   # Indigo
+                    ]
+        
         list_of_succ_fail = []
         cluster_centroids = []
         cluster_times = []
@@ -166,98 +210,50 @@ for row in metadata.iterrows():
         # Perform DBSCAN clustering
         dbscan = DBSCAN(eps=5, min_samples=50)
         labels_3d = dbscan.fit_predict(data_3d[['x', 'y', 'z']])
-
+        nodes_to_plot_blue_edges = []
+        nodes_to_plot_green_edges = []   
+        nodes_to_plot_black_edges = []   
+        nodes_to_plot_red_edges = []
+        nodes_to_plot_cyan_edges = []
         data_3d['cluster'] = labels_3d
 
-        marker_styles = {'red': 'o', 'blue': '^', 'green': 's', 'black': 'x'}
-        label_names = {'red': 'intermediate', 'blue': 'success', 'green': 'failure', 'black': 'start'}
-        cmap = matplotlib.cm.get_cmap('Spectral')
+        marker = {'b':'.', 'k':'x', 'c': 'x', 'r': '^', 'g': 's'}
+        for k, (x,y,z,c, cluster) in enumerate(zip(dict_3d_PoI['x'],dict_3d_PoI['y'],dict_3d_PoI['z'], dict_3d_PoI['colors'], data_3d['cluster'].values)): 
+            # for k, (x,y,z,c) in enumerate(zip(dict_3d['x'],dict_3d['y'],dict_3d['z'], dict_3d['colors'])):
+                if c == 'b':
+                    nodes_to_plot_blue_edges.append([x,y,z,colors[cluster],marker[c]])
+                if c == 'g':
+                    nodes_to_plot_green_edges.append([x,y,z,colors[cluster],marker[c]])
+                if c == 'k':
+                    nodes_to_plot_black_edges.append([x,y,z,colors[cluster],marker[c]])
+                elif c == 'r':
+                    nodes_to_plot_red_edges.append([x,y,z,colors[cluster],marker[c]])
+                elif c == 'c':
+                    nodes_to_plot_cyan_edges.append([x,y,z,colors[cluster],marker[c]])
+
+        nodes_to_plot_blue_edges = np.array(nodes_to_plot_blue_edges)
+        nodes_to_plot_green_edges = np.array(nodes_to_plot_green_edges)
+        nodes_to_plot_black_edges = np.array(nodes_to_plot_black_edges)    
+        nodes_to_plot_red_edges = np.array(nodes_to_plot_red_edges)
+        nodes_to_plot_cyan_edges = np.array(nodes_to_plot_cyan_edges)
+        
+
+        # marker_styles = {'red': 'o', 'blue': '^', 'green': 's', 'black': 'x'}
+        # label_names = {'red': 'intermediate', 'blue': 'success', 'green': 'failure', 'black': 'start'}
+        # cmap = matplotlib.cm.get_cmap('Spectral')
 
         fig = plt.figure(figsize=(12, 8))
         ax = fig.add_subplot(111, projection='3d')
-        for i in range(len(data_3d['x'].values)):
-            ax.plot(data_3d['x'][i], data_3d['y'][i], data_3d['z'][i], c=cmap(data_3d['cluster'][i]/26.0), marker=marker_styles[data_3d['colors'][i]], alpha = alphas_[i])
-        # scatter = ax.scatter(data_3d['x'], data_3d['y'], data_3d['z'], c=data_3d['cluster'], cmap='viridis', s=100)
-            # ax.scatter(data_3d['x'][i], data_3d['y'][i], data_3d['z'][i], c=data_3d['cluster'][i], cmap='viridis', marker=[marker_styles[color] for color in data_3d['colors'].values], s=100)
-        # sns.scatterplot(data = data_3d,  x='x', y='y',)
-        # Add colorbar
-        # cb = plt.colorbar(scatter, ax=ax, pad=0.1)
-        # cb.set_label('Cluster')
+        pdb.set_trace()
+        # ax.scatter(nodes_to_plot_blue_edges[:,0],nodes_to_plot_blue_edges[:,1],nodes_to_plot_blue_edges[:,2], c= nodes_to_plot_blue_edges[:,3], marker=nodes_to_plot_blue_edges[0,4])
+        ax.scatter(nodes_to_plot_black_edges[:,0],nodes_to_plot_black_edges[:,1],nodes_to_plot_black_edges[:,2], c= nodes_to_plot_black_edges[:,3], marker=nodes_to_plot_black_edges[0,4])
+        ax.scatter(nodes_to_plot_green_edges[:,0],nodes_to_plot_green_edges[:,1],nodes_to_plot_green_edges[:,2], c= nodes_to_plot_green_edges[:,3], marker=nodes_to_plot_green_edges[0,4])
+        ax.scatter(nodes_to_plot_red_edges[:,0],nodes_to_plot_red_edges[:,1],nodes_to_plot_red_edges[:,2], c= nodes_to_plot_red_edges[:,3], marker=nodes_to_plot_red_edges[0,4])
+        ax.scatter(nodes_to_plot_cyan_edges[:,0],nodes_to_plot_cyan_edges[:,1],nodes_to_plot_cyan_edges[:,2], c= nodes_to_plot_cyan_edges[:,3], marker=nodes_to_plot_cyan_edges[0,4])
+
 
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
         plt.title('DBSCAN Clustering Results (3D)')
         plt.show()
-
-        # from mpl_toolkits.mplot3d import Axes3D
-
-        # fig = plt.figure()
-        # ax = fig.add_subplot(111, projection='3d')
-
-        # Scatter plot
-        # scatter = ax.scatter(dict_3d['x'], dict_3d['y'], dict_3d['z'], c=dict_3d['colors'], alpha=alphas_, s=sizes_)
-
-        # Labeling axes
-        # ax.set_xlabel('X axis')
-        # ax.set_ylabel('Y axis')
-        # ax.set_zlabel('Z axis')
-        # plt.axis('off')
-
-        # Show plot
-        # plt.show()
-        # plt.pause(10)
-        # pdb.set_trace()
-        # nodes_to_plot_edges = []
-        # plot all edges between blue nodes. 
-        # for k, (x,y,z,c) in enumerate(zip(dict_3d['x'],dict_3d['y'],dict_3d['z'], dict_3d['colors'])):
-        #     if c == 'blue':
-        #         nodes_to_plot_edges.append(tuple([x,y,z]))
-        # # pdb.set_trace()
-
-        # edges_to_plot = set()
-        # for i in range(len(nodes_to_plot_edges)):
-        #     for j in range(i+1, len(nodes_to_plot_edges)):
-        #         edges_to_plot.add(tuple([nodes_to_plot_edges[i], nodes_to_plot_edges[j]]))
-
-
-        # for point in edges_to_plot:
-        #     # for point2 in edges_to_plot[point1]:
-        #         ax.plot([point[0][0], point[1][0]], [point[0][1], point[1][1]], [point[0][2], point[1][2]], 'k--', alpha=0.1)
-        # plt.show()
-        
-        '''
-        # this plots all edges..?
-        x=tuple(data.edge_index.numpy())
-        start = x[0]
-        end = x[1]
-        edges = [tuple((a,b,c)) for a,b,c in zip(start,end, data.weight.numpy())]
-        nodes = d3Trans
-        pdb.set_trace()
-        # try:
-        lines = [[[nodes[e[0]][0], nodes[e[1]][0]],
-                        [nodes[e[0]][1], nodes[e[1]][1]],
-                           [nodes[e[0]][2], nodes[e[1]][2]]] for e in edges]
-        # filter out lines by length
-        # lines2 = []
-        # for line in lines:
-        #     if np.all([l1==l2 for l1,l2 in zip(line[0],line[1])]):
-        #         continue
-        #     else:
-        #         lenline = np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2)
-        #         if lenline > 1:
-        #             # print(line)
-        #             lines2.append(np.array([line[0][0], line[1][0], line[0][1], line[1][1], line[2]]))
-
-                # print('len line:', np.sqrt((line[0][0] - line[1][0])**2 + (line[0][1] - line[1][1])**2))
-        # print(len(lines2))
-
-        for line in lines:
-            # pdb.set_trace()
-            ax.plot(line[0], line[1], line[2], color='g', alpha=0.1)
-            # fig.add_trace(plt.plot(line[:2], line[2:4], width=10+line[4]).data[0])
-
-        # fig.write_html('with_edges_original_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3])+'.html')
-        plt.show()
-        plt.savefig("with_edges_3d.png") '''
-        # pdb.set_trace()
