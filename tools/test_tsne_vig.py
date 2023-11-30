@@ -71,6 +71,57 @@ import os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 from params import *
 
+def generate_distinct_rgb_colors(n):
+    """
+    Generate an array of n distinct RGB colors with values in the [0, 1] range.
+
+    Args:
+        n (int): The number of distinct RGB colors to generate.
+
+    Returns:
+        list: A list of n distinct RGB color tuples with values in the [0, 1] range.
+    """
+    colors = []
+    for i in range(n):
+        hue = i / n
+        rgb_color = hsv_to_rgb(hue, 1, 1)
+        normalized_color = tuple(channel / 255.0 for channel in rgb_color)
+        colors.append(normalized_color)
+    return colors
+
+def hsv_to_rgb(h, s, v):
+    """
+    Convert HSV (Hue, Saturation, Value) color to RGB color.
+
+    Args:
+        h (float): Hue value in the range [0, 1].
+        s (float): Saturation value in the range [0, 1].
+        v (float): Value (brightness) in the range [0, 1].
+
+    Returns:
+        tuple: A tuple representing the RGB color.
+    """
+    h_i = int(h * 6)
+    f = h * 6 - h_i
+    p = v * (1 - s)
+    q = v * (1 - f * s)
+    t = v * (1 - (1 - f) * s)
+
+    if h_i == 0:
+        r, g, b = v, t, p
+    elif h_i == 1:
+        r, g, b = q, v, p
+    elif h_i == 2:
+        r, g, b = p, v, t
+    elif h_i == 3:
+        r, g, b = p, q, v
+    elif h_i == 4:
+        r, g, b = t, p, v
+    else:
+        r, g, b = v, p, q
+
+    return (int(r * 255), int(g * 255), int(b * 255))
+
 counter = 0
 for row in metadata.iterrows():
     if counter == 100:
@@ -157,34 +208,34 @@ for row in metadata.iterrows():
         dict_3d_PoI = dict_3d
         
         
-        colors = [
-                    (0, 0, 1),       # Blue
-                    (0, 0.5, 0),     # Green
-                    (1, 0, 0),       # Red
-                    (0, 0.75, 0.75), # Cyan
-                    (1, 0, 1),       # Magenta
-                    (1, 1, 0),       # Yellow
-                    (0, 0, 0),       # Black
-                    (1, 1, 1),       # White
-                    (0.5, 0.5, 0.5), # Gray
-                    (0.8, 0.8, 0.8), # Light Gray
-                    (0, 0, 0.5),     # Navy Blue
-                    (0.53, 0.81, 0.98), # Sky Blue
-                    (0, 0.98, 0.6),  # Lime Green
-                    (0.94, 0.5, 0.5), # Light Coral
-                    (1, 0.84, 0),     # Gold
-                    (0.5, 0, 0.5),   # Purple
-                    (1, 0.75, 0.8),   # Pink
-                    (1, 0.65, 0),     # Orange
-                    (0.59, 0.27, 0.08), # Brown
-                    (0.5, 0.5, 0),    # Olive
-                    (0, 0.5, 0.5),    # Teal
-                    (0.86, 0.44, 0.58), # Orchid
-                    (0.18, 0.55, 0.34), # Sea Green
-                    (0.12, 0.56, 1),   # Dodger Blue
-                    (0.18, 0.31, 0.31), # Dark Slate Gray
-                    (0.29, 0, 0.51),   # Indigo
-                    ]
+        # colors = [
+        #             (0, 0, 1),       # Blue
+        #             (0, 0.5, 0),     # Green
+        #             (1, 0, 0),       # Red
+        #             (0, 0.75, 0.75), # Cyan
+        #             (1, 0, 1),       # Magenta
+        #             (1, 1, 0),       # Yellow
+        #             (0, 0, 0),       # Black
+        #             (1, 1, 1),       # White
+        #             (0.5, 0.5, 0.5), # Gray
+        #             (0.8, 0.8, 0.8), # Light Gray
+        #             (0, 0, 0.5),     # Navy Blue
+        #             (0.53, 0.81, 0.98), # Sky Blue
+        #             (0, 0.98, 0.6),  # Lime Green
+        #             (0.94, 0.5, 0.5), # Light Coral
+        #             (1, 0.84, 0),     # Gold
+        #             (0.5, 0, 0.5),   # Purple
+        #             (1, 0.75, 0.8),   # Pink
+        #             (1, 0.65, 0),     # Orange
+        #             (0.59, 0.27, 0.08), # Brown
+        #             (0.5, 0.5, 0),    # Olive
+        #             (0, 0.5, 0.5),    # Teal
+        #             (0.86, 0.44, 0.58), # Orchid
+        #             (0.18, 0.55, 0.34), # Sea Green
+        #             (0.12, 0.56, 1),   # Dodger Blue
+        #             (0.18, 0.31, 0.31), # Dark Slate Gray
+        #             (0.29, 0, 0.51),   # Indigo
+                    # ]
         
         list_of_succ_fail = []
         cluster_centroids = []
@@ -208,13 +259,16 @@ for row in metadata.iterrows():
         data_3d = pd.DataFrame(dict_3d)
         # pdb.set_trace()
         # Perform DBSCAN clustering
-        dbscan = DBSCAN(eps=5, min_samples=50)
+        dbscan = DBSCAN(min_samples=30)
+
         labels_3d = dbscan.fit_predict(data_3d[['x', 'y', 'z']])
+        colors = generate_distinct_rgb_colors(len(np.unique(labels_3d)))
         nodes_to_plot_blue_edges = []
         nodes_to_plot_green_edges = []   
         nodes_to_plot_black_edges = []   
         nodes_to_plot_red_edges = []
         nodes_to_plot_cyan_edges = []
+
         data_3d['cluster'] = labels_3d
 
         marker = {'b':'.', 'k':'x', 'c': 'x', 'r': '^', 'g': 's'}
@@ -246,10 +300,10 @@ for row in metadata.iterrows():
         ax = fig.add_subplot(111, projection='3d')
         pdb.set_trace()
         # ax.scatter(nodes_to_plot_blue_edges[:,0],nodes_to_plot_blue_edges[:,1],nodes_to_plot_blue_edges[:,2], c= nodes_to_plot_blue_edges[:,3], marker=nodes_to_plot_blue_edges[0,4])
-        ax.scatter(nodes_to_plot_black_edges[:,0],nodes_to_plot_black_edges[:,1],nodes_to_plot_black_edges[:,2], c= nodes_to_plot_black_edges[:,3], marker=nodes_to_plot_black_edges[0,4])
-        ax.scatter(nodes_to_plot_green_edges[:,0],nodes_to_plot_green_edges[:,1],nodes_to_plot_green_edges[:,2], c= nodes_to_plot_green_edges[:,3], marker=nodes_to_plot_green_edges[0,4])
-        ax.scatter(nodes_to_plot_red_edges[:,0],nodes_to_plot_red_edges[:,1],nodes_to_plot_red_edges[:,2], c= nodes_to_plot_red_edges[:,3], marker=nodes_to_plot_red_edges[0,4])
-        ax.scatter(nodes_to_plot_cyan_edges[:,0],nodes_to_plot_cyan_edges[:,1],nodes_to_plot_cyan_edges[:,2], c= nodes_to_plot_cyan_edges[:,3], marker=nodes_to_plot_cyan_edges[0,4])
+        ax.scatter3D(nodes_to_plot_black_edges[:,0].tolist(),nodes_to_plot_black_edges[:,1].tolist(),nodes_to_plot_black_edges[:,2].tolist(), marker=nodes_to_plot_black_edges[0,4], c=nodes_to_plot_black_edges[:,3].tolist())
+        ax.scatter3D(nodes_to_plot_green_edges[:,0].tolist(),nodes_to_plot_green_edges[:,1].tolist(),nodes_to_plot_green_edges[:,2].tolist(), marker=nodes_to_plot_green_edges[0,4], c=nodes_to_plot_green_edges[:,3].tolist())
+        ax.scatter3D(nodes_to_plot_red_edges[:,0].tolist(),nodes_to_plot_red_edges[:,1].tolist(),nodes_to_plot_red_edges[:,2].tolist(), marker=nodes_to_plot_red_edges[0,4], c=nodes_to_plot_red_edges[:,3].tolist())
+        ax.scatter3D(nodes_to_plot_cyan_edges[:,0].tolist(),nodes_to_plot_cyan_edges[:,1].tolist(),nodes_to_plot_cyan_edges[:,2].tolist(), marker=nodes_to_plot_cyan_edges[0,4], c=nodes_to_plot_cyan_edges[:,3].tolist())
 
 
         ax.set_xlabel('X')
