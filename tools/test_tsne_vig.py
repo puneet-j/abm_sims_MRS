@@ -40,7 +40,7 @@ from torch_geometric.utils import to_networkx
 from bokeh.plotting import figure, from_networkx, show
 from bokeh.models import HoverTool, ColumnDataSource
 from bokeh.plotting import figure, save, output_file
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import HDBSCAN
 import seaborn as sns
 
 folder = './graphs/new_test/'
@@ -181,7 +181,7 @@ for row in metadata.iterrows():
 
         # pdb.set_trace()
 
-        # data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
+        data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
         # data = GraphDataset(fname,  train_percent, num_neighbors_sampling).pyg_graph
         print('data loaded')
 
@@ -259,7 +259,7 @@ for row in metadata.iterrows():
         data_3d = pd.DataFrame(dict_3d)
         # pdb.set_trace()
         # Perform DBSCAN clustering
-        dbscan = DBSCAN(min_samples=30)
+        dbscan = HDBSCAN(min_cluster_size=20, cluster_selection_epsilon=5.0)
 
         labels_3d = dbscan.fit_predict(data_3d[['x', 'y', 'z']])
         colors = generate_distinct_rgb_colors(len(np.unique(labels_3d)))
@@ -272,7 +272,7 @@ for row in metadata.iterrows():
         data_3d['cluster'] = labels_3d
 
         marker = {'b':'.', 'k':'x', 'c': 'x', 'r': '^', 'g': 's'}
-        for k, (x,y,z,c, cluster) in enumerate(zip(dict_3d_PoI['x'],dict_3d_PoI['y'],dict_3d_PoI['z'], dict_3d_PoI['colors'], data_3d['cluster'].values)): 
+        for k, (x,y,z,c, cluster) in enumerate(zip(dict_3d['x'],dict_3d['y'],dict_3d['z'], dict_3d['colors'], data_3d['cluster'].values)): 
             # for k, (x,y,z,c) in enumerate(zip(dict_3d['x'],dict_3d['y'],dict_3d['z'], dict_3d['colors'])):
                 if c == 'b':
                     nodes_to_plot_blue_edges.append([x,y,z,colors[cluster],marker[c]])
