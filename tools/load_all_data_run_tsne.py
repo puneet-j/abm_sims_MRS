@@ -91,7 +91,7 @@ print('data loaded')
 # pdb.set_trace()
 # dat = dat[:500000,:]
 
-tsne3 = TSNE(n_components=3, perplexity=10, verbose=1, n_jobs=20)
+tsne3 = TSNE(n_components=3, verbose=1, n_jobs=20)
 d3Trans = tsne3.fit_transform(dat)
 print('tsne done')
 
@@ -100,7 +100,7 @@ print('tsne done')
 # pickle.dump(d2Trans,fil_tsne2)
 # fil_tsne2.close()
 
-fil_tsne3 = open(folder +'combined_tsne3_10_perp.pickle', 'wb')
+fil_tsne3 = open(folder +'combined_tsne3.pickle', 'wb')
 pickle.dump(d3Trans,fil_tsne3)
 fil_tsne3.close()
 
@@ -216,7 +216,7 @@ for simplex in redHull.simplices:
 
 ax.set_aspect('equal', adjustable='box')
 
-plt.savefig('combined_3d.png')
+plt.savefig('combined_3d_auto.png')
 
 plt.show()
 # exit()

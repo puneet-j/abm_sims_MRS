@@ -43,7 +43,7 @@ from bokeh.plotting import figure, save, output_file
 from sklearn.cluster import DBSCAN
 import seaborn as sns
 
-folder = './graphs/random_test2/'
+folder = './graphs/new_test/'
 print(os.listdir('.'))
 files = os.listdir(folder)
 files = [file for file in files if file.endswith('.pickle')]
@@ -61,7 +61,7 @@ from torch_geometric.utils.convert import from_networkx
 import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
-matplotlib.use("TkAgg") 
+matplotlib.use("MacOSX") 
 import random 
 from torch_geometric.loader import NeighborLoader
 import numpy as np
@@ -73,10 +73,10 @@ from params import *
 
 counter = 0
 for row in metadata.iterrows():
-    if counter == 10:
+    if counter == 100:
         # counter += 1
         continue
-
+        # pass
     else:        
         # pdb.set_trace()
         fname = folder +'_'+str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
@@ -98,9 +98,9 @@ for row in metadata.iterrows():
         # pos = nx.spring_layout(sampled_graph)#, pos=positions)
         # pos = nx.nx_pydot.graphviz_layout(sampled_graph)
         ''' NEATO'''
-        fil_pos = open('poses_test.pickle', 'rb')
-        pos = pickle.load(fil_pos)
-        fil_pos.close()
+        # fil_pos = open('poses_test.pickle', 'rb')
+        # pos = pickle.load(fil_pos)
+        # fil_pos.close()
 
         # positions_ = nx.spring_layout(sampled_graph)  
 
@@ -109,23 +109,25 @@ for row in metadata.iterrows():
         colors_ = [a for a in nx.get_node_attributes(sampled_graph, 'colors').values()]
         alphas_ = [0.2 if color=='r' else 1.0 for color in colors_]
         sizes_ = [size * 0.1 if color == 'r' else size * 10.0 if color == 'g' else size for size, color in zip(sizes_, colors_)]
-
+        pdb.set_trace()
         colors_plotly = ['red' if color=='r' else 'blue' if color=='b' else 'green' if color=='g' else 'black' for color in colors_]
         # plt.figure(0)
         # pdb.set_trace()
-        if draw:
-            plt.figure()
-            try:
-                nx.draw_networkx_nodes(sampled_graph, pos, node_size=sizes_, node_color=colors_, alpha=alphas_) #pos=nx.spring_layout(sampled_graph),
-            except:
-                pdb.set_trace()
-            for edge in sampled_graph.edges(data='weight'):
-                nx.draw_networkx_edges(sampled_graph, pos, edgelist=[edge], width=0.2*edge[2])
-            plt.savefig("test_random2.png")
-            print(sampled_graph.number_of_edges())
+        # if draw:
+        #     plt.figure()
+        #     try:
+        #         nx.draw_networkx_nodes(sampled_graph, pos, node_size=sizes_, node_color=colors_, alpha=alphas_) #pos=nx.spring_layout(sampled_graph),
+        #     except:
+        #         pdb.set_trace()
+        #     for edge in sampled_graph.edges(data='weight'):
+        #         nx.draw_networkx_edges(sampled_graph, pos, edgelist=[edge], width=0.2*edge[2])
+        #     plt.savefig("test_random2.png")
+        #     print(sampled_graph.number_of_edges())
 
         # pdb.set_trace()
-        data = GraphDataset(fname,  train_percent, num_neighbors_sampling).pyg_graph
+
+        data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
+        # data = GraphDataset(fname,  train_percent, num_neighbors_sampling).pyg_graph
         print('data loaded')
 
 
@@ -140,39 +142,45 @@ for row in metadata.iterrows():
 
         dict_twod = {'x': list(two_d2[:,0]), 'y': list(two_d2[:,1]), 'colors': colors_plotly}
         dict_3d = {'x': list(d3Trans[:,0]), 'y': list(d3Trans[:,1]), 'z': list(d3Trans[:,2]), 'colors': colors_plotly}
+        list_of_succ_fail = []
+        cluster_centroids = []
+        cluster_times = []
+        cluster_time_mean = []
+        cluster_time_variance = []
 
-        data_2d = pd.DataFrame(dict_twod)
-        dbscan = DBSCAN(eps=5, min_samples=50)
-        labels = dbscan.fit_predict(data_2d[['x', 'y']])
 
-        data_2d['cluster'] = labels
-        sns.set(style="whitegrid")
-        plt.figure(figsize=(10, 6))
-        sns.scatterplot(x='x', y='y', hue='cluster', palette='viridis', data=data_2d, s=100, legend='full')
+        # data_2d = pd.DataFrame(dict_twod)
+        # dbscan = DBSCAN(eps=5, min_samples=50)
+        # labels = dbscan.fit_predict(data_2d[['x', 'y']])
 
-        plt.title('DBSCAN Clustering Results')
-        plt.show()
+        # data_2d['cluster'] = labels
+        # sns.set(style="whitegrid")
+        # plt.figure(figsize=(10, 6))
+        # sns.scatterplot(x='x', y='y', hue='cluster', palette='viridis', data=data_2d, s=100, legend='full')
+
+        # plt.title('DBSCAN Clustering Results')
+        # plt.show()
 
         data_3d = pd.DataFrame(dict_3d)
-
+        # pdb.set_trace()
         # Perform DBSCAN clustering
         dbscan = DBSCAN(eps=5, min_samples=50)
         labels_3d = dbscan.fit_predict(data_3d[['x', 'y', 'z']])
 
         data_3d['cluster'] = labels_3d
 
-        # Plot the results
-        fig = plt.figure(figsize=(12, 8))
-        ax = fig.add_subplot(111, projection='3d')
         marker_styles = {'red': 'o', 'blue': '^', 'green': 's', 'black': 'x'}
         label_names = {'red': 'intermediate', 'blue': 'success', 'green': 'failure', 'black': 'start'}
+        cmap = matplotlib.cm.get_cmap('Spectral')
 
-        for color in set(colors_plotly):
-            data_color = data_3d[data_3d['colors'] == color]
-            ax.scatter(data_color['x'], data_color['y'], data_color['z'],
-                    c=color, marker=marker_styles[color], s=100, label=label_names[color], alpha=alphas_)
-
-        # # Add colorbar
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        for i in range(len(data_3d['x'].values)):
+            ax.plot(data_3d['x'][i], data_3d['y'][i], data_3d['z'][i], c=cmap(data_3d['cluster'][i]/26.0), marker=marker_styles[data_3d['colors'][i]], alpha = alphas_[i])
+        # scatter = ax.scatter(data_3d['x'], data_3d['y'], data_3d['z'], c=data_3d['cluster'], cmap='viridis', s=100)
+            # ax.scatter(data_3d['x'][i], data_3d['y'][i], data_3d['z'][i], c=data_3d['cluster'][i], cmap='viridis', marker=[marker_styles[color] for color in data_3d['colors'].values], s=100)
+        # sns.scatterplot(data = data_3d,  x='x', y='y',)
+        # Add colorbar
         # cb = plt.colorbar(scatter, ax=ax, pad=0.1)
         # cb.set_label('Cluster')
 
@@ -180,8 +188,6 @@ for row in metadata.iterrows():
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
         plt.title('DBSCAN Clustering Results (3D)')
-
-        plt.legend(loc='best')
         plt.show()
 
         # from mpl_toolkits.mplot3d import Axes3D
