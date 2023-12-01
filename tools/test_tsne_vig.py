@@ -158,6 +158,8 @@ for row in metadata.iterrows():
         sizes_ = [10.0*a for a in nx.get_node_attributes(sampled_graph, 'sz').values()]
         positions_ = [a for a in nx.get_node_attributes(sampled_graph, 'x').values()]
         colors_ = [a for a in nx.get_node_attributes(sampled_graph, 'colors').values()]
+        times = [t for t in nx.get_node_attributes(sampled_graph, 'time').values()]
+        successes = [success for success in nx.get_node_attributes(sampled_graph, 'success').values()]
         alphas_ = [0.2 if color=='r' else 1.0 for color in colors_]
         sizes_ = [size * 0.1 if color == 'r' else size * 10.0 if color == 'g' else size for size, color in zip(sizes_, colors_)]
         colors_plotly = colors_
@@ -204,7 +206,7 @@ for row in metadata.iterrows():
         fil_tsne3.close()
 
         # dict_twod = {'x': list(two_d2[:,0]), 'y': list(two_d2[:,1]), 'colors': colors_plotly}
-        dict_3d = {'x': list(d3Trans[:,0]), 'y': list(d3Trans[:,1]), 'z': list(d3Trans[:,2]), 'colors': colors_plotly}
+        dict_3d = {'x': list(d3Trans[:,0]), 'y': list(d3Trans[:,1]), 'z': list(d3Trans[:,2]), 'colors': colors_plotly, 'times': times, 'successes':successes}
         dict_3d_PoI = dict_3d
         
         
