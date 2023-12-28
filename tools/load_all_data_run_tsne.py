@@ -90,21 +90,22 @@ colors_plotly = allCols
 print('data loaded')
 # pdb.set_trace()
 # dat = dat[:500000,:]
+for perp in range(1,11):
 
-tsne3 = TSNE(n_components=3, verbose=1, n_jobs=20)
-d3Trans = tsne3.fit_transform(dat)
-print('tsne done')
+    tsne3 = TSNE(n_components=3, verbose=1, perplexity=5*perp, n_jobs=-1)
+    d3Trans = tsne3.fit_transform(dat)
+    print('tsne done, perp: ', perp)
 
 
 # fil_tsne2 = open(folder +'combined_tsne2.pickle', 'wb')
 # pickle.dump(d2Trans,fil_tsne2)
 # fil_tsne2.close()
 
-fil_tsne3 = open(folder +'combined_tsne3.pickle', 'wb')
-pickle.dump(d3Trans,fil_tsne3)
-fil_tsne3.close()
+    fil_tsne3 = open(folder +'combined_tsne3_'+str(perp*5)+'.pickle', 'wb')
+    pickle.dump(d3Trans,fil_tsne3)
+    fil_tsne3.close()
 
-
+exit()
 # fil_tsne3 = open(folder +'combined_tsne3.pickle', 'rb')
 # d3Trans = pickle.load(fil_tsne3)
 # fil_tsne3.close()

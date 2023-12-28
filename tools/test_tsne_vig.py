@@ -43,7 +43,7 @@ from bokeh.plotting import figure, save, output_file
 from sklearn.cluster import HDBSCAN
 import seaborn as sns
 
-folder = './graphs/new_test/'
+folder = './graphs/new_test/bleh/'
 print(os.listdir('.'))
 files = os.listdir(folder)
 files = [file for file in files if file.endswith('.pickle')]

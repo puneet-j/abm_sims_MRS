@@ -109,7 +109,8 @@ for row in metadata.iterrows():
         sum_green = np.sum(1 if color=='g' else 0 for color in colors_)
         sum_black = np.sum(1 if color=='k' else 0 for color in colors_)
         sum_red = np.sum(1 if color=='r' else 0 for color in colors_)
-
+        successes = [a for a in nx.get_node_attributes(sampled_graph, 'success').values()]
+        convtimes = [a for a in nx.get_node_attributes(sampled_graph, 'time').values()]
         # print('sum of green: ', sum_green)
         # print('sum of black: ', sum_black)
 
@@ -151,15 +152,23 @@ for row in metadata.iterrows():
 
         data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
         # pdb.set_trace()
+        needed = np.squeeze(np.concatenate([data.x.numpy(),data.time_now.numpy().reshape(len(data.time_now), 1)], axis=1))
         if len(combined_data)<1:# is None:
-            combined_data = data.x.numpy()
+            combined_data = needed
             Allcols = colors_
+            # pdb.set_trace()
+            AllSucc = successes
+            AllTTC = convtimes
         else:
-            combined_data = np.concatenate([combined_data, data.x.numpy()], axis=0)
+            combined_data = np.concatenate([combined_data, needed], axis=0)
             print(len(combined_data), 'dat len')
             # pdb.set_trace()
             Allcols += colors_
+            AllSucc += successes
+            AllTTC += convtimes
             print(len(Allcols), 'col len')
+            print(len(AllSucc), 'succ len')
+            print(len(AllTTC), 'ttc len')
         # pdb.set_trace()
         print('data loaded')
 # pdb.set_trace()
@@ -169,6 +178,10 @@ fil_concat.close()
 fil_concat2 = open(folder +'all_combined_graphs_colors.pickle', 'wb')
 pickle.dump(Allcols,fil_concat2)
 fil_concat2.close()
+fil_concat3 = open(folder +'all_combined_graphs_succttc.pickle', 'wb')
+pickle.dump([AllSucc, AllTTC],fil_concat3)
+fil_concat3.close()
+
 print('file_saved')
 
 '''

@@ -269,7 +269,7 @@ def main():
             # pdb.set_trace()
 
             # pdb.set_trace()
-            goal1, goal2 = (-1, -6 )if graph.nodes[0]['x'][-2] > graph.nodes[0]['x'][-7] else (-6, -1)
+            goal1, goal2 = (-1, -6 ) if graph.nodes[0]['x'][-2] > graph.nodes[0]['x'][-7] else (-6, -1)
             id_of_goal1 = [tuple((z, y['x'][goal1], y['x'][goal2], y['x'][0])) for z,y in graph.nodes(data=True) if (y['x'][goal1] >= y['x'][0])]
             # all_ids_goal = [tuple((z, y['x'][-1], y['x'][-6], y['x'][0])) for z,y in graph.nodes(data=True)]# if (y['x'][-1] >= y['x'][0] or y['x'][-6] >= y['x'][0])]
 
