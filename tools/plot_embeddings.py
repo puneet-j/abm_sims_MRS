@@ -66,7 +66,10 @@ for row in metadata.iterrows():
     fname = str(row[1][1]) + str(row[1][2]) + str(row[1][3]) + '.pickle'
     num_neighbors_sampling = [5] * 2
     train_percent = 0.8
-    data = GraphDataset(folder + fname,  train_percent, num_neighbors_sampling).pyg_graph
+    fil =  open(fname, 'rb')
+    dat = pickle.load(fil)
+    fil.close()
+    data = GraphDataset(dat,  train_percent, num_neighbors_sampling).pyg_graph
     # break
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
