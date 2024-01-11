@@ -11,8 +11,9 @@ import copy
 # sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 
 class World:
-    def __init__(self, params, fold_name):
+    def __init__(self, params, fold_name, save=True):
         # params = (num_sites, site_quals, site_poses, num_agents)
+        self.save = save
         self.num_sites = params[0]
         self.site_qualities = params[1]
         if self.num_sites != len(self.site_qualities):
@@ -99,7 +100,8 @@ class World:
                 break
 
 
-        df = pd.DataFrame(self.list_for_df, columns = self.df_cols)
-        df.to_csv(self.fname, chunksize=7000)
-        self.save_metadata()
+        if self.save:
+            df = pd.DataFrame(self.list_for_df, columns = self.df_cols)
+            df.to_csv(self.fname, chunksize=7000)
+            self.save_metadata()
         
