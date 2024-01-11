@@ -67,6 +67,32 @@ def get_current_state_basic(astate, asite, apose, sitePoses, siteQuals, numAg, s
     # pdb.set_trace()
     current_state = [tnow]
     current_state.append(COMMIT_THRESHOLD)
+    environment = [(x,y,z) for x,(y,z) in zip(siteQuals,sitePoses)]  #np.zeros((10, 5))
+    
+    for states in environment:
+        current_state.append(states[0])
+        current_state.append(states[1])
+        current_state.append(states[2])
+
+
+    for id, (site, state, pose) in enumerate(zip(asite, astate, apose)):
+        # current_state.append(id)
+        current_state.append(pose[0])
+        current_state.append(pose[1])
+        current_state.append(STATES[state])
+        current_state.append(site if site else -1)
+    
+    current_state.append(s)
+    current_state.append(t)
+
+    
+
+    return current_state #.reshape(np.shape(current_state)[0]*np.shape(current_state)[1]*np.shape(current_state)[2]))
+
+def get_current_state_basic_sorted_sites(astate, asite, apose, sitePoses, siteQuals, numAg, s, t, tnow):
+    # pdb.set_trace()
+    current_state = [tnow]
+    current_state.append(COMMIT_THRESHOLD)
     environment = [(x,y,z) for x,(y,z) in sorted(zip(siteQuals,sitePoses))]  #np.zeros((10, 5))
     
     for states in environment:
@@ -113,7 +139,9 @@ def main():
     metadata.site_positions=metadata.site_positions.apply(lambda x: tuple([tuple(a) for a in x]))
     df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
     biglist = []
+    biglist_sorted = []
     for some_id, entry in enumerate(df.iterrows()):
+        print(entry)
         for fileName, site_conv, time_conv in zip(entry[1][3], entry[1][5], entry[1][6]):
             ''' TEMP BREAK'''
             quals = entry[1][0]
@@ -124,8 +152,11 @@ def main():
             # pdb.set_trace()
             success_now = site_conv/max(quals) #1 if site_conv == max(quals) else 0
             fl['currentState'] = fl.apply(lambda x: get_current_state_basic(x.agent_states, x.agent_sites, x.agent_positions, entry[1][1], entry[1][0], int(entry[1][2]), success_now, time_conv, x.time), axis=1)
+            fl['currentState_sorted'] = fl.apply(lambda x: get_current_state_basic(x.agent_states, x.agent_sites, x.agent_positions, entry[1][1], entry[1][0], int(entry[1][2]), success_now, time_conv, x.time), axis=1)
+
             # pdb.set_trace()
             biglist += fl.currentState.values.tolist()
+            biglist_sorted += fl.currentState_sorted.values.tolist()
 
         # pdb.set_trace()
     fname = 'combined_data_basic.pickle'
@@ -135,6 +166,15 @@ def main():
     fil =  open(folder_graph+fname, 'wb')
     pickle.dump(biglist, fil)   
     fil.close() 
+
+    fname2 = 'combined_data_basic_sorted.pickle'
+    # pdb.set_trace()
+    # meta_arr.append([entry[1][0], entry[1][1], entry[1][2], entry[1][6], list(np.nan_to_num(entry[1][5], nan=0.0, posinf=1.0, neginf=0.0))])
+    ''' PUNEET: TODO: TEST'''
+    fil =  open(folder_graph+fname2, 'wb')
+    pickle.dump(biglist_sorted, fil)   
+    fil.close() 
+
     #     ''' TEMP BREAK'''
     #     # break
     #     # fil2 = open(new_metadata_file, 'wb')
