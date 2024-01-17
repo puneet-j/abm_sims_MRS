@@ -31,8 +31,9 @@ def getSiteID(site):
 
 def get_current_state(astates, asites, aposes, sposes, squals):
     try:
-        current_state = []
-        for id, (site, state, pos) in enumerate(zip(asites, astates, aposes)):
+        current_state_main = []
+        for id, (site, state, pos) in enumerate(sorted(zip(asites, astates, aposes), key = lambda x: (squals, ))):
+            current_state = []
             if not(site is None):
                 whichSite = getSiteID(site)
                 current_state.append(1.0*pos[0]/MAX_DIST)
@@ -55,11 +56,19 @@ def get_current_state(astates, asites, aposes, sposes, squals):
                 current_state.append(1.0)
                 current_state.append(1.0)
                 current_state.append(0.0)
+            current_state_main.append(current_state)
+        current_state_main = sorted(current_state_main, key = lambda x: (1.0 - x[4], x[2], 1.0 - x[0]**2 + x[1]**2))
+        retVal = []
+        for cstate in current_state_main:
+            for c in cstate:
+                retVal.append(c)
     except Exception as e:
         print(e)
-        pdb.set_trace()   
+        pdb.set_trace()  
     # pdb.set_trace()
-    return tuple(current_state)
+ 
+    # pdb.set_trace()
+    return tuple(retVal)
 
 def round_function(x, d):
     new = []
