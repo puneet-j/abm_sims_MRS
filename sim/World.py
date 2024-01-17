@@ -23,13 +23,14 @@ class World:
                       site_id, site_qual, site_pos in zip(range(0,self.num_sites), self.site_qualities, self.site_poses)]
         self.num_agents = params[3]
         self.agent_configs_init = params[4]
+        self.timeLimit = params[5]
         self.agents = []
         self.hub = Site(10000, 0.0, [0.0, 0.0])
         self.time = 0
         self.file_time = str(int(time.time()*1000000))
         self.fname = './' + fold_name + '/' + self.file_time + '.csv'
         self.fname_metadata = './' + fold_name + '/' + 'metadata.csv'
-        self.df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state']
+        self.df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
         self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites']
         self.converged_to_site = None
         self.threshold = COMMIT_THRESHOLD
@@ -37,8 +38,8 @@ class World:
 
     def save_metadata(self):
         arr = [self.file_time + '.csv', tuple(self.site_qualities), tuple(self.site_poses), self.hub.pos, self.num_agents, 
-               self.converged_to_site, self.time, tuple([tuple([conf['state'],conf['site']]) for conf in self.agent_configs_init if len(conf)>1])]
-        df_metadata = pd.DataFrame(np.array(arr, dtype=object).reshape(1,8), columns=self.df_metadata_cols)
+               self.converged_to_site, self.time, tuple([tuple([conf['state'],conf['site']]) for conf in self.agent_configs_init if len(conf)>1]), self.timeLimit]
+        df_metadata = pd.DataFrame(np.array(arr, dtype=object).reshape(1,9), columns=self.df_metadata_cols)
         df_metadata.to_csv(self.fname_metadata, header=False, mode='a', index=False)
         return
     
@@ -72,7 +73,7 @@ class World:
         
         to_save = [self.time, copy.deepcopy(agent_poses), copy.deepcopy(agent_dirs), copy.deepcopy(agent_states), copy.deepcopy(agent_sites)]
         self.list_for_df.append(to_save[:])
-        while self.time < TIME_LIMIT:
+        while self.time < self.timeLimit:
             # shuffle(self.agents)
             for iter in range(0, self.num_agents):
                 ag = self.agents[iter]#copy.deepcopy()

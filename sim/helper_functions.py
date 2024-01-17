@@ -70,7 +70,7 @@ def get_10perc_dancing_bad(agents, site_quals):
 def get_valid_qualities(num_sites, num_configs):
     qual_arr = []
     for config in range(0,num_configs):
-        quals = np.random.random(num_sites)
+        quals = [0.8, 0.3] #np.random.random(num_sites)
         while np.max(quals) < 0.5:
             quals = np.random.random(num_sites)
         qual_arr.append(quals)
