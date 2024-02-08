@@ -30,7 +30,7 @@ def getSiteID(site):
             pdb.set_trace()
 
 
-def get_current_state(astates, asites, aposes, sposes, squals):
+def get_current_state(astates, asites, aposes, sposes, squals): 
     try:
         current_state_main = []
         for id, (site, state, pos) in enumerate(sorted(zip(asites, astates, aposes), key = lambda x: (squals, ))):
@@ -136,7 +136,7 @@ def main():
     metadata.site_positions=metadata.site_positions.apply(literal_eval)
     metadata.site_positions=metadata.site_positions.apply(lambda x: tuple([tuple(a) for a in x]))
     df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
-    
+    graph_metaFile = 'graphMetadata.csv'
     for some_id, entry in enumerate(df.iterrows()):
         if entry[1][2] != 10: # or some_id==0:
             continue

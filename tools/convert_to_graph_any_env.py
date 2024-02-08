@@ -12,7 +12,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sim'))
 from params import ENVIRONMENT_BOUNDARY_X, TIME_LIMIT, COMMIT_THRESHOLD
 from math import sqrt
-from itertools import compress
+# from itertools import compress
 
 STATES = {'RECRUIT':0, 'ASSESS':1, 'TRAVEL_HOME_TO_RECRUIT':2, 'TRAVEL_SITE':3, 
           'OBSERVE':4, 'EXPLORE':5, 'TRAVEL_HOME_TO_OBSERVE':6}
@@ -99,9 +99,9 @@ def get_edges_success_time(fl, IDLookup, get_edges_with, success_dict, time_dict
     #         pdb.set_trace()
     for id, (csid, time_val) in enumerate(zip(fl.stateIDs.values, fl.time.values)):
         if csid in time_dict:
-            time_dict[csid].append([[time_conv - time_val], [time_val]])
+            time_dict[csid].append(time_conv)#([[time_conv - time_val], [time_val]])
         else:
-            time_dict[csid] = [[time_conv - time_val], [time_val]]
+            time_dict[csid] = [time_conv] #[[time_conv - time_val], [time_val]]
 
         if csid in success_dict:
             success_dict[csid].append(success)
@@ -135,9 +135,9 @@ def main():
     metadata.site_positions=metadata.site_positions.apply(literal_eval)
     metadata.site_positions=metadata.site_positions.apply(lambda x: tuple([tuple(a) for a in x]))
     df = metadata.groupby(by=['site_qualities', 'site_positions', 'num_agents'], as_index=False).agg(lambda x: x.tolist())
-    
+    graph_metaFile = 'graphMetadata.csv'
     for some_id, entry in enumerate(df.iterrows()):
-        if entry[1][2] != 10: # or some_id==0:
+        if entry[1].iloc[2] != 10: # or some_id==0:
             continue
         print(entry)
         graph = nx.Graph()
@@ -146,9 +146,10 @@ def main():
         has_edges_with = dict()
         success_dict = dict()
         time_dict = dict()
-        for fileName, site_conv, time_conv in zip(entry[1][3], entry[1][5], entry[1][6]):
+        for fileName, site_conv, time_conv in zip(entry[1].iloc[3], entry[1].iloc[5], entry[1].iloc[6]):
             ''' TEMP BREAK'''
-            quals = entry[1][0]
+            # pdb.set_trace()
+            quals = entry[1].iloc[0]
             fl = pd.read_csv(folder + fileName)
             fl.agent_states = fl.agent_states.apply(literal_eval)
             fl.agent_sites = fl.agent_sites.apply(literal_eval)
@@ -157,14 +158,25 @@ def main():
             success_now = site_conv/max(quals) if site_conv else 0.0 #1 if site_conv == max(quals) else 0
             
             # pdb.set_trace()
-            fl['currentState'] = fl.apply(lambda x: get_current_state(x.agent_states, x.agent_sites, x.agent_positions, entry[1][1], entry[1][0]), axis=1)
+            fl['currentState'] = fl.apply(lambda x: get_current_state(x.agent_states, x.agent_sites, x.agent_positions, entry[1].iloc[1], entry[1].iloc[0]), axis=1)
             IDLookup, nodeSize = get_unique_IDs(fl, IDLookup, nodeSize)
 
             has_edges_with, success_dict, time_dict = get_edges_success_time(fl, IDLookup, has_edges_with, success_dict, time_dict, success_now, time_conv)
-        # pdb.set_trace()
+        
+
+        nodeMetaArr = []
+        # for id, successVal in success_dict.items():
+        #     pdb.set_trace()
+        #     success_dict[id] = np.nanmean()
+        #     if np.isnan(successVal):
+        #         success_dict[id] = 0
+        #     time_dict[id] = np.nanmean(time_dict[id])*1.0/TIME_LIMIT
+            
+
         ''' ADD NODES, NODE SIZES, and EDGES WITH WEIGHTS'''
         for nodePos, nodeID in IDLookup.items():
-            graph.add_node(nodeID, x=nodePos, sz=nodeSize[nodePos], success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID][0]), time_now=np.mean(time_dict[nodeID][1]))
+            graph.add_node(nodeID, x=nodePos, sz=nodeSize[nodePos])#, success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID][0]), time_now=np.mean(time_dict[nodeID][1]))
+            nodeMetaArr.append([nodeID, np.nanmean(success_dict[nodeID]), np.mean(time_dict[nodeID])*1.0/TIME_LIMIT])
 
         for node,value in has_edges_with.items():
             for edge_to in value:
@@ -173,19 +185,26 @@ def main():
                 else:
                     graph.add_edge(node, edge_to, weight=1.0)
 
+        # for succ, time, pos, id in zip(IDLookup.items())
         # pdb.set_trace()
         fname = str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2]) + '.pickle'
         # pdb.set_trace()
-        meta_arr.append([entry[1][0], entry[1][1], entry[1][2], entry[1][6], list(np.nan_to_num(entry[1][5], nan=0.0, posinf=1.0, neginf=0.0))])
+        meta_arr.append([entry[1].iloc[0], entry[1].iloc[1], entry[1].iloc[2], entry[1].iloc[6], list(np.nan_to_num(entry[1].iloc[5], nan=0.0, posinf=1.0, neginf=0.0))])
         ''' PUNEET: TODO: TEST'''
         fil =  open(folder_graph+fname, 'wb')
         pickle.dump(graph, fil)   
         fil.close() 
         ''' TEMP BREAK'''
+        try:
+            df_metaArr = pd.DataFrame(nodeMetaArr, columns=['nodeID', 'mean_success', 'mean_conv_time'])
+            df_metaArr.to_csv(folder_graph + graph_metaFile)
+        except:
+            pdb.set_trace()
         # break
         # fil2 = open(new_metadata_file, 'wb')
     df_new_metadata = pd.DataFrame(meta_arr, columns=['qualities', 'positions', 'agents', 'time_converged', 'site_converged'])
     df_new_metadata.to_csv(new_metadata_file)
+    
 
 
 main()
