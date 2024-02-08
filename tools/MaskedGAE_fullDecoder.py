@@ -102,14 +102,15 @@ def loss_function(reconstructed_x, original_x):
 
 def create_subgraphs(data, num_subgraphs=10):
     # Split the graph into num_subgraphs subgraphs
-    nodes = np.arange(data.num_nodes)
+    # pdb.set_trace()
+    nodes = np.arange(data.num_nodes)#np.random.choice(data.num_nodes,)
     subgraph_nodes = np.array_split(nodes, num_subgraphs)
 
     subgraphs = []
     for node_subset in subgraph_nodes:
         # Create subgraph for the current subset of nodes
         try:
-            sg_edge_index, sg_edge_attr = subgraph(torch.from_numpy(node_subset), data.edge_index, edge_attr=data.edge_attr, relabel_nodes=False)
+            sg_edge_index, sg_edge_attr = k_hop_subgraph(torch.from_numpy(node_subset), data.edge_index, edge_attr=data.edge_attr, relabel_nodes=False)
         except:
             # pdb.set_trace()
             plt.figure(1)
