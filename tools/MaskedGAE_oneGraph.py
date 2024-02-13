@@ -55,7 +55,7 @@ class MaskedGraphAutoencoder(nn.Module):
         self.decoder = GraphDecoder(in_channels, hidden_channels, out_channels)
 
     def forward(self, x, edge_index, mask):
-        x_masked = x * mask
+        x_masked = x #* mask
         z = self.encoder(x_masked, edge_index)
         x_reconstructed = self.decoder(z, edge_index)
         return x_reconstructed
@@ -74,10 +74,10 @@ def networkx_to_pyg_graph(G, node_features, edge_features):
     data = Data(x=x, edge_index=edge_index, edge_attr=edge_attr)
     return data
 
-def generate_mask(x, mask_rate=0.1):
+def generate_mask(x, mask_rate=0.1, device=None):
     # Generate a mask for input features
-    mask = torch.FloatTensor(x.size()).uniform_() > mask_rate
-    return mask.float()
+    mask = torch.FloatTensor(x.size(), device=device).uniform_() > mask_rate
+    return mask.float().to(x.device)
 
 def generate_batch_mask(x, batch, mask_rate=0.01, device=None):
     # Generate a mask for batched input features
@@ -85,20 +85,20 @@ def generate_batch_mask(x, batch, mask_rate=0.01, device=None):
     return mask.float().to(x.device)
 
 
-def train(model, data_loader, optimizer):
+def train(model, data, optimizer):
     model.train()
     total_loss = 0
-    for data in data_loader:
-        optimizer.zero_grad()
-        mask = generate_batch_mask(data.x, data.batch, device=device).to(device)  # Adjusted for subgraph batching
-        
-        reconstructed_x = model(data.x.to(device), data.edge_index.to(device), mask)
-        # pdb.set_trace()
-        loss = loss_function(reconstructed_x, data.x.to(device))
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item()
-    return total_loss / len(data_loader)
+    # for data in data_loader:
+    optimizer.zero_grad()
+    # mask = generate_batch_mask(data.x, data.batch, device=device).to(device)  # Adjusted for subgraph batching
+    # mask = generate_mask(data.x, device=device).to(device)
+    reconstructed_x = model(data.x.to(device), data.edge_index.to(device), mask=None)
+    # pdb.set_trace()
+    loss = loss_function(reconstructed_x, data.x.to(device))
+    loss.backward()
+    optimizer.step()
+    total_loss += loss.item()
+    return total_loss #/ len(data_loader)
 
 # Assuming a loss function appropriate for node feature reconstruction, e.g., MSE for continuous features
 def loss_function(reconstructed_x, original_x):
@@ -195,6 +195,7 @@ if __name__ == "__main__":
 
     hC = 64
     inC = len(G.nodes[0]['x'])
+    print('dimension of nodes: ',inC)
     '''
     print(f"radius: {nx.radius(G)}")
     print(f"diameter: {nx.diameter(G)}")
@@ -207,19 +208,21 @@ if __name__ == "__main__":
     # Convert networkx graph to PyTorch Geometric graph
     pyg_graph = networkx_to_pyg_graph(G, 'x', 'weight')
     # pdb.set_trace()
-    subgraphs = create_subgraphs(pyg_graph, num_subgraphs=100, num_hops=2)
+    # subgraphs = create_subgraphs(pyg_graph, num_subgraphs=1, num_hops=2)
     # pdb.set_trace()
-    data_loader = DataLoader(subgraphs, batch_size=1, shuffle=True)
+    subgraphs = pyg_graph
+    # data_loader = DataLoader(subgraphs, batch_size=1, shuffle=True)
     # pdb.set_trace()
     final_loss = []
-    for outchannels in range(5,20):
-        model = MaskedGraphAutoencoder(in_channels=inC, hidden_channels=hC, out_channels=5).to(device)
-        optimizer = optim.Adam(model.parameters(), lr=0.1)
-
-        for epoch in range(1, 30):  # Number of epochs
-            loss = train(model, data_loader, optimizer)
+    for outchannels in range(2,5):
+        model = MaskedGraphAutoencoder(in_channels=inC, hidden_channels=hC, out_channels=outchannels).to(device)
+        optimizer = optim.Adam(model.parameters(), lr=0.01)
+        losses = []
+        for epoch in range(1, 100):  # Number of epochs
+            loss = train(model, subgraphs, optimizer)
             print(f'Epoch {epoch}, Loss: {loss:.4f}')
-        final_loss.append(loss)
+            losses.append(loss)
+        final_loss.append(losses)
     print(final_loss) 
-    print(range(5,20))
+    # print(range(5,20))
         
