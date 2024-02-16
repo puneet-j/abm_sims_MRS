@@ -7,24 +7,24 @@ import os
 from params import *
 import copy 
 
-def generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, inits, maxTimes):
-    worlds = []
+# def generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, inits, maxTimes):
+#     worlds = []
 
-    for sites in site_configs:
-        # for sim in range(0,sims_per_config):
-        # pdb.set_trace()
-            # qualities = quals[sim]
-        for agents in agent_configs:
-            for distance in distances:
-                qualities = get_valid_qualities(sites, sims_per_config)
-                for sim_dist_iter in range(0,sims_per_distance):
-                    poses = get_poses(sites, distance)
-                    for qual in qualities:
-                        for agent_init in inits: #get_agent_inits(agents, poses, qual):
-                            for mTimes in maxTimes:
-                                for repeats in range(0,sim_repeats):           
-                                    worlds.append([sites, qual, poses, agents, agent_init, mTimes])
-    return worlds
+#     for sites in site_configs:
+#         # for sim in range(0,sims_per_config):
+#         # pdb.set_trace()
+#             # qualities = quals[sim]
+#         for agents in agent_configs:
+#             for distance in distances:
+#                 qualities = get_valid_qualities(sites, sims_per_config)
+#                 for sim_dist_iter in range(0,sims_per_distance):
+#                     poses = get_poses(sites, distance)
+#                     for qual in qualities:
+#                         for agent_init in inits: #get_agent_inits(agents, poses, qual):
+#                             for mTimes in maxTimes:
+#                                 for repeats in range(0,sim_repeats):           
+#                                     worlds.append([sites, qual, poses, agents, agent_init, mTimes])
+#     return worlds
 
 def convert_to_init_agent(arr):
     arr2 = []
@@ -49,10 +49,10 @@ def get_init_condition_from_df(df, starts):
         init_condition.append(convert_to_init_agent(dat))
     return init_condition
 
-def generate_world_configs_from_init_sims(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, starts, fname):
-    init_configs = []
+def generate_world_configs_from_init_sims(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, starts, fname, mTimes):
+    
     # for agent_init in get_agent_inits(agents, poses, qual):
-
+    worlds = []
     for sites in site_configs:
         # for sim in range(0,sims_per_config):
         # pdb.set_trace()
@@ -64,15 +64,20 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
                     poses = get_poses(sites, distance)
                     for qual in qualities:
                         for agent_init in get_agent_inits(agents, poses, qual):
-                            # for repeats in range(0,sim_repeats):           
-                            worlds = [sites, qual, poses, agents, agent_init, TIME_LIMIT]
+                            # for repeats in range(0,sim_repeats):   
+                            w_init = [sites, qual, poses, agents, agent_init, TIME_LIMIT] 
+                            worlds.append(w_init)
                             # pdb.set_trace()
-                            w = World(worlds, fname, save=False)
+                            w = World(w_init, fname, save=False)
                             w.simulate()
+                            init_configs = []
                             init_configs.append(agent_init)
                             init_configs += get_init_condition_from_df(w.list_for_df, starts)
+                            for init in init_configs:
+                                for mtime in mTimes:
+                                    worlds.append([sites, qual, poses, agents, init, mtime])
                             
-    return init_configs
+    return worlds
     # return worlds
 
 
@@ -87,10 +92,10 @@ if __name__ == '__main__':
     agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 1 #20
     sims_per_distance = 1 #20
-    sim_repeats = 10
-    num_samples_per_starting_condition = 29
+    sim_repeats = 1
+    num_samples_per_starting_condition = 1
     maxTimes = [100, 500, 1000, 10000, 35000]
-    fold_name = 'graphsage_results'
+    fold_name = 'graphsage_results/tests/'
     fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
     empty = pd.DataFrame([], columns=df_metadata_cols)
@@ -100,21 +105,21 @@ if __name__ == '__main__':
     else:
         empty.to_csv(fname_metadata, index=False)
     
-    random_inits = generate_world_configs_from_init_sims(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, num_samples_per_starting_condition, fold_name)
+    worlds = generate_world_configs_from_init_sims(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, num_samples_per_starting_condition, fold_name, maxTimes)
     # pdb.set_trace()
-    worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, random_inits, maxTimes)
+    # worlds = generate_world_configs(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, random_inits, maxTimes)
     # pdb.set_trace()
-
+    
     '''comment this for testing'''
-    manager = multiprocessing.Manager()
-    lock = manager.Lock()
-    pool = multiprocessing.Pool()
-    results = [pool.apply_async(simulate_world, args=(sim, World(w, fold_name))) for sim, w in enumerate(worlds)]
-    pool.close()
-    pool.join()
+    # manager = multiprocessing.Manager()
+    # lock = manager.Lock()
+    # pool = multiprocessing.Pool()
+    # results = [pool.apply_async(simulate_world, args=(sim, World(w, fold_name))) for sim, w in enumerate(worlds)]
+    # pool.close()
+    # pool.join()
 
     '''uncomment this for testing'''
-    # for sim, w in enumerate(worlds):
-    #     world = World(w, fold_name)
-    #     world.simulate()
-    #     print(sim, ' done')
+    for sim, w in enumerate(worlds):
+        world = World(w, fold_name)
+        world.simulate()
+        print(sim, ' done')

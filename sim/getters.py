@@ -30,7 +30,7 @@ def get_OBSERVE_TO_TRAVEL_SITE_PROB(agent, p):
 # site quality assessment while exploring uses linear site quality
 def get_EXPLORE_TO_ASSESS_PROB(ag):
     site = agent_at_any_site(ag)
-    if not(site is None):
+    if site is not None:
         return site.quality, site
         # # try:
         # if site.quality > SITE_QUALITY_ASSESS_THRESHOLD:
@@ -53,7 +53,7 @@ def get_EXPLORE_TO_TRAVEL_HOME_PROB(agent, p, toAssess):
 
 # assessment for now is just a binomial random variable
 def get_ASSESS_TO_TRAVEL_HOME_PROB(agent, p):
-    if not(agent_at_any_site(agent) is None):
+    if agent_at_any_site(agent) is not None:
         '''NOTE: IT FAILED THIS IN A FEW OF A THOUSAND SIMS -> CHECK : PUNEET, VIGYNESH'''
         return p, agent.assigned_site
     else:

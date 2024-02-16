@@ -13,6 +13,7 @@ import copy
 class World:
     def __init__(self, params, fold_name, save=True):
         # params = (num_sites, site_quals, site_poses, num_agents)
+        # print(params)
         self.save = save
         self.num_sites = params[0]
         self.site_qualities = params[1]
