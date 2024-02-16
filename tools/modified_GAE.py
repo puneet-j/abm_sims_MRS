@@ -13,6 +13,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch_geometric.utils import to_dense_adj, subgraph, k_hop_subgraph
 import matplotlib.pyplot as plt
+from combine_nx_to_dataloader import GraphDataset
+
 
 '''NOTE: Vigynesh, Puneet: Implement garbage collection'''
 
@@ -24,11 +26,11 @@ class GraphEncoder(nn.Module):
         # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels * 2)  # Additional hidden layer
         self.conv3 = SAGEConv(hidden_channels * 2, out_channels)  # Final Layer
 
-    def forward(self, x, edge_index):
+    def forward(self, x, edge_index, edge_weight):
         try:
-            x = F.relu(self.conv1(x, edge_index))
-            x = F.relu(self.conv2(x, edge_index))
-            x = F.relu(self.conv3(x, edge_index))
+            x = F.relu(self.conv1(x, edge_index, edge_weight=edge_weight))
+            x = F.relu(self.conv2(x, edge_index, edge_weight=edge_weight))
+            x = F.relu(self.conv3(x, edge_index, edge_weight=edge_weight))
             # x = self.conv3(x, edge_index)
             return x
         except:
@@ -43,10 +45,10 @@ class GraphDecoder(nn.Module):
         # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels)  # Additional hidden layer
         self.conv4 = SAGEConv(hidden_channels, in_channels)  # Additional hidden layer to output size
 
-    def forward(self, z, edge_index):
-        z = F.relu(self.conv1(z, edge_index))
-        z = F.relu(self.conv2(z, edge_index))
-        z = F.relu(self.conv3(z, edge_index))
+    def forward(self, z, edge_index, edge_weight):
+        z = F.relu(self.conv1(z, edge_index, edge_weight=edge_weight))
+        z = F.relu(self.conv2(z, edge_index, edge_weight=edge_weight))
+        z = F.relu(self.conv3(z, edge_index, edge_weight=edge_weight))
         z = self.conv4(z, edge_index)
         return z
 
@@ -87,20 +89,20 @@ def generate_batch_mask(x, batch, mask_rate=0.01, device=None):
     return mask.float().to(x.device)
 
 
-def train(model, data, optimizer):
+def train(model, data_loader, optimizer):
     model.train()
     total_loss = 0
-    # for data in data_loader:
-    optimizer.zero_grad()
-    # mask = generate_batch_mask(data.x, data.batch, device=device).to(device)  # Adjusted for subgraph batching
-    # mask = generate_mask(data.x, device=device).to(device)
-    reconstructed_x = model(data.x.to(device), data.edge_index.to(device), mask=None)
-    # pdb.set_trace()
-    loss = loss_function(reconstructed_x, data.x.to(device))
-    loss.backward()
-    optimizer.step()
-    total_loss += loss.item()
-    return total_loss #/ len(data_loader)
+    for data in data_loader:
+        optimizer.zero_grad()
+        # mask = generate_batch_mask(data.x, data.batch, device=device).to(device)  # Adjusted for subgraph batching
+        # mask = generate_mask(data.x, device=device).to(device)
+        reconstructed_x = model(data.x.to(device), data.edge_index.to(device), data.edge_attr.to(device), mask=None)
+        # pdb.set_trace()
+        loss = loss_function(reconstructed_x, data.x.to(device))
+        loss.backward()
+        optimizer.step()
+        total_loss += loss.item()
+    return total_loss / len(data_loader)
 
 # Assuming a loss function appropriate for node feature reconstruction, e.g., MSE for continuous features
 def loss_function(reconstructed_x, original_x):
@@ -158,29 +160,18 @@ def get_test_train(graph, num_test_nodes=5, random_seed=42):
 
 # Example usage
 if __name__ == "__main__":
-    # Create a networkx graph
-    folder_graph = './graphs/graphsage_graph/'
-    metadata_file = folder_graph + 'metadata.csv'
-    succTimeFiles = folder_graph + 'graphMetadata.csv'
-    succTime = pd.read_csv(succTimeFiles)
-    metFile = pd.read_csv(metadata_file)
-    for id, row in enumerate(metFile.iterrows()):
-        fname = str(row[1].iloc[1]) + str(row[1].iloc[2]) + str(row[1].iloc[3]) + '_noAgentPos' + '.pickle'
-        # pdb.set_trace()
-        try:
-            fil =  open(folder_graph+fname, 'rb')
-            G = pickle.load(fil)
-            fil.close()
-            break
-        except:
-            continue
+    # data = 
+    # for node_features, edge_index, edge_features in dataloader:
+
     # pdb.set_trace()
     cuda_available = torch.cuda.is_available()
     device = torch.device("cuda" if cuda_available else "cpu")
+    folder_graph = './graphs/graphsage_graph/single_graphs/'
+    fname = 'graph_list_with_features.pth'
 
     hC = 64
-    inC = len(G.nodes[0]['x'])
-    print('dimension of nodes: ',inC)
+    inC = 40 #len(G.nodes[0]['x'])
+    # print('dimension of nodes: ',inC)
     '''
     print(f"radius: {nx.radius(G)}")
     print(f"diameter: {nx.diameter(G)}")
@@ -190,22 +181,26 @@ if __name__ == "__main__":
     # print(f"density: {nx.density(G)}")
     print(f"max degree: {np.max(G.degree())}")
     '''
-    trainG, testG = get_test_train(G, num_test_nodes=0)
+    # trainG, testG = get_test_train(G, num_test_nodes=0)
     # Convert networkx graph to PyTorch Geometric graph
-    trainPyG = networkx_to_pyg_graph(trainG, 'x', 'weight')
+    # trainPyG = networkx_to_pyg_graph(trainG, 'x', 'weight')
     # pdb.set_trace()
     # subgraphs = create_subgraphs(pyg_graph, num_subgraphs=1, num_hops=2)
     # pdb.set_trace()
     # testPyG = get_test_train(testG, 'x')
     # data_loader = DataLoader(subgraphs, batch_size=1, shuffle=True)
     # pdb.set_trace()
+    graph_list = torch.load(folder_graph+fname)
+    dataset = GraphDataset(graph_list)
+    dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+
     final_loss = []
     for outchannels in range(2,5):
         model = MaskedGraphAutoencoder(in_channels=inC, hidden_channels=hC, out_channels=outchannels).to(device)
         optimizer = optim.Adam(model.parameters(), lr=0.01)
         losses = []
         for epoch in range(1, 100):  # Number of epochs
-            loss = train(model, trainPyG, optimizer)
+            loss = train(model, dataloader, optimizer)
             print(f'Epoch {epoch}, Loss: {loss:.4f}')
             losses.append(loss)
         final_loss.append(losses)
