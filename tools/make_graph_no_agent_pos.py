@@ -188,7 +188,7 @@ def main():
 
         # for succ, time, pos, id in zip(IDLookup.items())
         # pdb.set_trace()
-        fname = str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2]) + '_noAgentPos' + '.pickle'
+        fname = str(entry[1].iloc[0]) + str(entry[1].iloc[1]) + str(entry[1].iloc[2]) + '_noAgentPos' + '.pickle'
         # pdb.set_trace()
         meta_arr.append([entry[1].iloc[0], entry[1].iloc[1], entry[1].iloc[2], entry[1].iloc[6], list(np.nan_to_num(entry[1].iloc[5], nan=0.0, posinf=1.0, neginf=0.0))])
         ''' PUNEET: TODO: TEST'''
@@ -198,7 +198,7 @@ def main():
         ''' TEMP BREAK'''
         try:
             df_metaArr = pd.DataFrame(nodeMetaArr, columns=['nodeID', 'mean_success', 'mean_conv_time'])
-            df_metaArr.to_csv(folder_graph + graph_metaFile)
+            df_metaArr.to_csv(folder_graph + str(entry[1].iloc[0]) + str(entry[1].iloc[1]) + str(entry[1].iloc[2]) + graph_metaFile)
         except:
             pdb.set_trace()
         # break
@@ -206,7 +206,6 @@ def main():
     df_new_metadata = pd.DataFrame(meta_arr, columns=['qualities', 'positions', 'agents', 'time_converged', 'site_converged'])
     df_new_metadata.to_csv(new_metadata_file)
     
-
 
 main()
 

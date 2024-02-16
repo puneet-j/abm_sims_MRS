@@ -14,20 +14,22 @@ import torch.nn.functional as F
 from torch_geometric.utils import to_dense_adj, subgraph, k_hop_subgraph
 import matplotlib.pyplot as plt
 
+'''NOTE: Vigynesh, Puneet: Implement garbage collection'''
+
 class GraphEncoder(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(GraphEncoder, self).__init__()
         self.conv1 = SAGEConv(in_channels, hidden_channels)
         self.conv2 = SAGEConv(hidden_channels, hidden_channels * 2)
-        self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels * 2)  # Additional hidden layer
-        self.conv4 = SAGEConv(hidden_channels * 2, out_channels)  # Additional hidden layer
+        # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels * 2)  # Additional hidden layer
+        self.conv3 = SAGEConv(hidden_channels * 2, out_channels)  # Final Layer
 
     def forward(self, x, edge_index):
         try:
             x = F.relu(self.conv1(x, edge_index))
             x = F.relu(self.conv2(x, edge_index))
             x = F.relu(self.conv3(x, edge_index))
-            x = self.conv4(x, edge_index)
+            # x = self.conv3(x, edge_index)
             return x
         except:
             pdb.set_trace()
@@ -38,7 +40,7 @@ class GraphDecoder(nn.Module):
         # Assuming the encoded features are to be decoded back to original feature size
         self.conv1 = SAGEConv(out_channels, hidden_channels * 2)
         self.conv2 = SAGEConv(hidden_channels * 2, hidden_channels * 2)  # Mimic encoder complexity
-        self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels)  # Additional hidden layer
+        # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels)  # Additional hidden layer
         self.conv4 = SAGEConv(hidden_channels, in_channels)  # Additional hidden layer to output size
 
     def forward(self, z, edge_index):
@@ -104,33 +106,6 @@ def train(model, data, optimizer):
 def loss_function(reconstructed_x, original_x):
     return F.mse_loss(reconstructed_x, original_x)
 
-# def create_subgraphs(data, num_subgraphs=10):
-#     # Split the graph into num_subgraphs subgraphs
-#     # pdb.set_trace()
-#     nodes = np.arange(data.num_nodes)#np.random.choice(data.num_nodes,)
-#     subgraph_nodes = np.array_split(nodes, num_subgraphs)
-
-#     subgraphs = []
-#     for node_subset in subgraph_nodes:
-#         # Create subgraph for the current subset of nodes
-#         try:
-#             sg_edge_index, sg_edge_attr = k_hop_subgraph(torch.from_numpy(node_subset), data.edge_index, edge_attr=data.edge_attr, relabel_nodes=False)
-#         except:
-#             # pdb.set_trace()
-#             plt.figure(1)
-#             plt.plot(node_subset)
-#             plt.figure(2)
-#             plt.plot(data.edge_index[0,:], data.edge_index[1,:])
-#             plt.figure(3)
-#             plt.plot(data.edge_attr)
-#             plt.show()
-#             pdb.set_trace()
-#         sg_x = data.x[node_subset]
-#         sg_data = Data(x=sg_x, edge_index=sg_edge_index, edge_attr=sg_edge_attr)
-#         subgraphs.append(sg_data)
-    
-#     return subgraphs
-
 def create_subgraphs(data, num_subgraphs=100, num_hops=2, random_seed=42):
     """
     Generate subgraphs using k-hop subgraph around randomly selected nodes.
@@ -172,6 +147,15 @@ def create_subgraphs(data, num_subgraphs=100, num_hops=2, random_seed=42):
     return subgraphs
 
 
+def get_test_train(graph, num_test_nodes=5, random_seed=42):
+    # torch.manual_seed(random_seed)
+    np.random_seed(random_seed)
+    test_idx = np.random.randint(0, graph.num_nodes, (num_test_nodes,))
+    testG = nx.Graph()
+    testG.add_nodes_from(graph.nodes([test_idx]))
+    graph.remove_nodes_from(test_idx)
+    return graph, testG
+
 # Example usage
 if __name__ == "__main__":
     # Create a networkx graph
@@ -187,6 +171,7 @@ if __name__ == "__main__":
             fil =  open(folder_graph+fname, 'rb')
             G = pickle.load(fil)
             fil.close()
+            break
         except:
             continue
     # pdb.set_trace()
@@ -205,12 +190,13 @@ if __name__ == "__main__":
     # print(f"density: {nx.density(G)}")
     print(f"max degree: {np.max(G.degree())}")
     '''
+    trainG, testG = get_test_train(G)
     # Convert networkx graph to PyTorch Geometric graph
-    pyg_graph = networkx_to_pyg_graph(G, 'x', 'weight')
+    trainPyG = networkx_to_pyg_graph(trainG, 'x', 'weight')
     # pdb.set_trace()
     # subgraphs = create_subgraphs(pyg_graph, num_subgraphs=1, num_hops=2)
     # pdb.set_trace()
-    subgraphs = pyg_graph
+    testPyG = get_test_train(testG, 'x')
     # data_loader = DataLoader(subgraphs, batch_size=1, shuffle=True)
     # pdb.set_trace()
     final_loss = []
@@ -219,7 +205,7 @@ if __name__ == "__main__":
         optimizer = optim.Adam(model.parameters(), lr=0.01)
         losses = []
         for epoch in range(1, 100):  # Number of epochs
-            loss = train(model, subgraphs, optimizer)
+            loss = train(model, trainPyG, optimizer)
             print(f'Epoch {epoch}, Loss: {loss:.4f}')
             losses.append(loss)
         final_loss.append(losses)

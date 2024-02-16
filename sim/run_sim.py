@@ -83,7 +83,7 @@ def simulate_world(sim, world):
 
 if __name__ == '__main__':
     site_configs = [2]#[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
-    distances = [100]#[100, 200]#, 300]#, 300]
+    distances = [100, 200, 150]#[100, 200]#, 300]#, 300]
     agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 1 #20
     sims_per_distance = 1 #20

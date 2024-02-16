@@ -54,6 +54,7 @@ def get_EXPLORE_TO_TRAVEL_HOME_PROB(agent, p, toAssess):
 # assessment for now is just a binomial random variable
 def get_ASSESS_TO_TRAVEL_HOME_PROB(agent, p):
     if not(agent_at_any_site(agent) is None):
+        '''NOTE: IT FAILED THIS IN A FEW OF A THOUSAND SIMS -> CHECK : PUNEET, VIGYNESH'''
         return p, agent.assigned_site
     else:
         pdb.set_trace()
