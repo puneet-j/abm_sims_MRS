@@ -91,11 +91,11 @@ if __name__ == '__main__':
     distances = [100, 200, 150]#[100, 200]#, 300]#, 300]
     agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 1 #20
-    sims_per_distance = 1 #20
-    sim_repeats = 1
-    num_samples_per_starting_condition = 1
+    sims_per_distance = 10 #20
+    sim_repeats = 10
+    num_samples_per_starting_condition = 29
     maxTimes = [100, 500, 1000, 10000, 35000]
-    fold_name = 'graphsage_results/tests/'
+    fold_name = 'graphsage_results/newtest/'
     fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
     empty = pd.DataFrame([], columns=df_metadata_cols)
@@ -111,15 +111,15 @@ if __name__ == '__main__':
     # pdb.set_trace()
     
     '''comment this for testing'''
-    # manager = multiprocessing.Manager()
-    # lock = manager.Lock()
-    # pool = multiprocessing.Pool()
-    # results = [pool.apply_async(simulate_world, args=(sim, World(w, fold_name))) for sim, w in enumerate(worlds)]
-    # pool.close()
-    # pool.join()
+    manager = multiprocessing.Manager()
+    lock = manager.Lock()
+    pool = multiprocessing.Pool()
+    results = [pool.apply_async(simulate_world, args=(sim, World(w, fold_name))) for sim, w in enumerate(worlds)]
+    pool.close()
+    pool.join()
 
     '''uncomment this for testing'''
-    for sim, w in enumerate(worlds):
-        world = World(w, fold_name)
-        world.simulate()
-        print(sim, ' done')
+    # for sim, w in enumerate(worlds):
+    #     world = World(w, fold_name)
+    #     world.simulate()
+    #     print(sim, ' done')
