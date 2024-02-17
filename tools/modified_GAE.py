@@ -43,13 +43,13 @@ class GraphDecoder(nn.Module):
         self.conv1 = SAGEConv(out_channels, hidden_channels * 2)
         self.conv2 = SAGEConv(hidden_channels * 2, hidden_channels * 2)  # Mimic encoder complexity
         # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels)  # Additional hidden layer
-        self.conv4 = SAGEConv(hidden_channels, in_channels)  # Additional hidden layer to output size
+        self.conv3 = SAGEConv(hidden_channels, in_channels)  # Additional hidden layer to output size
 
     def forward(self, z, edge_index, edge_weight):
         z = F.relu(self.conv1(z, edge_index, edge_weight=edge_weight))
         z = F.relu(self.conv2(z, edge_index, edge_weight=edge_weight))
         z = F.relu(self.conv3(z, edge_index, edge_weight=edge_weight))
-        z = self.conv4(z, edge_index)
+        # z = self.conv4(z, edge_index)
         return z
 
 class MaskedGraphAutoencoder(nn.Module):
@@ -190,9 +190,9 @@ if __name__ == "__main__":
     # testPyG = get_test_train(testG, 'x')
     # data_loader = DataLoader(subgraphs, batch_size=1, shuffle=True)
     # pdb.set_trace()
-    graph_list = torch.load(folder_graph+fname)
+    graph_list = torch.load(fname)
     dataset = GraphDataset(graph_list)
-    dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
 
     final_loss = []
     for outchannels in range(2,5):

@@ -44,8 +44,8 @@ for file in files:
     fil.close()
     graph_list.append(G)
 
-dataset = GraphDataset(graph_list)
-dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+# dataset = GraphDataset(graph_list)
+# dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 
 # Save the graph list for later use, similar to the previous example
 torch.save(graph_list, 'graph_list_with_features.pth')

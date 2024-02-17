@@ -122,7 +122,7 @@ def get_edges_success_time(fl, IDLookup, get_edges_with, success_dict, time_dict
     return get_edges_with, success_dict, time_dict
 
 def main():
-    folder = './graphsage_results/'
+    folder = './graphsage_results/newtest/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)

@@ -75,7 +75,8 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
                             init_configs += get_init_condition_from_df(w.list_for_df, starts)
                             for init in init_configs:
                                 for mtime in mTimes:
-                                    worlds.append([sites, qual, poses, agents, init, mtime])
+                                    for _ in sim_repeats:
+                                        worlds.append([sites, qual, poses, agents, init, mtime])
                             
     return worlds
     # return worlds
@@ -91,9 +92,9 @@ if __name__ == '__main__':
     distances = [100, 200, 150]#[100, 200]#, 300]#, 300]
     agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 1 #20
-    sims_per_distance = 10 #20
+    sims_per_distance = 5 #20
     sim_repeats = 10
-    num_samples_per_starting_condition = 29
+    num_samples_per_starting_condition = 10
     maxTimes = [100, 500, 1000, 10000, 35000]
     fold_name = 'graphsage_results/newtest/'
     fname_metadata = './' + fold_name + '/metadata.csv'
