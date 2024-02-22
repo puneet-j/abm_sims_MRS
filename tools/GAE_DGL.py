@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch_geometric
-from torch_geometric.nn import SAGEConv, GraphConv
+from torch_geometric.nn import GraphConv #,  SAGEConv,
 from torch_geometric.data import Data
 import networkx as nx
 import numpy as np
@@ -14,7 +14,8 @@ import torch.nn.functional as F
 from torch_geometric.utils import to_dense_adj, subgraph, k_hop_subgraph
 import matplotlib.pyplot as plt
 from combine_nx_to_dataloader import GraphDataset
-
+from dgl.nn import SAGEConv, EdgeWeightNorm
+import dgl
 
 '''NOTE: Vigynesh, Puneet: Implement garbage collection'''
 
@@ -96,18 +97,18 @@ def get_test_train(graph, num_test_nodes=5, random_seed=42):
 class GraphEncoder(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(GraphEncoder, self).__init__()
-        self.conv1 = SAGEConv(in_channels, hidden_channels)
-        self.conv2 = SAGEConv(hidden_channels, hidden_channels * 2)
-        # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels * 2)  # Additional hidden layer
-        self.conv3 = SAGEConv(hidden_channels * 2, out_channels)  # Final Layer
+        self.conv1 = SAGEConv(in_channels, hidden_channels, 'pool')
+        self.conv2 = SAGEConv(hidden_channels, hidden_channels * 2, 'pool')
+        # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels * 2, 'pool')  # Additional hidden layer
+        self.conv3 = SAGEConv(hidden_channels * 2, out_channels, 'pool')  # Final Layer
 
-    def forward(self, x, edge_index):
+    def forward(self, x, feat, edge_weight):
         try:
-            x = F.relu(self.conv1(x, edge_index))
-            x = F.relu(self.conv2(x, edge_index))
-            x = F.relu(self.conv3(x, edge_index))
+            h = F.relu(self.conv1(x, feat, edge_weight=edge_weight))
+            h = F.relu(self.conv2(x, h, edge_weight=edge_weight))
+            h = F.relu(self.conv3(x, h, edge_weight=edge_weight))
             # x = self.conv3(x, edge_index)
-            return x
+            return h
         except Exception as e:
             print(e)
             pdb.set_trace()
@@ -116,17 +117,18 @@ class GraphDecoder(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(GraphDecoder, self).__init__()
         # Assuming the encoded features are to be decoded back to original feature size
-        self.conv1 = GraphConv(out_channels, hidden_channels * 2)
-        self.conv2 = GraphConv(hidden_channels * 2, hidden_channels * 2)  # Mimic encoder complexity
-        # self.conv3 = GraphConv(hidden_channels * 2, hidden_channels)  # Additional hidden layer
-        self.conv3 = GraphConv(hidden_channels * 2, in_channels)  # Additional hidden layer to output size
+        self.conv1 = SAGEConv(out_channels, hidden_channels * 2, 'pool')
+        self.conv2 = SAGEConv(hidden_channels * 2, hidden_channels * 2, 'pool')  # Mimic encoder complexity
+        # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels, 'pool')  # Additional hidden layer
+        self.conv3 = SAGEConv(hidden_channels * 2, in_channels, 'pool')  # Additional hidden layer to output size
 
-    def forward(self, z):
-        z = F.relu(self.conv1(z))
-        z = F.relu(self.conv2(z))
-        z = F.relu(self.conv3(z))
+    def forward(self, z, feat, edge_weight):
+        hd = F.relu(self.conv1(z, feat, edge_weight=edge_weight))
+        hd = F.relu(self.conv2(z, hd, edge_weight=edge_weight))
+        hd = F.relu(self.conv3(z, hd, edge_weight=edge_weight))
         # z = self.conv4(z, edge_index)
-        return z
+        adj_rec = torch.matmul(hd, hd.t())
+        return hd, adj_rec
 
 class MaskedGraphAutoencoder(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
@@ -134,17 +136,16 @@ class MaskedGraphAutoencoder(nn.Module):
         self.encoder = GraphEncoder(in_channels, hidden_channels, out_channels)
         self.decoder = GraphDecoder(in_channels, hidden_channels, out_channels)
 
-    def forward(self, x, edge_index):
-        x_masked = x #* mask
-        z = self.encoder(x_masked, edge_index)
-        x_reconstructed = self.decoder(z)
-        return x_reconstructed, z
+    def forward(self, graph, feat, edge_weight):
+        # x_masked = x #* mask
+        z = self.encoder(graph, feat, edge_weight)
+        x_reconstructed, adj_rec = self.decoder(graph, z, edge_weight)
+        return x_reconstructed, adj_rec
 
 
 def train(model, data_loader, optimizer):
     model.train()
     total_loss = 0
-    embeddings = []
     for data in data_loader:
         optimizer.zero_grad()
         # pdb.set_trace()
@@ -152,25 +153,31 @@ def train(model, data_loader, optimizer):
         # mask = generate_mask(data.x, device=device).to(device)
         # reconstructed_x = model(data.x.to(device), data.edge_index.to(device), data.edge_attr.to(device), mask=None)
         # print(data[0][0].shape, data[1][0].shape, data[2][0].shape)
-        reconstructed_x, embed = model(data[0][0].to(device), data[1][0].to(device))
-
+        ew = torch.tensor([1.0/d for d in data[2][0]]).to(device)
+        g = dgl.graph((data[1][0][0].to(device), data[1][0][1].to(device)))
+        # ew = data[2][0].to(device)
+        # norm = EdgeWeightNorm(norm='both')
+        # ew_norm = norm(g, ew)
+        ew_norm = ew
+        feats = data[0][0].to(device)
+        reconstructed_x, adj_rec = model(g, feats, edge_weight=ew_norm)
+        original_adj = g.adj().to_dense()
         # pdb.set_trace()
-        loss = loss_function(reconstructed_x, data[0][0].to(device))
+        loss = loss_function(reconstructed_x, feats, original_adj, adj_rec) #dgl.graph((data[1][0][0].to(device), data[1][0][0].to(device))))
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
-        embeddings.append(embed)
-    return total_loss / len(data_loader), embeddings
+    return total_loss / len(data_loader)
 
 # Assuming a loss function appropriate for node feature reconstruction, e.g., MSE for continuous features
-def loss_function(reconstructed_x, original_x):
-    return F.mse_loss(reconstructed_x, original_x)
+def loss_function(reconstructed_x, original_x, orig_adj, adj):
+    return F.mse_loss(reconstructed_x, original_x) + F.cross_entropy(orig_adj, adj)
 
 
 # Example usage
 if __name__ == "__main__":
     # data = 
-    # for node_features, edge_index, edge_features in dataloader:
+    # for node_features, edge_features in dataloader:
 
     # pdb.set_trace()
     cuda_available = torch.cuda.is_available()
@@ -202,35 +209,18 @@ if __name__ == "__main__":
     graph_list = torch.load(fname)
     dataset = GraphDataset(graph_list)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-    
+
     final_loss = []
-    embeddings = []
-    for outchannels in range(0,3):
+    for outchannels in range(2,5):
         model = MaskedGraphAutoencoder(in_channels=inC, hidden_channels=hC, out_channels=outchannels).to(device)
         optimizer = optim.Adam(model.parameters(), lr=0.01)
         losses = []
-        embeds = []
-        for epoch in range(1, 10):  # Number of epochs
-            loss, embeds = train(model, dataloader, optimizer)
-            embeds.append(embeds)
+        for epoch in range(1, 15):  # Number of epochs
+            loss = train(model, dataloader, optimizer)
             print(f'Epoch {epoch}, Loss: {loss:.4f}')
             losses.append(loss)
-        embeddings.append(embeds)
         final_loss.append(losses)
-        # Assuming encoder and decoder are your model's components
-        encoder_state_dict = model.encoder
-        decoder_state_dict = model.decoder
-
-        # Save the state dictionaries
-        torch.save(encoder_state_dict, 'encoder'+str(outchannels)+'.pth')
-        torch.save(decoder_state_dict, 'decoder'+str(outchannels)+'.pth')
-
     print(final_loss)
-    np.save('gaelossarray_sage_no_weights_0_3_with_embeds.npy', final_loss)
-    # pdb.set_trace()
-    fl = open('embeddings.pickle', 'wb')
-    pickle.dump(embeddings, fl)
-    fl.close()
-    # np.save('embeddings.npy', embeddings.numpy()) 
+    np.save('tools/gaelossarray_with_adjacency.npy', final_loss) 
     # print(range(5,20))
         

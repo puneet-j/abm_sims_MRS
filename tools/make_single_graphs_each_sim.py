@@ -178,6 +178,8 @@ def main():
                         graph[node][edge_to]['weight'] += 1.0
                     else:
                         graph.add_edge(node, edge_to, weight=1.0)
+            
+            # for edge in 
 
             fname = fileName + '_noAgentPos_single_sim' + '.pickle'
             # pdb.set_trace()

@@ -75,7 +75,7 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
                             init_configs += get_init_condition_from_df(w.list_for_df, starts)
                             for init in init_configs:
                                 for mtime in mTimes:
-                                    for _ in sim_repeats:
+                                    for _ in range(0,sim_repeats):
                                         worlds.append([sites, qual, poses, agents, init, mtime])
                             
     return worlds
