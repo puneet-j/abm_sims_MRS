@@ -88,13 +88,13 @@ def simulate_world(sim, world):
 
 if __name__ == '__main__':
     site_configs = [2]#[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
-    distances = [100, 200, 150]#[100, 200]#, 300]#, 300]
+    distances = [100]#[100, 200, 150]#[100, 200]#, 300]#, 300]
     agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
-    sims_per_config = 10 #20
+    sims_per_config = 1 #20
     sims_per_distance = 1 #20
-    sim_repeats = 10
-    num_samples_per_starting_condition = 10
-    maxTimes = [1000, 10000, 35000]
+    sim_repeats = 1
+    num_samples_per_starting_condition = 1
+    maxTimes = [35000]#[1000, 10000, 35000]
     fold_name = 'graphsage_results/CDC/'
     fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']

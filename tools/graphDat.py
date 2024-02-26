@@ -1,16 +1,21 @@
 import torch
 import networkx as nx 
 from torch.utils.data import Dataset, DataLoader
+import pickle
 
 class GraphDataset(Dataset):
-    def __init__(self, graph_list):
-        self.graph_list = graph_list
-
+    def __init__(self, folder, file_paths):
+        self.file_paths = file_paths
+        self.folder = folder 
+        
     def __len__(self):
-        return len(self.graph_list)
+        return len(self.file_paths)
 
     def __getitem__(self, idx):
-        G = self.graph_list[idx]
+        with open(self.folder + self.file_paths[idx], 'rb') as f:
+            G = pickle.load( f)
+        # Transform the graph as needed, e.g., to PyTorch geometric data format
+        # return graph
 
         # Assuming node features 'x' are stored in each node
         # This will create a list of node feature tensors
