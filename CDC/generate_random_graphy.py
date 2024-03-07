@@ -2,7 +2,6 @@ import networkx as nx
 import numpy as np
 import scipy.sparse as sp
 import os
-import time
 # import tensorflow as tf
 import pandas as pd
 import pdb
@@ -154,154 +153,83 @@ def node_to_color_red(node, quals):
     else:
         return False
 
-def dancers_at_hub(node, quals):
-    arr = [0, 0]
-    danc = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
-    for d in danc:
-        if d[1] == np.min(quals):
-            arr[1] += 1
-        elif d[1] == np.max(quals):
-            arr[0] += 1
-    return arr
-
 def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, graph_metaFile):
-    # prev = time.time()*1000.0
-    # print("time now 1: 0")
-
     graph = nx.Graph()
-    IDLookup = dict()
-    nodeSize = dict()
-    has_edges_with = dict()
-    success_dict = dict()
-    time_dict = dict()
-    ''' TEMP BREAK'''
-    # pdb.set_trace()
-    quals = entry[1].iloc[0]
+    # IDLookup = dict()
+    # nodeSize = dict()
+    # has_edges_with = dict()
+    # success_dict = dict()
+    # time_dict = dict()
+    # ''' TEMP BREAK'''
+    # # pdb.set_trace()
+    # quals = entry[1].iloc[0]
     # if np.max(quals) - np.min(quals) > 0.5 or np.min(quals) < 0.2:
     #     return "Processed", fileName
-    fl = pd.read_csv(folder + fileName)
-
-    # now = time.time()*1000.0
-    # print("time now 2: ", now - prev)
-
-    fl.agent_states = fl.agent_states.apply(literal_eval)
-    fl.agent_sites = fl.agent_sites.apply(literal_eval)
-    fl.agent_positions = fl.agent_positions.apply(literal_eval)
-
-    # prev, now = now, time.time()*1000.0
-    # print("time now 3: ", now - prev)
-
-    # pdb.set_trace()
-    success_now =  0.0 if np.isnan(site_conv) else site_conv/max(quals) #1 if site_conv == max(quals) else 0
-    # print(success_now)
-    # pdb.set_trace()
-    try:
-        fl['currentState'] = fl.apply(lambda x: get_current_state(x.agent_states, x.agent_sites, x.agent_positions, entry[1].iloc[1], entry[1].iloc[0]), axis=1)
-    except Exception as e:
-        print(e)
-        pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 4: ", now - prev)
-    try:
-        IDLookup, nodeSize = get_unique_IDs(fl, IDLookup, nodeSize)
-    except Exception as e:
-        print(e)
-        pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 5: ", now - prev)
-    # 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344
-    try:
-        has_edges_with, success_dict, time_dict = get_edges_success_time(fl, IDLookup, has_edges_with, success_dict, time_dict, success_now, time_conv)
-    except Exception as e:
-        print(e)
-        pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 6: ", now - prev)
+    # fl = pd.read_csv(folder + fileName)
+    # fl.agent_states = fl.agent_states.apply(literal_eval)
+    # fl.agent_sites = fl.agent_sites.apply(literal_eval)
+    # fl.agent_positions = fl.agent_positions.apply(literal_eval)
+    # # pdb.set_trace()
+    # success_now =  0.0 if np.isnan(site_conv) else site_conv/max(quals) #1 if site_conv == max(quals) else 0
+    # # print(success_now)
+    # # pdb.set_trace()
+    # fl['currentState'] = fl.apply(lambda x: get_current_state(x.agent_states, x.agent_sites, x.agent_positions, entry[1].iloc[1], entry[1].iloc[0]), axis=1)
+    # IDLookup, nodeSize = get_unique_IDs(fl, IDLookup, nodeSize)
+    # # 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344
+    # has_edges_with, success_dict, time_dict = get_edges_success_time(fl, IDLookup, has_edges_with, success_dict, time_dict, success_now, time_conv)
 
     # pdb.set_trace()
-    nodeMetaArr = []
-    qrounded = [np.round(quals[0], decimals=3), np.round(quals[1], decimals=3)]
+    # nodeMetaArr = []
+    # qrounded = [np.round(quals[0], decimals=3), np.round(quals[1], decimals=3)]
 
-    
-    try:
-        ''' ADD NODES, NODE SIZES, and EDGES WITH WEIGHTS'''
-        for nodePos, nodeID in IDLookup.items():
-            graph.add_node(nodeID, x=nodePos, sz=nodeSize[nodePos])#, success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID][0]), time_now=np.mean(time_dict[nodeID][1]))
-            # nodeMetaArr.append([nodePos, np.nanmean(success_dict[nodeID]), np.mean(time_dict[nodeID])*1.0/TIME_LIMIT])
-
-        # prev, now = now, time.time()*1000.0
-        # print("time now 7: ", now - prev)
-
-        for node,value in has_edges_with.items():
-            for edge_to in value:
-                if graph.has_edge(node, edge_to):
-                    graph[node][edge_to]['weight'] += 1.0
-                else:
-                    graph.add_edge(node, edge_to, weight=1.0)
-    except Exception as e:
-        print(e)
-        pdb.set_trace()    
-    # prev, now = now,time.time()*1000.0
-    # print("time now 8: ", now - prev)
+    ''' ADD NODES, NODE SIZES, and EDGES WITH WEIGHTS'''
+    # for nodePos, nodeID in IDLookup.items():
+    for i in range(0,100):
+        graph.add_node(i, x=tuple(np.random.random(40)))#, success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID][0]), time_now=np.mean(time_dict[nodeID][1]))
+        # nodeMetaArr.append([nodePos, np.nanmean(success_dict[nodeID]), np.mean(time_dict[nodeID])*1.0/TIME_LIMIT])
+    edges = np.random.randint(0, high=99, size=(2,np.random.randint(100,high=300, size=1)[0]))
+    for node1, node2 in zip(edges[0], edges[1]):
+        graph.add_edge(node1, node2, weight=1.0)
     
     # pdb.set_trace()
-    colors = 'b'
-    nx.set_node_attributes(graph, colors, 'colors')
-    nx.set_node_attributes(graph, qrounded, 'quals')
-    nx.set_node_attributes(graph, entry[1].iloc[1], 'poses')
-    nx.set_node_attributes(graph, success_now, 'success')
-    nx.set_node_attributes(graph, time_conv, 'times_conved')
-    nx.set_node_attributes(graph, 0, 'global_info')
-    
-    try:
-        for node_dance in graph.nodes(data=True):
-            graph.nodes[node_dance[0]]['global_info'] = dancers_at_hub(node_dance[1]['x'], qrounded)
-    except Exception as e:
-        print(e)
-        pdb.set_trace() 
+    # colors = 'b'
+    # nx.set_node_attributes(graph, colors, 'colors')
+    # nx.set_node_attributes(graph, qrounded, 'quals')
+    # nx.set_node_attributes(graph, entry[1].iloc[1], 'quals')
 
-    # node_to_color_black = tuple([0.0, 1.0])
-    id_to_color = [z for z,y in graph.nodes(data=True) if node_to_color_black(y['x'])]
-    for node_c in id_to_color:
-            graph.nodes[node_c]['colors'] = 'k'
+    # # node_to_color_black = tuple([0.0, 1.0])
+    # id_to_color = [z for z,y in graph.nodes(data=True) if node_to_color_black(y['x'])]
+    # for node_c in id_to_color:
+    #         graph.nodes[node_c]['colors'] = 'k'
 
-    id_of_goal1 = [z for z,y in graph.nodes(data=True) if node_to_color_green(y['x'], qrounded)]
-    id_of_goal2 = [z for z,y in graph.nodes(data=True) if node_to_color_red(y['x'], qrounded)]
-    # pdb.set_trace()
-    for node in id_of_goal1:
-        graph.nodes[node]['colors'] = 'g'
-    for node in id_of_goal2:
-        graph.nodes[node]['colors'] = 'r'  
-    # for edge in 
+    # id_of_goal1 = [z for z,y in graph.nodes(data=True) if node_to_color_green(y['x'], qrounded)]
+    # id_of_goal2 = [z for z,y in graph.nodes(data=True) if node_to_color_red(y['x'], qrounded)]
+    # # pdb.set_trace()
+    # for node in id_of_goal1:
+    #     graph.nodes[node]['colors'] = 'g'
+    # for node in id_of_goal2:
+    #     graph.nodes[node]['colors'] = 'r'  
+    # # for edge in 
 
 
-    if len(id_of_goal2) > 0:
-        if len(id_of_goal1) > 0:
-            print("PROBLEM PROBLEM PROBLEM!!!!!!!!")
-            pdb.set_trace()
-        print(len(graph.nodes), len(id_to_color), len(id_of_goal1), len(id_of_goal2), success_now)
-    
-    
+    # if len(id_of_goal2) > 0:
+    #     if len(id_of_goal1) > 0:
+    #         print("PROBLEM PROBLEM PROBLEM!!!!!!!!")
+    #         pdb.set_trace()
+    #     print(len(graph.nodes), len(id_to_color), len(id_of_goal1), len(id_of_goal2), success_now)
     newfname =  str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2])
     fname = newfname + '_' + fileName + '_noAgentPos_single_sim' + '.pickle'
     # pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 9: ", now - prev)
-
     ''' PUNEET: TODO: TEST'''
     fil =  open(folder_graph+fname, 'wb')
     pickle.dump(graph, fil)   
     fil.close() 
     ''' TEMP BREAK'''
-
-    # prev, now = now, time.time()*1000.0
-    # print("time now 10: ", now - prev)
     # try:
     #     df_metaArr = pd.DataFrame(nodeMetaArr, columns=['nodeID', 'mean_success', 'mean_conv_time'])
     #     df_metaArr.to_csv(folder_graph + newfname + '_single_sim_' + graph_metaFile)
     # except:
     #     pdb.set_trace()
-
 
     return "Processed", fileName
 
@@ -312,7 +240,7 @@ def main():
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph = './graphs/CDC/lotsOfInfo/'
+    folder_graph = './graphs/CDC/testRandom/'
     new_metadata_file = folder_graph + 'metadata.csv'
     graph_metaFile = 'graphMetadata.csv'
     meta_arr = []
@@ -329,20 +257,19 @@ def main():
         files_to_process = [(fileName, site_conv, time_conv, entry, folder, folder_graph, graph_metaFile) 
                             for fileName, site_conv, time_conv in zip(entry[1].iloc[3], entry[1].iloc[5], entry[1].iloc[6])]
 
-        # with ThreadPoolExecutor(max_workers=8) as executor:
-        #     futures = [executor.submit(process_file, *file_info) for file_info in files_to_process]
-        #     for future in as_completed(futures):
-        #         try:
-        #             result, fileName = future.result()
-        #             print(f"{result}: {fileName}")
-        #         except Exception as exc:
-        #             print(f"File generated an exception: {exc}")
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(process_file, *file_info) for file_info in files_to_process]
+            for future in as_completed(futures):
+                try:
+                    result, fileName = future.result()
+                    print(f"{result}: {fileName}")
+                except Exception as exc:
+                    print(f"File generated an exception: {exc}")
         
+        break
 
-        for fileinfo in files_to_process:
-            process_file(fileinfo[0], fileinfo[1], fileinfo[2], fileinfo[3], fileinfo[4], fileinfo[5], fileinfo[6])
-        #     break
-        # break
+        # for fileinfo in files_to_process:
+        #     process_file(fileinfo[0], fileinfo[1], fileinfo[2], fileinfo[3], fileinfo[4], fileinfo[5], fileinfo[6])
 
         # meta_arr.append([entry[1].iloc[0], entry[1].iloc[1], entry[1].iloc[2], entry[1].iloc[6], list(np.nan_to_num(entry[1].iloc[5], nan=0.0, posinf=1.0, neginf=0.0))])
 

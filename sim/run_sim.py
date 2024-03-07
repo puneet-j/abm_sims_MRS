@@ -28,15 +28,19 @@ import copy
 
 def convert_to_init_agent(arr):
     arr2 = []
-    for ag in range(len(arr[-1])):
-        new_dict = {}
-        new_dict['pose'] = arr[1][ag]
-        new_dict['state'] = arr[-2][ag]
-        new_dict['speed'] = 0.0 if (arr[-2][ag] == 'OBSERVE' or arr[-2][ag] == 'RECRUIT' 
-                                    or arr[-2][ag] == 'ASSESS') else 5.0
-        new_dict['site'] = arr[-1][ag]
-        new_dict['dir'] = arr[2][ag]
-        arr2.append(new_dict.copy())
+    for ag in range(0,len(arr[-2])):
+        try:
+            new_dict = {}
+            new_dict['pose'] = arr[1][ag]
+            new_dict['state'] = arr[-3][ag]
+            new_dict['speed'] = 0.0 if (arr[-3][ag] == 'OBSERVE' or arr[-3][ag] == 'RECRUIT' 
+                                        or arr[-3][ag] == 'ASSESS') else 5.0
+            new_dict['site'] = arr[-2][ag]
+            new_dict['dir'] = arr[2][ag]
+            arr2.append(new_dict.copy())
+        except Exception as e:
+            print(e)
+            pdb.set_trace()
     return arr2
 
 def get_init_condition_from_df(df, starts):
@@ -87,15 +91,15 @@ def simulate_world(sim, world):
     print(sim, ' done')
 
 if __name__ == '__main__':
-    site_configs = [2]#[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
-    distances = [100, 200, 150]#[100, 200]#, 300]#, 300]
-    agent_configs = [10]#[5, 10, 20] #[5, 20, 50, 100, 200]
-    sims_per_config = 10 #20
-    sims_per_distance = 1 #20
-    sim_repeats = 10
-    num_samples_per_starting_condition = 10
+    site_configs = [2] #[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
+    distances = [100, 200, 150] #[100, 200]#, 300]#, 300]
+    agent_configs = [10] #[5, 10, 20] #[5, 20, 50, 100, 200]
+    sims_per_config = 10 #10 
+    sims_per_distance = 1 
+    sim_repeats = 10 # 10
+    num_samples_per_starting_condition = 10 # 10
     maxTimes = [1000, 10000, 35000]
-    fold_name = 'graphsage_results/CDC/'
+    fold_name = 'graphsage_results/CDC/rounded_results'
     fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
     empty = pd.DataFrame([], columns=df_metadata_cols)

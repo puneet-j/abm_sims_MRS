@@ -1,6 +1,9 @@
 import numpy as np
 from params import *
 import random
+MAX_DIST=ENVIRONMENT_BOUNDARY_X[-1]
+STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
+          'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
 
 def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
@@ -103,8 +106,11 @@ def get_explore_dir(dir):
         to_change_dir = EXPLORE_DIRECTION_CHANGE*np.random.choice([1, -1],p=[0.5, 0.5])
         xchange = to_change_dir
         ychange = to_change_dir
-        dir[0] += xchange 
-        dir[1] += ychange 
+        try:
+            dir[0] += xchange 
+            dir[1] += ychange 
+        except Exception as e:
+            pdb.set_trace()
         dir = dir/np.linalg.norm(dir)
     return list(dir)
 
@@ -129,10 +135,71 @@ def agent_at_any_site(ag):
             return st
     return None
 
+def getSiteID(site):
+    if site == 'H':
+        return -1
+    else:
+        return site
+
+def get_current_state(astates, asites, aposes, sposes, squals):
+    # try:
+    current_state_main = []
+    for id, (site, state, pos) in enumerate(sorted(zip(asites, astates, aposes), key = lambda x: (squals, ))):
+        current_state = []
+        if not(site is None):
+            whichSite = getSiteID(site)
+            # current_state.append(1.0*pos[0]/MAX_DIST)
+            # current_state.append(1.0*pos[1]/MAX_DIST)
+            current_state.append(1.0*STATES[state])
+            # current_state.append(1.0*STATES[state]/len(STATES))
+            if whichSite==-1:
+                current_state.append(0.0)
+                current_state.append(0.0)
+                current_state.append(0.0)
+            else:
+                current_state.append(1.0*sposes[whichSite][0]/MAX_DIST)
+                current_state.append(1.0*sposes[whichSite][1]/MAX_DIST)
+                current_state.append(1.0*squals[whichSite])
+        
+        else:
+            # current_state.append(1.0*pos[0]/MAX_DIST)
+            # current_state.append(1.0*pos[1]/MAX_DIST)
+            current_state.append(1.0*STATES[state])
+            # current_state.append(1.0*STATES[state]/len(STATES))
+            current_state.append(1.0)
+            current_state.append(1.0)
+            current_state.append(0.0)
+        current_state_main.append(current_state)
+    current_state_main = sorted(current_state_main, key = lambda x: (1.0 - x[3], x[0]))
+    retVal = []
+    for cstate in current_state_main:
+        for c in cstate:
+            retVal.append(c)
+    # except Exception as e:
+    #     print(e)
+    #     pdb.set_trace()  
+    # pdb.set_trace()
+ 
+    # pdb.set_trace()
+    return tuple(np.round(retVal, 3))
+
+import copy
+
+def round_function(x, d):
+    new = []
+    for r in copy.deepcopy(x):
+        # if 
+        # pdb.set_trace()
+        new.append(list(np.round(copy.deepcopy(r),d)))
+    # pdb.set_trace()
+    return new
+
+
 # def agent_at_hub_or_site(ag):
 #     at_hub = agent_at_hub(ag)
 #     at_site = agent_at_any_site(ag)
 #     return at_hub, at_site
+
 def get_RECRUITrs_by_site_for_world(world):
     all_agents = world.agents
     RECRUITrs = [0]*world.num_sites

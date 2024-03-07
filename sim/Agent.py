@@ -60,27 +60,37 @@ class Agent:
         self.speed = AGENT_SPEED
         self.dir = get_home_dir(self.pos)
         # pdb.set_trace()
-        self.pos[0] += self.speed*self.dir[0]
-        self.pos[1] += self.speed*self.dir[1]
-    
+        try:
+            self.pos[0] += self.speed*self.dir[0]
+            self.pos[1] += self.speed*self.dir[1]
+        except Exception as e:
+            pdb.set_trace()
+
     def goSite(self):
         self.speed = AGENT_SPEED
         if self.assigned_site is None:
             pdb.set_trace()
         self.dir = get_site_dir(self.pos, self.assigned_site.pos)
-        self.pos[0] += self.speed*self.dir[0]
-        self.pos[1] += self.speed*self.dir[1]
-    
+        try:
+            self.pos[0] += self.speed*self.dir[0]
+            self.pos[1] += self.speed*self.dir[1]
+        except Exception as e:
+            pdb.set_trace()    
+            
     def explore(self):
         # for ag_temp in self.world.agents:
             # print('in explore start: ', ag_temp.pos, ag_temp.state)
+
         self.speed = AGENT_SPEED
         self.dir = get_explore_dir(self.dir)
-        # for ag_temp in self.world.agents:
-        #     print('in explore after getting dir: ', ag_temp.pos, ag_temp.state, ag_temp.dir)
-        self.pos[0] += self.speed*self.dir[0]
-        # for ag_temp in self.world.agents:
-        #     print('in explore after updating X: ', ag_temp.pos, ag_temp.state, ag_temp.dir)
-        self.pos[1] += self.speed*self.dir[1]
-        # for ag_temp in self.world.agents:
-        #     print('in explore end: ', ag_temp.pos, ag_temp.state)
+        try:
+            # for ag_temp in self.world.agents:
+            #     print('in explore after getting dir: ', ag_temp.pos, ag_temp.state, ag_temp.dir)
+            self.pos[0] += self.speed*self.dir[0]
+            # for ag_temp in self.world.agents:
+            #     print('in explore after updating X: ', ag_temp.pos, ag_temp.state, ag_temp.dir)
+            self.pos[1] += self.speed*self.dir[1]
+            # for ag_temp in self.world.agents:
+            #     print('in explore end: ', ag_temp.pos, ag_temp.state)
+        except Exception as e:
+            pdb.set_trace()
