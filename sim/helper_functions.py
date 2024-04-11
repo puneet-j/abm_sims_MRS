@@ -181,6 +181,13 @@ def get_current_state(astates, asites, aposes, sposes, squals):
     # pdb.set_trace()
  
     # pdb.set_trace()
+    if len(retVal) < 40:
+        diff = 40 - len(retVal)
+        num_agents_to_add = int(np.ceil(diff/4))
+        agent_empty = [1.0, 1.0, 1.0, 0.0]
+        for i in range(0,num_agents_to_add):
+            retVal+=agent_empty
+        # pdb.set_trace()  
     return tuple(np.round(retVal, 3))
 
 import copy

@@ -23,18 +23,19 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 torch.manual_seed(42)
-folder_graph = './CDC/only_mediocre_sims/'
+folder_graph = './RS/more_graphs/'
 
 
 class GraphEncoderWithResidual(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(GraphEncoderWithResidual, self).__init__()
-        self.conv1 = SAGEConv(in_channels, hidden_channels)
-        self.conv2 = SAGEConv(hidden_channels, hidden_channels * 2)
-        # self.conv3 = SAGEConv(hidden_channels * 2, out_channels)
-        self.lin = nn.Linear(hidden_channels * 2, out_channels)
+        self.conv1 = SAGEConv(in_channels, hidden_channels*5)
+        self.conv2 = SAGEConv(hidden_channels*5, hidden_channels)
+        self.conv3 = SAGEConv(hidden_channels, out_channels)
+        # self.lin = nn.Linear(hidden_channels * 2, out_channels)
         # Linear transformation to match dimensions for residual connection
         self.shortcut = nn.Linear(in_channels, out_channels)
+        self.sm = nn.Softmax(dim=1)
 
     def forward(self, x, edge_index):
         identity = x
@@ -45,6 +46,7 @@ class GraphEncoderWithResidual(nn.Module):
         # Applying shortcut and adding it to the output of conv3
         identity = self.shortcut(identity)
         x += identity  # Element-wise addition
+        x = self.sm(x)
         return x
     
     
@@ -57,7 +59,7 @@ def train(model, data_loader, optimizer, device):
         optimizer.zero_grad()
         embed = model(data[0][0].to(device), data[1][0].to(device))
         origs.append(data[0][0].detach())
-        loss = cosine_loss(data[1][0].to(device), embed)
+        loss = loss_function(data[2][0].to(device), embed) #cosine_loss(data[1][0].to(device), embed)
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
@@ -67,7 +69,7 @@ def train(model, data_loader, optimizer, device):
 
 # Assuming a loss function appropriate for node feature reconstruction, e.g., MSE for continuous features
 def loss_function(reconstructed_x, original_x):
-    return F.mse_loss(reconstructed_x, original_x)
+    return F.cross_entropy(reconstructed_x, original_x)
 
 
 def cosine_loss(adj, emb):
@@ -88,8 +90,8 @@ if __name__ == "__main__":
     # fname = 'small_graphs.pth'
     files = os.listdir(folder_graph)
     files = [file for file in files if file.endswith('.pickle')]
-    hC = 20
-    inC = 44
+    hC = 40
+    inC = 100
 
     '''
     print(f"radius: {nx.radius(G)}")
@@ -116,7 +118,7 @@ if __name__ == "__main__":
     for outchannels in range(3,4):
         # print('here before model')
         model = GraphEncoderWithResidual(in_channels=inC, hidden_channels=hC, out_channels=outchannels).to(device)
-        optimizer = optim.Adam(model.parameters(), lr=0.01)
+        optimizer = optim.Adam(model.parameters(), lr=0.0001)
         # scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=5, verbose=True)
         losses = []
         embeds = []
@@ -138,7 +140,7 @@ if __name__ == "__main__":
         # decoder_state_dict = model.decoder.state_dict()
 
         # Save the state dictionaries
-        torch.save(encoder_state_dict, './CDC/GI22I0p5ALLENVS_AGENTS_encoder_state_dict'+str(outchannels)+'.pth')
+        torch.save(encoder_state_dict, './RS/3OneHot_encoder_state_dict'+str(outchannels)+'.pth')
         # torch.save(decoder_state_dict, './CDC/decoder_state_dict'+str(outchannels)+'.pth')
 
 

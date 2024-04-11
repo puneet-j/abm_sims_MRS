@@ -30,49 +30,6 @@ def getSiteID(site):
         except:
             pdb.set_trace()
 
-
-# def get_current_state(astates, asites, aposes, sposes, squals):
-#     try:
-#         current_state_main = []
-#         for id, (site, state, pos) in enumerate(sorted(zip(asites, astates, aposes), key = lambda x: (squals, ))):
-#             current_state = []
-#             if not(site is None):
-#                 whichSite = getSiteID(site)
-#                 # current_state.append(1.0*pos[0]/MAX_DIST)
-#                 # current_state.append(1.0*pos[1]/MAX_DIST)
-#                 current_state.append(1.0*STATES[state])
-#                 # current_state.append(1.0*STATES[state]/len(STATES))
-#                 if whichSite==-1:
-#                     current_state.append(0.0)
-#                     current_state.append(0.0)
-#                     current_state.append(0.0)
-#                 else:
-#                     current_state.append(1.0*sposes[whichSite][0]/MAX_DIST)
-#                     current_state.append(1.0*sposes[whichSite][1]/MAX_DIST)
-#                     current_state.append(1.0*squals[whichSite])
-            
-#             else:
-#                 # current_state.append(1.0*pos[0]/MAX_DIST)
-#                 # current_state.append(1.0*pos[1]/MAX_DIST)
-#                 current_state.append(1.0*STATES[state])
-#                 # current_state.append(1.0*STATES[state]/len(STATES))
-#                 current_state.append(1.0)
-#                 current_state.append(1.0)
-#                 current_state.append(0.0)
-#             current_state_main.append(current_state)
-#         current_state_main = sorted(current_state_main, key = lambda x: (1.0 - x[3], x[0], x[1]**2 + x[2]**2))
-#         retVal = []
-#         for cstate in current_state_main:
-#             for c in cstate:
-#                 retVal.append(c)
-#     except Exception as e:
-#         print(e)
-#         pdb.set_trace()  
-#     # pdb.set_trace()
- 
-#     # pdb.set_trace()
-#     return tuple(retVal)
-
 def round_function(x, d):
     new = []
     for r in x:
@@ -81,46 +38,23 @@ def round_function(x, d):
     return tuple(new)
 
 def get_unique_IDs(fl, dict_old, nodeSize):
-    states_unique = np.unique(fl.currentState.apply(lambda x: round_function(x, 3)))
+    states_unique = np.unique(fl.currentState)
 
     for i in range(len(states_unique)):
-        # if states_unique[i] in dict_old:
-            # continue
-            # nodeSize[states_unique[i]] += 1.0
-        # else:
-            # pdb.set_trace()
-            dict_old[states_unique[i]] = i #len(dict_old)
-            # nodeSize[states_unique[i]] = 1.0
+        dict_old[states_unique[i]] = i #len(dict_old)
     return dict_old#, nodeSize
 
 
 def get_edges_success_time(fl, IDLookup, get_edges_with, success_dict, time_dict, success, time_conv):
-    fl['stateIDs'] = fl.apply(lambda x: IDLookup[round_function(x.currentState, 3)], axis=1)
-    # fl['currentState'] = fl['currentState'].apply(lambda x: list(x))
-    # tempstate =  fl.apply(lambda x: round_function(x.currentState, 3), axis=1)
-    # for st in tempstate:
-    #     if st == (0.5, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 0, 0, 1, 0.001, 0, 0, 1, 0.001, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 1, 0, 0, 1.0, 0, 1, 0, 0.016, 0.0, 0, 0, 1, 0.98, 0.2, 0, 1, 0, 0.016, 0.0, 0, 0, 1, 0.98, 0.6):
-    #         pdb.set_trace()
+    fl['stateIDs'] = fl.apply(lambda x: IDLookup[x.currentState], axis=1)
     for id, csid in enumerate(fl.stateIDs.values):
-    # for id, (csid, time_val) in enumerate(zip(fl.stateIDs.values, fl.time.values)):
-        # if csid in time_dict:
-        #     time_dict[csid].append(time_conv)#([[time_conv - time_val], [time_val]])
-        # else:
-        #     time_dict[csid] = [time_conv] #[[time_conv - time_val], [time_val]]
-
-        # if csid in success_dict:
-        #     success_dict[csid].append(success)
-        # else:
-        #     success_dict[csid] = [success]
-        
         if id+1 == len(fl.stateIDs.values):
             break
         if csid in get_edges_with:
             get_edges_with[csid].append(fl.stateIDs.values[id+1])
         else:
             get_edges_with[csid] = [fl.stateIDs.values[id+1]]
-        # if csid == 88:
-        #     pdb.set_trace()
+
 
 
     return get_edges_with#, success_dict, time_dict
@@ -132,6 +66,8 @@ def node_to_color_black(node):
         return False
 
 def node_to_color_green(node, quals):
+    # pdb.set_trace()
+    nA = np.sum([1 for _ in node[0::4]])
     dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
     q = 0
     # pdb.set_trace()
@@ -139,37 +75,54 @@ def node_to_color_green(node, quals):
         if d[1] == np.max(quals):
             q += 1
     
-    if q > 5:
+    if q > COMMIT_THRESHOLD*nA:
         return True
     else:
         return False
     
 def node_to_color_red(node, quals):
+    # pdb.set_trace()
+    nA = np.sum([1 for _ in node[0::4]])
     dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
     q = 0
     # pdb.set_trace()
     for d in dancers:
         if d[1] == np.min(quals):
             q += 1
-    if q > 5:
+    if q > COMMIT_THRESHOLD*nA:
         return True
     else:
         return False
 
+# def get_full_qual(q):
+#     while len(q) < 4:
+#         q.append(0.0)
+#     return q
+
 def dancers_at_hub(node, quals):
-    pdb.set_trace()
-    arr = [0, 0, 0, 0]
+    # pdb.set_trace()
+    arr = [0]*4#len(quals)#[0, 0, 0, 0]
     danc = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
+    qsorted = sorted(quals, reverse=True)
+    qdict = dict()
+    for i, q in enumerate(qsorted):
+        qdict[q] = i
+    # qsorted = get_full_qual(qsorted)
     for d in danc:
-        if d[1] == np.min(quals):
-            arr[1] += 1
-        elif d[1] == np.max(quals):
-            arr[0] += 1
+        arr[qdict[d[1]]] += 1
+        # if d[1] == qsorted[0]:
+        #     arr[0] += 1
+        # elif d[1] == qsorted[1]:
+        #     arr[1] += 1
+        # elif d[1] == qsorted[2]:
+        #     arr[2] += 1
+        # elif d[1] == qsorted[3]:
+        #     arr[3] += 1   
+    # pdb.set_trace()
     return arr
 
 def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, graph_metaFile):
-    # prev = time.time()*1000.0
-    # print("time now 1: 0")
+
 
     graph = nx.Graph()
     IDLookup = dict()
@@ -180,62 +133,36 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
     ''' TEMP BREAK'''
     # pdb.set_trace()
     quals = entry[1].iloc[0]
-    if np.max(quals) - np.min(quals) > 0.5 or np.min(quals) < 0.2:
+    if np.max(quals) - np.min(quals) < 0.3 or np.min(quals) < 0.2 or np.max(quals) - np.min(quals) > 0.5 :
         return "Skipped", fileName
     fl = pd.read_csv(folder + fileName)
-
-    # now = time.time()*1000.0
-    # print("time now 2: ", now - prev)
 
     fl.agent_states = fl.agent_states.apply(literal_eval)
     fl.agent_sites = fl.agent_sites.apply(literal_eval)
     fl.agent_positions = fl.agent_positions.apply(literal_eval)
-    # pdb.set_trace()
     fl['currentState'] = fl.node.apply(literal_eval)
-    # pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 3: ", now - prev)
-
-    # pdb.set_trace()
     success_now =  0.0 if np.isnan(site_conv) else site_conv/max(quals) #1 if site_conv == max(quals) else 0
-    # print(success_now)
-    # pdb.set_trace()
-    # try:
-    #     fl['currentState'] = fl.apply(lambda x: get_current_state(x.agent_states, x.agent_sites, x.agent_positions, entry[1].iloc[1], entry[1].iloc[0]), axis=1)
-    # except Exception as e:
-    #     print(e)
-    #     pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 4: ", now - prev)
+
     try:
         IDLookup = get_unique_IDs(fl, IDLookup, nodeSize)
     except Exception as e:
         print(e)
         pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 5: ", now - prev)
-    # 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344, 0.0, 0.1, 0.0, 0.0.34471420672136344
+
     try:
         has_edges_with = get_edges_success_time(fl, IDLookup, has_edges_with, success_dict, time_dict, success_now, time_conv)
     except Exception as e:
         print(e)
         pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 6: ", now - prev)
 
-    # pdb.set_trace()
     nodeMetaArr = []
-    qrounded = [np.round(quals[0], decimals=3), np.round(quals[1], decimals=3)]
+    qrounded = [np.round(q, decimals=3) for q in quals]
 
     
     try:
         ''' ADD NODES, NODE SIZES, and EDGES WITH WEIGHTS'''
         for nodePos, nodeID in IDLookup.items():
             graph.add_node(nodeID, x=nodePos)#, sz=nodeSize[nodePos])#, success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID][0]), time_now=np.mean(time_dict[nodeID][1]))
-            # nodeMetaArr.append([nodePos, np.nanmean(success_dict[nodeID]), np.mean(time_dict[nodeID])*1.0/TIME_LIMIT])
-
-        # prev, now = now, time.time()*1000.0
-        # print("time now 7: ", now - prev)
 
         for node,value in has_edges_with.items():
             for edge_to in value:
@@ -289,9 +216,6 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
     
     newfname =  str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2])
     fname = newfname + '_' + fileName + '_noAgentPos_single_sim' + '.pickle'
-    # pdb.set_trace()
-    # prev, now = now, time.time()*1000.0
-    # print("time now 9: ", now - prev)
 
     ''' PUNEET: TODO: TEST'''
     fil =  open(folder_graph+fname, 'wb')
@@ -299,13 +223,6 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
     fil.close() 
     ''' TEMP BREAK'''
 
-    # prev, now = now, time.time()*1000.0
-    # print("time now 10: ", now - prev)
-    # try:
-    #     df_metaArr = pd.DataFrame(nodeMetaArr, columns=['nodeID', 'mean_success', 'mean_conv_time'])
-    #     df_metaArr.to_csv(folder_graph + newfname + '_single_sim_' + graph_metaFile)
-    # except:
-    #     pdb.set_trace()
 
 
     return "Processed", fileName
@@ -317,7 +234,7 @@ def main():
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph = './CDC/only_mediocre_sims/'
+    folder_graph = './CDC/allenvsmore/'
     new_metadata_file = folder_graph + 'metadata.csv'
     graph_metaFile = 'graphMetadata.csv'
     meta_arr = []
@@ -345,18 +262,10 @@ def main():
                 except Exception as exc:
                     print(f"File generated an exception: {exc}")
         
-
         # for fileinfo in files_to_process:
         #     process_file(fileinfo[0], fileinfo[1], fileinfo[2], fileinfo[3], fileinfo[4], fileinfo[5], fileinfo[6])
-        #     break
+            # break
         # break
-
-        # meta_arr.append([entry[1].iloc[0], entry[1].iloc[1], entry[1].iloc[2], entry[1].iloc[6], list(np.nan_to_num(entry[1].iloc[5], nan=0.0, posinf=1.0, neginf=0.0))])
-
-    # df_new_metadata = pd.DataFrame(meta_arr, columns=['qualities', 'positions', 'agents', 'time_converged', 'site_converged'])
-    # df_new_metadata.to_csv(new_metadata_file)
-    
-
 if __name__ == "__main__":
     main()
 

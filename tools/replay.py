@@ -15,19 +15,20 @@ AGENT_COLORS = {'OBSERVE':'b', 'EXPLORE': 'r', 'ASSESS': 'k', 'RECRUIT': 'm',
                 'TRAVEL_HOME_TO_OBSERVE': 'c', 'TRAVEL_HOME_TO_RECRUIT': 'y', 'TRAVEL_SITE': 'y'}
 
 
-folder = './replay/'
-files = os.listdir(folder)
-files = [file for file in files if file.endswith('.csv')]
-files = np.sort(files)
+# folder = './replay/'
+# files = os.listdir(folder)
+# files = [file for file in files if file.endswith('.csv')]
+# files = np.sort(files)
 
-df = pd.read_csv(folder+files[0])
-metadata = pd.read_csv(folder+files[1])
-
+# df = pd.read_csv(folder+files[0])
+metadata = pd.read_csv('./graphsage_results/CDC/multiple_agent_env_results/metadata.csv')
+df = pd.read_csv('./graphsage_results/CDC/multiple_agent_env_results/1710456708361697.csv')
 df.agent_positions = df.agent_positions.apply(literal_eval)
 df.agent_states = df.agent_states.apply(literal_eval)
 
 metadata.site_positions = metadata.site_positions.apply(literal_eval)
 metadata.site_qualities = metadata.site_qualities.apply(literal_eval)
+pdb.set_trace()
 
 fig = plt.figure()
 ax = fig.add_subplot()
@@ -35,9 +36,9 @@ ax = fig.add_subplot()
 colorlist = [i for i in AGENT_COLORS.values()]
 statelist = [i for i in AGENT_COLORS.keys()]
 
-plot_legend_x = [350]*len(AGENT_COLORS)
-plot_legend = [400, 370, 430, 340, 470, 310, 280]
-plot_legend_colors = [330]*len(AGENT_COLORS)
+plot_legend_x = [150]*len(AGENT_COLORS)
+plot_legend = [200, 170, 230, 140, 270, 110, 80]
+plot_legend_colors = [120]*len(AGENT_COLORS)
 
 for t, (poses, states) in  enumerate(zip(df.agent_positions, df.agent_states)):
     x_coords = [item[0] for item in poses]
@@ -49,18 +50,18 @@ for t, (poses, states) in  enumerate(zip(df.agent_positions, df.agent_states)):
         # pdb.set_trace()
         c = plt.Circle(site, radius = SITE_SIZE, edgecolor=[1.0,qual,0], fill = False)
         ax.add_patch(c)
-    chub = plt.Circle((0,0), radius = SITE_SIZE, fill=False)
+    chub = plt.Circle((0,0), radius = SITE_SIZE, fill=True)
     ax.add_patch(chub)
 
     plt.scatter(x_coords, y_coords, c=colors)
     
-    plt.scatter(plot_legend_colors, plot_legend, c=colorlist, linewidth=3.0)
-    [plt.text(x, y, text) for (x, y, text) in zip(plot_legend_x, plot_legend, statelist)]
-    plt.text(-10,450,'TIME: '+str(t))
-    plt.text(-20,400,'RECRUITRS: '+str(RECRUITrs))
+    # plt.scatter(plot_legend_colors, plot_legend, c=colorlist, linewidth=3.0)
+    # [plt.text(x, y, text) for (x, y, text) in zip(plot_legend_x, plot_legend, statelist)]
+    plt.text(-10,250,'TIME: '+str(t))
+    plt.text(-20,200,'RECRUITRS: '+str(RECRUITrs))
 
 
-    plt.xlim([-500, 500])
-    plt.ylim([-500, 500])
+    plt.xlim([-300, 300])
+    plt.ylim([-300, 300])
     plt.pause(0.001)
     plt.cla()

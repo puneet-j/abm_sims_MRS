@@ -61,11 +61,11 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
         # pdb.set_trace()
             # qualities = quals[sim]
         for agents in agent_configs:
-            for distance in distances:
-                qualities = get_valid_qualities(sites, sims_per_config)
-                for sim_dist_iter in range(0,sims_per_distance):
-                    poses = get_poses(sites, distance)
-                    for qual in qualities:
+            qualities = get_valid_qualities(sites, sims_per_config)
+            for qual in qualities:
+                for distance in distances:
+                    for sim_dist_iter in range(0,sims_per_distance):
+                        poses = get_poses(sites, distance)
                         for agent_init in get_agent_inits(agents, poses, qual):
                             # for repeats in range(0,sim_repeats):   
                             w_init = [sites, qual, poses, agents, agent_init, TIME_LIMIT] 
@@ -91,15 +91,15 @@ def simulate_world(sim, world):
     print(sim, ' done')
 
 if __name__ == '__main__':
-    site_configs = [2] #[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
+    site_configs = [2, 3, 4] #[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
     distances = [100, 200, 150] #[100, 200]#, 300]#, 300]
-    agent_configs = [10] #[5, 10, 20] #[5, 20, 50, 100, 200]
+    agent_configs = [10, 5] #[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 10 #10 
     sims_per_distance = 1 
     sim_repeats = 10 # 10
     num_samples_per_starting_condition = 10 # 10
     maxTimes = [1000, 10000, 35000]
-    fold_name = 'graphsage_results/CDC/rounded_results'
+    fold_name = 'graphsage_results/CDC/multiple_agent_env_results/'
     fname_metadata = './' + fold_name + '/metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
     empty = pd.DataFrame([], columns=df_metadata_cols)

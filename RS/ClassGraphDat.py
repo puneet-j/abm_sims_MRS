@@ -6,16 +6,6 @@ import pdb
 import numpy as np
 # def get_complete_global():
 #     return
-def get_complete_global(a, l):
-    arr = [0]*4
-    nA = np.ceil(l/4.0)
-    for i in range(0,len(a)):
-        # pdb.set_trace()
-        arr[i] = a[i]/nA
-    # print(arr)
-    # pdb.set_trace()
-    return arr
-
 class GraphDataset(Dataset):
     def __init__(self, folder, file_paths):
         self.file_paths = file_paths
@@ -24,15 +14,36 @@ class GraphDataset(Dataset):
     def __len__(self):
         return len(self.file_paths)
 
+    def get_complete_global(self, a, l):
+        arr = [0]*4
+        nA = np.ceil(l/4.0)
+        for i in range(0,len(a)):
+            # pdb.set_trace()
+            arr[i] = a[i]/nA
+        # print(arr)
+        # pdb.set_trace()
+        return arr
+    # CLIST = ["Slow/Success", "Fast/Success", "Slow/Failure", "Fast/Failure"]
+    # 
+    # def get_class(self, cl):
+    #     x = [0]*4
+    #     if cl == "Slow/Success":
+    #         x[0] = 1
+    #     elif cl == "Fast/Success":
+    #         x[1] = 1
+    #     elif cl == "Slow/Failure":
+    #         x[2] = 1
+    #     elif cl == "Fast/Failure":
+    #         x[3] = 1
+    #     return x
+
     def __getitem__(self, idx):
         with open(self.folder + self.file_paths[idx], 'rb') as f:
-            G = pickle.load( f)
-        # Transform the graph as needed, e.g., to PyTorch geometric data format
-        # return graph
-
-        # Assuming node features 'x' are stored in each node
-        # This will create a list of node feature tensors
-        # global_info = torch.tensor([get_complete_global(G.nodes[node]['global_info'], len(G.nodes[node]['x'])) for node in G.nodes], dtype=torch.float)
+            G = pickle.load(f)
+        
+        # print(G.nodes[0]['class'])
+        classes = torch.tensor([G.nodes[node]['classes'].index(1) for node in G.nodes], dtype=torch.long)
+        # global_info = torch.tensor([self.get_complete_global(G.nodes[node]['global_info'], len(G.nodes[node]['x'])) for node in G.nodes], dtype=torch.float)
         node_features = torch.tensor([G.nodes[node]['x'] for node in G.nodes], dtype=torch.float)
         # pdb.set_trace()
         # For edge features, assuming 'weight' attribute exists for each edge
@@ -45,6 +56,6 @@ class GraphDataset(Dataset):
         # adj_matrix_tensor = torch.tensor(adj_matrix, dtype=torch.float)
 
         # Return node features, edge index, and edge features
-        return node_features, edge_index
+        return node_features, edge_index, classes
         # return torch.cat((global_info, node_features), dim=1), edge_index#, edge_features
         # return torch.cat((global_info, node_features), dim=1), edge_index#, edge_features

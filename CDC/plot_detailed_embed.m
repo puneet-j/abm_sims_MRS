@@ -3,15 +3,59 @@ close all;
 
 
 clc
+
+% df = pd.DataFrame(emb, columns=['x', 'y', 'z'])
+% df.to_csv('./CDC/ALLENVS_AGENTS_emb.csv')
+% 
+% df = pd.DataFrame(arrpos, columns=['poses'])
+% df.to_csv('./CDC/ALLENVS_AGENTS_poses.csv')
+% 
+% df = pd.DataFrame(arrqual, columns=['quals'])
+% df.to_csv('./CDC/ALLENVS_AGENTS_quals.csv')
+% 
+% 
+% df = pd.DataFrame(arr_global_info, columns=['global_info'])
+% df.to_csv('./CDC/ALLENVS_AGENTS_global_info.csv')
+% 
+% df = pd.DataFrame(arrcol, columns=['colors'])
+% df.to_csv('./CDC/ALLENVS_AGENTS_colors.csv')
+% 
+% df = pd.DataFrame(arr_num_agents, columns=['num_agents'])
+% df.to_csv('./CDC/ALLENVS_AGENTS_num_agents.csv')
 %%
 
 % emb = readmatrix('./AllInfoPlot_emb.csv');
 % arr = readmatrix('./AllInfoPlot_arr.csv',  OutputType="char");
 
-emb = readmatrix('./notAllSuccess_GlobalTrained_AllInfoPlot_emb_trained_on_lots_info.csv');
-arr = readmatrix('./notAllSuccess_GlobalTrained_AllInfoPlot_arr_trained_on_lots_info.csv',  OutputType="char");
-emb = emb(2:end,:);
+emb = readmatrix('./ALLENVS_AGENTS_emb.csv');
+colors_emb = readmatrix('./ALLENVS_AGENTS_colors.csv',  OutputType="char");
+poses_node = readmatrix('./ALLENVS_AGENTS_poses.csv');%,  OutputType="char");
+quals_node = readmatrix('./ALLENVS_AGENTS_quals.csv');
+global_info_node = readmatrix('./ALLENVS_AGENTS_global_info.csv');
+num_agents_node = readmatrix('./ALLENVS_AGENTS_num_agents.csv');
+% poses_node = readmatrix('./ALLENVS_AGENTS_arr.csv');
 
+emb = emb(2:end,:);
+global_info_node = global_info_node(2:end, 2:end);
+
+%%
+poses_node = readmatrix('./ALLENVS_AGENTS_poses.csv',  OutputType="char");
+
+%%
+poses_node = poses_node(2:end, 2:end);
+%%
+new = ones(size(poses_node,1), size(poses_node,2), 2)*1000;
+dist = ones(size(poses_node,1), 1)*1000;
+for i=1:length(poses_node(:,1))
+    for j=1:4
+        p = poses_node(i,j);
+        % aposex, aposey = str2num(p{1});
+        new(i,j,:) = str2num(p{1});
+        dist(i) = round(sqrt(new(i,j,1)^2 + new(i,j,2)^2));
+    end
+end
+%%
+emb = emb(:,2:end);
 %%
 % 
 % x = zeros(length(arr), 1);
@@ -61,6 +105,32 @@ emb = emb(2:end,:);
 % scatter3(x, y, z, s, c, 'o'); % MATLAB handles coloring differently. You may need to adjust 'c' to be numeric or map it to specific colors.
 % % alpha(a); % Set alpha values directly if applicable
 %%
+colors_emb = colors_emb(:,2:end);
+%%
+colors = colors_emb;
+coords = emb;
+s  = num_agents_node;
+%%
+c = colors;
+
+
+%%
+% global_info_node = global_info_node(2:end, 2:end);
+% num_agents_node = num_agents_node(2:end, 2:end);
+% poses_node = poses_node(2:end, 2:end);
+% quals_node = quals_node(2:end, 2:end);
+%%
+quals_node(isnan(quals_node))=0;
+%%
+poses_node(isnan(poses_node))=0;
+%%
+num_agents_node(isnan(num_agents_node))=0;
+
+%%
+global_info_node(isnan(global_info_node))=0;
+
+% dists = 
+%%
 red = zeros(length(arr), 3);
 blue = zeros(length(arr), 3);
 green = zeros(length(arr), 3);
@@ -76,6 +146,8 @@ rounds = zeros(length(arr), 3);
 quals = zeros(length(arr), 2);
 dists = s;
 % a = [];
+
+%%
 
 for k = 2:length(emb)-1
     e = emb(k,:); % Assuming 'e' is a cell array or a nested array where e{1} is the target

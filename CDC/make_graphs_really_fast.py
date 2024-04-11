@@ -131,10 +131,11 @@ def get_unique_IDs(fl, dict_old, nodeSize):
 def parse_row(r, quals, poses):
     
     agent_states = literal_eval(r[4])
-    agent_sites = literal_eval(r[-1])
+    agent_sites = literal_eval(r[-2])
     agent_positions = literal_eval(r[2])
     # pdb.set_trace()
-    node = get_current_state(agent_states, agent_sites, agent_positions, poses, quals)
+    node = literal_eval(r[-1])
+    # node = get_current_state(agent_states, agent_sites, agent_positions, poses, quals)
     return node
 
 def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, graph_metaFile):
@@ -177,7 +178,7 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
             #pdb.set_trace()
             if node not in G:
                 G[node] = defaultdict(int)
-
+                # G[node]
             if prev_node is not None:
                 G[prev_node][node] += 1
                 
@@ -197,13 +198,13 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
 
 
 def main():
-    folder = './graphsage_results/CDC/'
+    folder = './graphsage_results/CDC/multiple_agent_env_results/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph = './graphs/CDC/testaks/'
+    folder_graph = './graphs/CDC/fast_multiple_graphs/'
     # new_metadata_file = folder_graph + 'metadata.csv'
     graph_metaFile = 'graphMetadata.csv'
     # meta_arr = []

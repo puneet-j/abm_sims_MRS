@@ -112,6 +112,9 @@ end
 arr = unique(cat(1,ia1, ia2));
 
 q_unique = quals(arr, :);
+
+%%
+q_unique = q_unique(1,:);
 %%
 % quals = 
 quals_to_test = quals(2,:);
@@ -136,7 +139,7 @@ for k = 1:length(s)
         plot_these(counter,:) = coords(k,:);
         counter = counter + 1;
     else
-        disp(quals(k,:))
+        % disp(quals(k,:));
     end
 end
 plot_these = plot_these(1:counter-1, :);
@@ -146,7 +149,7 @@ figure;
 grid on;
 box on;
 % plot3(plot_these(:,1), plot_these(:,2), plot_these(:,3), '+', 'color',c)
-scatter(plot_these(:,1), plot_these(:,2), s, c)
+scatter(plot_these(:,1), plot_these(:,2), s, c);
 
     % if dist == 100
     %     pluses(k, :) = [e(2), e(3), e(4)];

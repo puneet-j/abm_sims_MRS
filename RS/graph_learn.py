@@ -23,16 +23,16 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 torch.manual_seed(42)
-folder_graph = './CDC/only_mediocre_sims/'
+folder_graph = './RS/more_graphs/'
 
 
 class GraphEncoderWithResidual(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(GraphEncoderWithResidual, self).__init__()
-        self.conv1 = SAGEConv(in_channels, hidden_channels)
-        self.conv2 = SAGEConv(hidden_channels, hidden_channels * 2)
-        # self.conv3 = SAGEConv(hidden_channels * 2, out_channels)
-        self.lin = nn.Linear(hidden_channels * 2, out_channels)
+        self.conv1 = SAGEConv(in_channels, hidden_channels*5)
+        self.conv2 = SAGEConv(hidden_channels*5, hidden_channels)
+        # self.conv3 = SAGEConv(hidden_channels, out_channels)
+        self.lin = nn.Linear(hidden_channels, out_channels)
         # Linear transformation to match dimensions for residual connection
         self.shortcut = nn.Linear(in_channels, out_channels)
 
@@ -88,8 +88,8 @@ if __name__ == "__main__":
     # fname = 'small_graphs.pth'
     files = os.listdir(folder_graph)
     files = [file for file in files if file.endswith('.pickle')]
-    hC = 20
-    inC = 44
+    hC = 40
+    inC = 100
 
     '''
     print(f"radius: {nx.radius(G)}")
@@ -116,7 +116,7 @@ if __name__ == "__main__":
     for outchannels in range(3,4):
         # print('here before model')
         model = GraphEncoderWithResidual(in_channels=inC, hidden_channels=hC, out_channels=outchannels).to(device)
-        optimizer = optim.Adam(model.parameters(), lr=0.01)
+        optimizer = optim.Adam(model.parameters(), lr=0.0001)
         # scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=5, verbose=True)
         losses = []
         embeds = []
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         # decoder_state_dict = model.decoder.state_dict()
 
         # Save the state dictionaries
-        torch.save(encoder_state_dict, './CDC/GI22I0p5ALLENVS_AGENTS_encoder_state_dict'+str(outchannels)+'.pth')
+        torch.save(encoder_state_dict, './RS/4OneHot_encoder_state_dict'+str(outchannels)+'.pth')
         # torch.save(decoder_state_dict, './CDC/decoder_state_dict'+str(outchannels)+'.pth')
 
 

@@ -29,12 +29,13 @@ torch.manual_seed(42)
 class GraphEncoderWithResidual(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(GraphEncoderWithResidual, self).__init__()
-        self.conv1 = SAGEConv(in_channels, hidden_channels)
-        self.conv2 = SAGEConv(hidden_channels, hidden_channels * 2)
-        # self.conv3 = SAGEConv(hidden_channels * 2, out_channels)
-        self.lin = nn.Linear(hidden_channels * 2, out_channels)
+        self.conv1 = SAGEConv(in_channels, hidden_channels*2)
+        self.conv2 = SAGEConv(hidden_channels*2, hidden_channels)
+        # self.conv3 = SAGEConv(hidden_channels, out_channels)
+        self.lin = nn.Linear(hidden_channels, out_channels)
         # Linear transformation to match dimensions for residual connection
         self.shortcut = nn.Linear(in_channels, out_channels)
+        # self.sm = nn.Softmax(dim=1)
 
     def forward(self, x, edge_index):
         identity = x
@@ -45,85 +46,84 @@ class GraphEncoderWithResidual(nn.Module):
         # Applying shortcut and adding it to the output of conv3
         identity = self.shortcut(identity)
         x += identity  # Element-wise addition
+        # print('before: ', x[0])
+        # print(np.shape(x))
+        # x = self.sm(x)
+        # print('after: ', x[0])
         return x
-    
-# class GraphEncoder(nn.Module):
+
+
+
+# class GraphEncoderWithResidual(nn.Module):
 #     def __init__(self, in_channels, hidden_channels, out_channels):
-#         super(GraphEncoder, self).__init__()
-#         self.conv1 = SAGEConv(in_channels, hidden_channels)
-#         self.conv2 = SAGEConv(hidden_channels, hidden_channels * 2)
-#         # self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels * 2)  # Additional hidden layer
-#         self.conv4 = SAGEConv(hidden_channels * 2, out_channels)  # Final Layer
+#         super(GraphEncoderWithResidual, self).__init__()
+#         self.conv1 = SAGEConv(in_channels, hidden_channels*2)
+#         self.conv2 = SAGEConv(hidden_channels*2, hidden_channels)
+#         self.conv3 = SAGEConv(hidden_channels, out_channels)
+#         # self.lin = nn.Linear(hidden_channels, out_channels)
+#         # Linear transformation to match dimensions for residual connection
+#         self.shortcut = nn.Linear(in_channels, out_channels)
+#         # self.sm = nn.Softmax(dim=1)
 
 #     def forward(self, x, edge_index):
+#         identity = x
 #         x = F.relu(self.conv1(x, edge_index))
 #         x = F.relu(self.conv2(x, edge_index))
-#         # x = F.relu(self.conv3(x, edge_index))
-#         x = self.conv4(x, edge_index)
+#         x = self.conv3(x, edge_index)
+#         # x = self.lin(x)
+#         # Applying shortcut and adding it to the output of conv3
+#         identity = self.shortcut(identity)
+#         x += identity  # Element-wise addition
+#         # print('before: ', x[0])
+#         # print(np.shape(x))
+#         # x = self.sm(x)
+#         # print('after: ', x[0])
 #         return x
-
-# class GraphDecoder(nn.Module):
-#     def __init__(self, in_channels, hidden_channels, out_channels):
-#         super(GraphDecoder, self).__init__()
-#         # Assuming the encoded features are to be decoded back to original feature size
-#         self.conv1 = SAGEConv(out_channels, hidden_channels )
-#         self.conv2 = SAGEConv(hidden_channels , hidden_channels * 2)  # Mimic encoder complexity
-#         self.conv3 = SAGEConv(hidden_channels * 2, hidden_channels)  # Additional hidden layer
-#         self.conv4 = SAGEConv(hidden_channels, in_channels)  # Additional hidden layer to output size
-
-#     def forward(self, z, edge_index):
-#         # pdb.set_trace()
-#         z = F.relu(self.conv1(z, edge_index))
-#         z = F.relu(self.conv2(z, edge_index))
-#         z = F.relu(self.conv3(z, edge_index))
-#         z = self.conv4(z, edge_index)
-#         return z
-
-# class MaskedGraphAutoencoder(nn.Module):
-#     def __init__(self, in_channels, hidden_channels, out_channels):
-#         super(MaskedGraphAutoencoder, self).__init__()
-#         self.encoder = GraphEncoder(in_channels, hidden_channels, out_channels)
-#         # self.decoder = GraphDecoder(in_channels, hidden_channels, out_channels)
-
-#     def forward(self, x, edge_index):
-#         x_masked = x #* mask
-#         z = self.encoder(x_masked, edge_index)
-#         # x_reconstructed = self.decoder(z, edge_index)
-#         return z # x_reconstructed, z
     
+    
+
+
+def node_to_color_black(node):
+    if node[9] == 0.0:
+        return True
+    else:
+        return False
 
 def node_to_color_green(node, quals):
     # pdb.set_trace()
-    nA = np.sum([1 for _ in node[0::4]])
-    dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
-    q = 0
+    nA = np.sum([1 for _ in node[0::10]])
+    dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+    qs = [0]*4
     # pdb.set_trace()
     for d in dancers:
-        if d[1] == np.max(quals):
-            q += 1
-    
-    if q > COMMIT_THRESHOLD*nA:
-        return True
+        ii = quals.index(d[1])
+        qs[ii] += 1
+
+    if np.max(qs) > COMMIT_THRESHOLD*nA:
+        id = np.argmax(qs)
+        if quals[id] == np.max(quals):
+            return True
+        else:
+            return False
     else:
         return False
     
 def node_to_color_red(node, quals):
     # pdb.set_trace()
-    nA = np.sum([1 for _ in node[0::4]])
-    dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
-    q = 0
+    nA = np.sum([1 for _ in node[0::10]])
+    dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+    qs = [0]*4
     # pdb.set_trace()
     for d in dancers:
-        if d[1] == np.min(quals):
-            q += 1
-    if q > COMMIT_THRESHOLD*nA:
-        return True
-    else:
-        return False
+        ii = quals.index(d[1])
+        qs[ii] += 1
 
-def node_to_color_black(node):
-    if node[3] == 0.0:
-        return True
+    if np.max(qs) > COMMIT_THRESHOLD*nA:
+        id = np.argmax(qs)
+        if quals[id] != np.max(quals):
+            return True
+        else:
+            return False
     else:
         return False
     
@@ -171,7 +171,7 @@ def get_complete_global(a):
     # pdb.set_trace()
     return arr
 
-folder_graph = './CDC/only_mediocre_sims/'
+folder_graph = './RS/classGraphs/'
 files = os.listdir(folder_graph)
 files = [file for file in files if file.endswith('.pickle')]
 arr = dict()
@@ -207,15 +207,15 @@ for file in files[:-1]:
             arr_num_agents.append(num_agents)
             # arr2.append([node[0], node[1]['x'], node[1]['colors'], node[1]['quals'], node[1]['poses'], node[1]['global_info'], num_agents])
             # pdb.set_trace()
-            # arr1.append(list(node[1]['x']))#+list(node[1]['global_info']))
-            arr1.append(list(node[1]['x'])+list(node[1]['global_info']))
+            arr1.append(list(node[1]['x']))#+list(node[1]['global_info']))
+            # arr1.append(list(node[1]['x'])+list(node[1]['global_info']))
             # arr.append([list(node[1]['x'])+[a for a in node[1]['global_info']]])
             arr[node[1]['x']] = node[1]['colors']
 
 # pdb.set_trace()
-encoder_dict = torch.load('./CDC/GI20I0p5ALLENVS_AGENTS_encoder_state_dict3.pth')
-in_channels = 44
-hidden_channels = 20
+encoder_dict = torch.load('./RS/LinNewOneHot_encoder_state_dict3.pth')
+in_channels = 100
+hidden_channels = 40
 out_channels = 3
 GAE = GraphEncoderWithResidual(in_channels, hidden_channels, out_channels)
 GAE.load_state_dict(encoder_dict)
@@ -226,24 +226,25 @@ for i in arr1:
     # pdb.set_trace()
     emb.append(GAE(torch.tensor([i], dtype=torch.float), torch.empty((2,0), dtype=torch.int64)).detach().tolist()[0])
     arrtosave.append(i)
+# pdb.set_trace()
 df = pd.DataFrame(emb, columns=['x', 'y', 'z'])
-df.to_csv('./CDC/GI20I0p5ALLENVS_AGENTS_emb.csv')
+df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_emb.csv')
 
 df = pd.DataFrame(arrpos, columns=['pose1', 'pose2', 'pose3', 'pose4'])
-df.to_csv('./CDC/GI20I0p5ALLENVS_AGENTS_poses.csv')
+df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_poses.csv')
 
 df = pd.DataFrame(arrqual, columns=['qual1', 'qual2', 'qual3', 'qual4'])
-df.to_csv('./CDC/GI20I0p5ALLENVS_AGENTS_quals.csv')
+df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_quals.csv')
 
 
-df = pd.DataFrame(arr_global_info, columns=['GI1', 'GI2', 'GI3', 'GI4'])
-df.to_csv('./CDC/GI20I0p5ALLENVS_AGENTS_global_info.csv')
+df = pd.DataFrame(arr_global_info, columns=['1', '2', '3', '4'])
+df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_global_info.csv')
 
 df = pd.DataFrame(arrcol, columns=['colors'])
-df.to_csv('./CDC/GI20I0p5ALLENVS_AGENTS_colors.csv')
+df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_colors.csv')
 
 df = pd.DataFrame(arr_num_agents, columns=['num_agents'])
-df.to_csv('./CDC/GI20I0p5ALLENVS_AGENTS_num_agents.csv')
+df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_num_agents.csv')
 
 # pdb.set_trace()
 
