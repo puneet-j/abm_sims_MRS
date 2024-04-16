@@ -88,15 +88,15 @@ def get_edges(fl, IDLookup, get_edges_with, success_dict, time_dict, success, ti
     return get_edges_with#, success_dict, time_dict
 
 def node_to_color_black(node):
-    if node[9] == 0.0:
+    if node[4] == 0.0:
         return True
     else:
         return False
 
 def node_to_color_green(node, quals):
     # pdb.set_trace()
-    nA = np.sum([1 for _ in node[0::10]])
-    dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+    nA = np.sum([1 for _ in node[0::4]])
+    dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
     qs = [0]*4
     # pdb.set_trace()
     for d in dancers:
@@ -113,6 +113,26 @@ def node_to_color_green(node, quals):
         return False
     
 def node_to_color_red(node, quals):
+    # pdb.set_trace()
+    nA = np.sum([1 for _ in node[0::4]])
+    dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
+    qs = [0]*4
+    # pdb.set_trace()
+    for d in dancers:
+        ii = quals.index(d[1])
+        qs[ii] += 1
+
+    if np.max(qs) > COMMIT_THRESHOLD*nA:
+        id = np.argmax(qs)
+        if quals[id] != np.max(quals):
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def node_to_color_red_OneHot(node, quals):
     # pdb.set_trace()
     nA = np.sum([1 for _ in node[0::10]])
     dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
@@ -131,6 +151,30 @@ def node_to_color_red(node, quals):
     else:
         return False
 
+def node_to_color_black_OneHot(node):
+    if node[9] == 0.0:
+        return True
+    else:
+        return False
+
+def node_to_color_green_OneHot(node, quals):
+    # pdb.set_trace()
+    nA = np.sum([1 for _ in node[0::10]])
+    dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+    qs = [0]*4
+    # pdb.set_trace()
+    for d in dancers:
+        ii = quals.index(d[1])
+        qs[ii] += 1
+
+    if np.max(qs) > COMMIT_THRESHOLD*nA:
+        id = np.argmax(qs)
+        if quals[id] == np.max(quals):
+            return True
+        else:
+            return False
+    else:
+        return False
 
 def get_class(success, time):
     if success > SUCCESS_LIMIT and time > TIME_LIMIT_FOR_SLOW:
@@ -152,6 +196,20 @@ def get_class(success, time):
 def dancers_at_hub(node, quals):
     # pdb.set_trace()
     arr = [0]*4#len(quals)#[0, 0, 0, 0]
+    danc = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
+    qsorted = sorted(quals, reverse=True)
+    qdict = dict()
+    for i, q in enumerate(qsorted):
+        qdict[q] = i
+    # qsorted = get_full_qual(qsorted)
+    for d in danc:
+        arr[qdict[d[1]]] += 1
+ 
+    return arr
+
+def dancers_at_hub_OneHot(node, quals):
+    # pdb.set_trace()
+    arr = [0]*4#len(quals)#[0, 0, 0, 0]
     danc = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
     qsorted = sorted(quals, reverse=True)
     qdict = dict()
@@ -160,15 +218,7 @@ def dancers_at_hub(node, quals):
     # qsorted = get_full_qual(qsorted)
     for d in danc:
         arr[qdict[d[1]]] += 1
-        # if d[1] == qsorted[0]:
-        #     arr[0] += 1
-        # elif d[1] == qsorted[1]:
-        #     arr[1] += 1
-        # elif d[1] == qsorted[2]:
-        #     arr[2] += 1
-        # elif d[1] == qsorted[3]:
-        #     arr[3] += 1   
-    # pdb.set_trace()
+ 
     return arr
 
 def onehotState(st):
@@ -185,7 +235,7 @@ def onehotState(st):
             new_arr.append(i)
     return tuple(new_arr)
 
-def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, graph_metaFile):
+def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph1, folder_graph2):
 
 
     graph = nx.Graph()
@@ -197,17 +247,18 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
     ''' TEMP BREAK'''
     # pdb.set_trace()
     quals = entry[1].iloc[0]
-    if np.min(quals) < 0.2 or np.max(quals) - np.min(quals) < 0.5 and np.max(quals) - np.min(quals) > 0.3:
+    if np.min(quals) < 0.2 or np.max(quals) - np.min(quals) > 0.8:# and np.max(quals) - np.min(quals) > 0.3:
         return "Skipped", fileName
+    
     fl = pd.read_csv(folder + fileName)
 
     fl.agent_states = fl.agent_states.apply(literal_eval)
     fl.agent_sites = fl.agent_sites.apply(literal_eval)
     fl.agent_positions = fl.agent_positions.apply(literal_eval)
     fl['currentState'] = fl.node.apply(literal_eval)
-    fl.currentState = fl.currentState.apply(lambda x: onehotState(x))
+    # fl.currentState = fl.currentState.apply(lambda x: onehotState(x))
     success_now =  0.0 if np.isnan(site_conv) else site_conv/max(quals) #1 if site_conv == max(quals) else 0
-    
+    folder_graph = folder_graph2 if np.isnan(site_conv) else folder_graph1
     # pdb.set_trace()
     
     try:
@@ -222,7 +273,7 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
         print(e)
         pdb.set_trace()
 
-    nodeMetaArr = []
+    # nodeMetaArr = []
     qrounded = [np.round(q, decimals=3) for q in quals]
     # class_assign = []
     # for node in graph.nodes(data=True):
@@ -255,12 +306,7 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
     # nx.set_node_attributes(graph, success_now, 'success')
     nx.set_node_attributes(graph, time_conv, 'times_conved')
     nx.set_node_attributes(graph, 0, 'global_info')
-    # class_assign = []
-    # for node in graph.nodes(data=True):
-        # pdb.set_trace()
-        # class_assign.append(get_class(np.mean(node[1]['success']), np.mean(node[1]['time'])))
-    # pdb.set_trace()
-    # nx.set_node_attributes(graph, class_assign, 'class')
+
 
     try:
         for node_dance in graph.nodes(data=True):
@@ -282,11 +328,6 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph, gr
     # print('green nodes: ', len(id_of_goal1))
     for node in id_of_goal2:
         graph.nodes[node]['colors'] = 'r'  
-    # print('red nodes: ', len(id_of_goal2))
-
-    # print('total nodes: ', len(graph.nodes))
-
-    # for edge in 
 
 
     if len(id_of_goal2) > 0:
@@ -316,10 +357,11 @@ def main():
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph = './RS/classGraphs/'
-    new_metadata_file = folder_graph + 'metadata.csv'
-    graph_metaFile = 'graphMetadata.csv'
-    meta_arr = []
+    folder_graph1 = './RS/finished_trials/'
+    folder_graph2 = './RS/unfinished_trials/'
+    # new_metadata_file = folder_graph + 'metadata.csv'
+    # graph_metaFile = 'graphMetadata.csv'
+    # meta_arr = []
     metadata = pd.read_csv(metadata_file) 
     metadata.site_qualities=metadata.site_qualities.apply(literal_eval)
     metadata.site_positions=metadata.site_positions.apply(literal_eval)
@@ -332,7 +374,7 @@ def main():
         # if entry[1].iloc[2] != 10: # or some_id==0:
         #     continue
         print(entry)
-        files_to_process = [(fileName, site_conv, time_conv, entry, folder, folder_graph, graph_metaFile) 
+        files_to_process = [(fileName, site_conv, time_conv, entry, folder, folder_graph1, folder_graph2) 
                             for fileName, site_conv, time_conv in zip(entry[1].iloc[3], entry[1].iloc[5], entry[1].iloc[6])]
 
         with ThreadPoolExecutor(max_workers=8) as executor:
@@ -343,11 +385,12 @@ def main():
                     print(f"{result}: {fileName}")
                 except Exception as exc:
                     print(f"File generated an exception: {exc}")
+
         # counter = 0
         # for fileinfo in files_to_process:
-        #     # counter += 1
+        # #     # counter += 1
         #     process_file(fileinfo[0], fileinfo[1], fileinfo[2], fileinfo[3], fileinfo[4], fileinfo[5], fileinfo[6])
-            # if counter == 1:
+        #     # if counter == 1:
             #     break
             
         #     break

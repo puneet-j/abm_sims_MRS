@@ -4,6 +4,9 @@ from torch.utils.data import Dataset, DataLoader
 import pickle
 import pdb 
 import numpy as np
+STATES_LIST = ['RECRUIT', 'ASSESS', 'TRAVEL_HOME_TO_RECRUIT', 'TRAVEL_SITE', 'OBSERVE', 'EXPLORE', 'TRAVEL_HOME_TO_OBSERVE']
+STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
+          'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
 # def get_complete_global():
 #     return
 class GraphDataset(Dataset):
@@ -36,6 +39,16 @@ class GraphDataset(Dataset):
     #     elif cl == "Fast/Failure":
     #         x[3] = 1
     #     return x
+    def oneHotToState(self, st):
+        newx = []
+        i=0
+        while i < 10:
+            state = np.round(STATES[STATES_LIST[st[10*i:10*i+7].index(1)]], 3)
+            newx.append(state)
+            for j in range(10*i+7, 10*i+10):
+                newx.append(st[j])
+            i += 1
+        return newx
 
     def __getitem__(self, idx):
         with open(self.folder + self.file_paths[idx], 'rb') as f:
@@ -44,7 +57,9 @@ class GraphDataset(Dataset):
         # print(G.nodes[0]['class'])
         classes = torch.tensor([G.nodes[node]['classes'].index(1) for node in G.nodes], dtype=torch.long)
         # global_info = torch.tensor([self.get_complete_global(G.nodes[node]['global_info'], len(G.nodes[node]['x'])) for node in G.nodes], dtype=torch.float)
+        # node_features = torch.tensor([self.oneHotToState(G.nodes[node]['x']) for node in G.nodes], dtype=torch.float)
         node_features = torch.tensor([G.nodes[node]['x'] for node in G.nodes], dtype=torch.float)
+
         # pdb.set_trace()
         # For edge features, assuming 'weight' attribute exists for each edge
         # Creating a tensor for edge indices and another for edge features
