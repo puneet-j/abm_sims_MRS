@@ -336,20 +336,20 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph1, f
             pdb.set_trace()
         print(len(graph.nodes), len(id_to_color), len(id_of_goal1), len(id_of_goal2), success_now)
     
+    return graph, folder_graph
     
-    
-    newfname =  str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2])
-    fname = newfname + '_' + fileName + '_noAgentPos_single_sim' + '.pickle'
+    # newfname =  str(entry[1][0]) + str(entry[1][1]) + str(entry[1][2])
+    # fname = newfname + '_' + fileName + '_noAgentPos_single_sim' + '.pickle'
 
-    ''' PUNEET: TODO: TEST'''
-    fil =  open(folder_graph+fname, 'wb')
-    pickle.dump(graph, fil)   
-    fil.close() 
-    ''' TEMP BREAK'''
-
+    # ''' PUNEET: TODO: TEST'''
+    # fil =  open(folder_graph+fname, 'wb')
+    # pickle.dump(graph, fil)   
+    # fil.close() 
+    # ''' TEMP BREAK'''
 
 
-    return "Processed", fileName
+
+    # return "Processed", fileName
 
 def main():
     folder = './graphsage_results/CDC/multiple_agent_env_results/'
@@ -385,9 +385,23 @@ def main():
             for future in as_completed(futures):
                 try:
                     result, fileName = future.result()
-                    print(f"{result}: {fileName}")
+                    if fileName == folder_graph1:
+                        ft.append(result)
+                    else:
+                        unft.append(result)
+                    # print(f"{result}: {fileName}")
                 except Exception as exc:
                     print(f"File generated an exception: {exc}")
+
+
+        # ''' PUNEET: TODO: TEST'''
+        fil =  open('./RS/all_graphs_ft.pickle', 'wb')
+        pickle.dump(ft, fil)   
+        fil.close() 
+        fil =  open('./RS/all_graphs_unft.pickle', 'wb')
+        pickle.dump(unft, fil)   
+        fil.close() 
+        # ''' TEMP BREAK'''
 
         # counter = 0
         # for fileinfo in files_to_process:

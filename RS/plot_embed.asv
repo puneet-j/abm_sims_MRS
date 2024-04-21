@@ -8,28 +8,14 @@ clc;
 % quals_node = readmatrix('./GI20I0p5ALLENVS_AGENTS_quals.csv');
 % global_info_node = readmatrix('./GI20I0p5ALLENVS_AGENTS_global_info.csv');
 % num_agents_node = readmatrix('./GI20I0p5ALLENVS_AGENTS_num_agents.csv');
-% 
-% emb = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_emb.csv');
-% colors_emb = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_colors.csv',  OutputType="char");
-% poses_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_poses.csv',  OutputType="char");
-% quals_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_quals.csv');
-% global_info_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_global_info.csv');
-% num_agents_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_num_agents.csv');
 
-% emb = readmatrix('./LinNew_ALLENVS_AGENTS_emb.csv');
-% colors_emb = readmatrix('./LinNew_ALLENVS_AGENTS_colors.csv',  OutputType="char");
-% poses_node = readmatrix('./LinNew_ALLENVS_AGENTS_poses.csv',  OutputType="char");
-% quals_node = readmatrix('./LinNew_ALLENVS_AGENTS_quals.csv');
-% global_info_node = readmatrix('./LinNew_ALLENVS_AGENTS_global_info.csv');
-% num_agents_node = readmatrix('./LinNew_ALLENVS_AGENTS_num_agents.csv');
+emb = readmatrix('../CDC/LinNew_ALLENVS_AGENTS_emb.csv');
+colors_emb = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_colors.csv',  OutputType="char");
+poses_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_poses.csv',  OutputType="char");
+quals_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_quals.csv');
+global_info_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_global_info.csv');
+num_agents_node = readmatrix('../CDC/20I0p5ALLENVS_AGENTS_num_agents.csv');
 
-
-emb = readmatrix('./Finished_Large_LinNew_ALLENVS_AGENTS_emb.csv');
-colors_emb = readmatrix('./Finished_Large_LinNew_ALLENVS_AGENTS_colors.csv',  OutputType="char");
-poses_node = readmatrix('./Finished_Large_LinNew_ALLENVS_AGENTS_poses.csv',  OutputType="char");
-quals_node = readmatrix('./Finished_Large_LinNew_ALLENVS_AGENTS_quals.csv');
-global_info_node = readmatrix('./Finished_Large_LinNew_ALLENVS_AGENTS_global_info.csv');
-num_agents_node = readmatrix('./Finished_Large_LinNew_ALLENVS_AGENTS_num_agents.csv');
 
 % emb = readmatrix('./NewOneHot_ALLENVS_AGENTS_emb.csv');
 % colors_emb = readmatrix('./NewOneHot_ALLENVS_AGENTS_colors.csv',  OutputType="char");
@@ -294,7 +280,7 @@ set(ax,'Fontsize', 20);
 view([180, -90, 90]);
 box on;
 
-save testvarsFL.mat circ tri plus s c s2 c2 s3 c3 alphas1 alphas2 alphas3
+save testvars.mat circ tri plus s c s2 c2 s3 c3 alphas1 alphas2 alphas3
 
 
 

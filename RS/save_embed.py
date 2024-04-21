@@ -29,10 +29,11 @@ torch.manual_seed(42)
 class GraphEncoderWithResidual(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
         super(GraphEncoderWithResidual, self).__init__()
-        self.conv1 = SAGEConv(in_channels, hidden_channels*2)
-        self.conv2 = SAGEConv(hidden_channels*2, hidden_channels)
-        # self.conv3 = SAGEConv(hidden_channels, out_channels)
-        self.lin = nn.Linear(hidden_channels, out_channels)
+        self.conv1 = SAGEConv(in_channels, hidden_channels*4)
+        self.conv2 = SAGEConv(hidden_channels*4, hidden_channels*2)
+        self.conv3 = SAGEConv(hidden_channels*2, hidden_channels)
+        self.lin1 = nn.Linear(hidden_channels, int(hidden_channels/2))
+        self.lin2 = nn.Linear(int(hidden_channels/2), out_channels)
         # Linear transformation to match dimensions for residual connection
         self.shortcut = nn.Linear(in_channels, out_channels)
         # self.sm = nn.Softmax(dim=1)
@@ -41,16 +42,40 @@ class GraphEncoderWithResidual(nn.Module):
         identity = x
         x = F.relu(self.conv1(x, edge_index))
         x = F.relu(self.conv2(x, edge_index))
-        # x = self.conv3(x, edge_index)
-        x = self.lin(x)
+        x = self.conv3(x, edge_index)
+        x = F.dropout(F.relu(self.lin1(x)), p=0.2)
+        x = self.lin2(x)
         # Applying shortcut and adding it to the output of conv3
         identity = self.shortcut(identity)
         x += identity  # Element-wise addition
-        # print('before: ', x[0])
-        # print(np.shape(x))
         # x = self.sm(x)
-        # print('after: ', x[0])
         return x
+
+# class GraphEncoderWithResidual(nn.Module):
+#     def __init__(self, in_channels, hidden_channels, out_channels):
+#         super(GraphEncoderWithResidual, self).__init__()
+#         self.conv1 = SAGEConv(in_channels, hidden_channels*2)
+#         self.conv2 = SAGEConv(hidden_channels*2, hidden_channels)
+#         # self.conv3 = SAGEConv(hidden_channels, out_channels)
+#         self.lin = nn.Linear(hidden_channels, out_channels)
+#         # Linear transformation to match dimensions for residual connection
+#         self.shortcut = nn.Linear(in_channels, out_channels)
+#         # self.sm = nn.Softmax(dim=1)
+
+#     def forward(self, x, edge_index):
+#         identity = x
+#         x = F.relu(self.conv1(x, edge_index))
+#         x = F.relu(self.conv2(x, edge_index))
+#         # x = self.conv3(x, edge_index)
+#         x = self.lin(x)
+#         # Applying shortcut and adding it to the output of conv3
+#         identity = self.shortcut(identity)
+#         x += identity  # Element-wise addition
+#         # print('before: ', x[0])
+#         # print(np.shape(x))
+#         # x = self.sm(x)
+#         # print('after: ', x[0])
+#         return x
 
 
 
@@ -81,18 +106,16 @@ class GraphEncoderWithResidual(nn.Module):
 #         return x
     
     
-
-
 def node_to_color_black(node):
-    if node[9] == 0.0:
+    if node[3] == 0.0:
         return True
     else:
         return False
 
 def node_to_color_green(node, quals):
     # pdb.set_trace()
-    nA = np.sum([1 for _ in node[0::10]])
-    dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+    nA = np.sum([1 for _ in node[0::4]])
+    dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
     qs = [0]*4
     # pdb.set_trace()
     for d in dancers:
@@ -110,8 +133,8 @@ def node_to_color_green(node, quals):
     
 def node_to_color_red(node, quals):
     # pdb.set_trace()
-    nA = np.sum([1 for _ in node[0::10]])
-    dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+    nA = np.sum([1 for _ in node[0::4]])
+    dancers = [(1, q) for a, q in zip(node[0::4], node[3::4]) if a == 0.0]
     qs = [0]*4
     # pdb.set_trace()
     for d in dancers:
@@ -126,6 +149,50 @@ def node_to_color_red(node, quals):
             return False
     else:
         return False
+
+# def node_to_color_black(node):
+#     if node[9] == 0.0:
+#         return True
+#     else:
+#         return False
+
+# def node_to_color_green(node, quals):
+#     # pdb.set_trace()
+#     nA = np.sum([1 for _ in node[0::10]])
+#     dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+#     qs = [0]*4
+#     # pdb.set_trace()
+#     for d in dancers:
+#         ii = quals.index(d[1])
+#         qs[ii] += 1
+
+#     if np.max(qs) > COMMIT_THRESHOLD*nA:
+#         id = np.argmax(qs)
+#         if quals[id] == np.max(quals):
+#             return True
+#         else:
+#             return False
+#     else:
+#         return False
+    
+# def node_to_color_red(node, quals):
+#     # pdb.set_trace()
+#     nA = np.sum([1 for _ in node[0::10]])
+#     dancers = [(1, q) for a, q in zip(node[0::10], node[9::10]) if a == 1]
+#     qs = [0]*4
+#     # pdb.set_trace()
+#     for d in dancers:
+#         ii = quals.index(d[1])
+#         qs[ii] += 1
+
+#     if np.max(qs) > COMMIT_THRESHOLD*nA:
+#         id = np.argmax(qs)
+#         if quals[id] != np.max(quals):
+#             return True
+#         else:
+#             return False
+#     else:
+#         return False
     
 def get_color(node, quals):
     red = node_to_color_red(node, quals)
@@ -171,7 +238,7 @@ def get_complete_global(a):
     # pdb.set_trace()
     return arr
 
-folder_graph = './RS/classGraphs/'
+folder_graph = './RS/finished_trials/'
 files = os.listdir(folder_graph)
 files = [file for file in files if file.endswith('.pickle')]
 arr = dict()
@@ -213,9 +280,9 @@ for file in files[:-1]:
             arr[node[1]['x']] = node[1]['colors']
 
 # pdb.set_trace()
-encoder_dict = torch.load('./RS/LinNewOneHot_encoder_state_dict3.pth')
-in_channels = 100
-hidden_channels = 40
+encoder_dict = torch.load('./RS/Finished_Large_LinNew_encoder_state_dict3.pth')
+in_channels = 40
+hidden_channels = 100
 out_channels = 3
 GAE = GraphEncoderWithResidual(in_channels, hidden_channels, out_channels)
 GAE.load_state_dict(encoder_dict)
@@ -228,23 +295,23 @@ for i in arr1:
     arrtosave.append(i)
 # pdb.set_trace()
 df = pd.DataFrame(emb, columns=['x', 'y', 'z'])
-df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_emb.csv')
+df.to_csv('./RS/Finished_Large_LinNew_ALLENVS_AGENTS_emb.csv')
 
 df = pd.DataFrame(arrpos, columns=['pose1', 'pose2', 'pose3', 'pose4'])
-df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_poses.csv')
+df.to_csv('./RS/Finished_Large_LinNew_ALLENVS_AGENTS_poses.csv')
 
 df = pd.DataFrame(arrqual, columns=['qual1', 'qual2', 'qual3', 'qual4'])
-df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_quals.csv')
+df.to_csv('./RS/Finished_Large_LinNew_ALLENVS_AGENTS_quals.csv')
 
 
 df = pd.DataFrame(arr_global_info, columns=['1', '2', '3', '4'])
-df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_global_info.csv')
+df.to_csv('./RS/Finished_Large_LinNew_ALLENVS_AGENTS_global_info.csv')
 
 df = pd.DataFrame(arrcol, columns=['colors'])
-df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_colors.csv')
+df.to_csv('./RS/Finished_Large_LinNew_ALLENVS_AGENTS_colors.csv')
 
 df = pd.DataFrame(arr_num_agents, columns=['num_agents'])
-df.to_csv('./RS/LinNewOneHot_ALLENVS_AGENTS_num_agents.csv')
+df.to_csv('./RS/Finished_Large_LinNew_ALLENVS_AGENTS_num_agents.csv')
 
 # pdb.set_trace()
 
