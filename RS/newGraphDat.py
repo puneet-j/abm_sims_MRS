@@ -4,6 +4,8 @@ from torch.utils.data import Dataset, DataLoader
 import pickle
 import pdb 
 import numpy as np
+from torch_geometric.data import Data
+
 # STATES_LIST = ['RECRUIT', 'ASSESS', 'TRAVEL_HOME_TO_RECRUIT', 'TRAVEL_SITE', 'OBSERVE', 'EXPLORE', 'TRAVEL_HOME_TO_OBSERVE']
 # STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
 #           'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
@@ -39,6 +41,7 @@ class GraphDataset(Dataset):
         g = self.data['global_info'][idx]#.squeeze_(0)
         # print('in graphdata: ', np.shape(f), np.shape(e))
         # print('in graphdat: ', np.shape(self.data['feat'][idx].squeeze_(0)), np.shape(self.data['edges'][idx].squeeze_(0)))
+        # return Data(x=torch.cat([g, f], dim=1), edge_index=e, is_directed=True, y=c)
         return f, e, c, g 
         #self.dat[idx]['feat'], self.dat[idx][]
         # return node_features, edge_index, classes

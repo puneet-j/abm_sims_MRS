@@ -19,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
           'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
 CLIST = ["Slow/Success", "Fast/Success", "Slow/Failure", "Fast/Failure"]
-TIME_LIMIT_FOR_SLOW = 200
+TIME_LIMIT_FOR_SLOW = 150
 SUCCESS_LIMIT = 0.7
 MAX_DIST=ENVIRONMENT_BOUNDARY_X[-1]
 LEN_STATES = 7
@@ -88,7 +88,7 @@ def get_edges(fl, IDLookup, get_edges_with, success_dict, time_dict, success, ti
     return get_edges_with#, success_dict, time_dict
 
 def node_to_color_black(node):
-    if node[4] == 0.0:
+    if node[3] == 0.0:
         return True
     else:
         return False
