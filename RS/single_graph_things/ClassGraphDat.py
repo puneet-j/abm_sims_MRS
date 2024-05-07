@@ -10,9 +10,10 @@ STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0,
 # def get_complete_global():
 #     return
 class GraphDataset(Dataset):
-    def __init__(self, folder, file_paths):
-        self.file_paths_edges = file_paths
+    def __init__(self, folder, file_paths, meta):
+        self.file_paths = file_paths
         self.folder = folder
+        self.meta = meta
         # files = ['alledges', 'allsucc', 'alltime', 'edgesList', 'nodeIDs']
 
     def __len__(self):
@@ -52,21 +53,29 @@ class GraphDataset(Dataset):
     #     return newx
 
     def __getitem__(self, idx):
-        # with open(self.folder + self.file_paths[idx], 'rb') as f:
-        #     G = pickle.load(f)
+        with open(self.folder + self.file_paths[idx], 'rb') as f:
+            G = pickle.load(f)
         
         # files = ['alledges', 'allsucc', 'alltime', 'edgesList', 'nodeIDs']
         # w
         # print(G.nodes[0]['class'])
-        classes = torch.tensor([G.nodes[node]['classes'].index(1) for node in G.nodes], dtype=torch.long)
+        # pdb.set_trace()
+        # classes = torch.tensor([self.meta[G.nodes[node]] for node in G.nodes], dtype=torch.long)
         # global_info = torch.tensor([self.get_complete_global(G.nodes[node]['global_info'], len(G.nodes[node]['x'])) for node in G.nodes], dtype=torch.float)
         # node_features = torch.tensor([self.oneHotToState(G.nodes[node]['x']) for node in G.nodes], dtype=torch.float)
-        node_features = torch.tensor([G.nodes[node]['x'] for node in G.nodes], dtype=torch.float)
+        # for node in G.nodes:
+        #     print(node)
+        # pdb.set_trace()
+        node_features = torch.tensor([node[1]['x'] for node in G.nodes(data=True)], dtype=torch.float)
 
         # pdb.set_trace()
         # For edge features, assuming 'weight' attribute exists for each edge
         # Creating a tensor for edge indices and another for edge features
         edge_index = torch.tensor(list(G.edges), dtype=torch.long).t().contiguous()
+        # print(G.nodes[0])
+        # for i in self.meta: print(i); break
+        # time_feature = torch.tensor([self.meta[node[1]['x']] for node in G.nodes(data=True)], dtype=torch.float)
+        time_feature = torch.tensor([node[1]['time'] for node in G.nodes(data=True)], dtype=torch.float)
         # edge_features = torch.tensor([G[u][v]['weight'] for u, v in G.edges], dtype=torch.float)
 
         # Adjacency matrix (optional if you use edge_index and edge_features directly)
@@ -74,6 +83,6 @@ class GraphDataset(Dataset):
         # adj_matrix_tensor = torch.tensor(adj_matrix, dtype=torch.float)
 
         # Return node features, edge index, and edge features
-        return node_features, edge_index, classes
+        return node_features, edge_index, time_feature#, classes
         # return torch.cat((global_info, node_features), dim=1), edge_index#, edge_features
         # return torch.cat((global_info, node_features), dim=1), edge_index#, edge_features
