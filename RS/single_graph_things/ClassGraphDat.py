@@ -10,10 +10,10 @@ STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0,
 # def get_complete_global():
 #     return
 class GraphDataset(Dataset):
-    def __init__(self, folder, file_paths, meta):
+    def __init__(self, folder, file_paths):#, meta):
         self.file_paths = file_paths
         self.folder = folder
-        self.meta = meta
+        # self.meta = meta
         # files = ['alledges', 'allsucc', 'alltime', 'edgesList', 'nodeIDs']
 
     def __len__(self):
@@ -75,14 +75,14 @@ class GraphDataset(Dataset):
         # print(G.nodes[0])
         # for i in self.meta: print(i); break
         # time_feature = torch.tensor([self.meta[node[1]['x']] for node in G.nodes(data=True)], dtype=torch.float)
-        time_feature = torch.tensor([node[1]['time'] for node in G.nodes(data=True)], dtype=torch.float)
+        #time_feature = torch.tensor([node[1]['time'] for node in G.nodes(data=True)], dtype=torch.float)
         # edge_features = torch.tensor([G[u][v]['weight'] for u, v in G.edges], dtype=torch.float)
-
+        quals = [node[1]['quals'] for node in G.nodes(data=True)]
         # Adjacency matrix (optional if you use edge_index and edge_features directly)
         # adj_matrix = nx.to_numpy_matrix(G)
         # adj_matrix_tensor = torch.tensor(adj_matrix, dtype=torch.float)
 
         # Return node features, edge index, and edge features
-        return node_features, edge_index, time_feature#, classes
+        return node_features, edge_index, quals#, time_feature#, classes
         # return torch.cat((global_info, node_features), dim=1), edge_index#, edge_features
         # return torch.cat((global_info, node_features), dim=1), edge_index#, edge_features
