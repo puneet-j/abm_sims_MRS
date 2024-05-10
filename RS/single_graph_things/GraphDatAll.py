@@ -8,7 +8,7 @@ STATES_LIST = ['RECRUIT', 'ASSESS', 'TRAVEL_HOME_TO_RECRUIT', 'TRAVEL_SITE', 'OB
 STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
           'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
 TIME_LIMIT = 200
-SUCC_LIMIT = 0.9
+# SUCC_LIMIT = 0.9
 # def get_complete_global():
 #     return
 class GraphDataset(Dataset):
@@ -39,11 +39,21 @@ class GraphDataset(Dataset):
         else:
             return 1
         
+    # def get_succclass(self, s):
+    #     if s < SUCC_LIMIT:
+    #         return 0
+    #     else:
+    #         return 1
+    
     def get_succclass(self, s):
-        if s < SUCC_LIMIT:
+        if s < 0.25:
             return 0
-        else:
+        elif s >= 0.25 and s < 0.5:
             return 1
+        elif s >= 0.5 and s < 0.75:
+            return 2
+        else:
+            return 3
     # def get_class(self, cl):
     #     x = [0]*4
     #     if cl == "Slow/Success":
