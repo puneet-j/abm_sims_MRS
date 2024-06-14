@@ -1,0 +1,457 @@
+%% Author_tex.tex
+%% V1.0
+%% 2012/13/12
+%% developed by Techset
+%%
+%% This file describes the coding for rsproca.cls
+
+\documentclass[openacc]{rsproca_new}%%%%where rsproca is the template name
+\usepackage{xcolor}
+\newcommand{\mg}[1]{\textcolor{blue}{(Mike: #1)}}
+\newcommand{\pj}[1]{\textcolor{magenta}{(Puneet: #1)}}
+\newcommand{\ns}[1]{\textcolor{red}{Nick: #1}}
+\newcommand{\vb}[1]{\textcolor{cyan}{Vigynesh: #1}}
+%%%% *** Do not use packages/style files that adjust lengths, control margins, column widths, etc. ***
+
+%%%%%%%%%%% Defining Enunciations  %%%%%%%%%%%
+\newtheorem{theorem}{\bf Theorem}[section]
+\newtheorem{condition}{\bf Condition}[section]
+\newtheorem{corollary}{\bf Corollary}[section]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%% Please insert respective article type here %%%%
+\titlehead{Research}
+
+\begin{document}
+
+%%%% Article title to be placed here
+\title{Performance Prediction of Hub-Based Swarms}
+
+\author{%%%% Author details
+Puneet Jain$^{1}$, Chaitanya Dwivedi$^{2}$,
+Vigynesh Bhatt$^{1}$, Nick Smith$^{1}$, and Michael A Goodrich$^{1}$ }
+
+%%%%%%%%% Insert author address here
+\address{$^{1}$Brigham Young University\\
+$^{2}$Amazon AGI}
+
+%%%% Subject entries to be placed here %%%%
+\subject{swarms, graph neural networks, performance prediction}
+
+%%%% Keyword entries to be placed here %%%%
+\keywords{swarms, graph neural networks, performance prediction}
+
+%%%% Insert corresponding author and its email address}
+\corres{Michael A Goodrich\\ \email{mike@cs.byu.edu}}
+
+%%%% Abstract text to be placed here %%%%%%%%%%%%
+\begin{abstract}
+There are really powerful tools for modeling swarms that have strong spatial structures like flocks of birds, schools of fish, and swarms of drones, but very little work on developing formalisms for other swarm structures like hub-based colonies doing foraging, performing nest maintenance, or solving decision problems like selecting a new nest site.
+
+We present a model for hub-based colonies of homogeneous agents that allows the swarm's collective state to be embedded into a low-dimensional space. These low dimensional embeddings allow performance metrics like success probability and decision time to be computed.  The embeddings have the property that collective states which have similar performance have very similar embeddings. Thus, estimates of task performance for novel situations can be reliably and quickly computed using interpolation techniques like kNN. We show results for smaller swarm systems of up to 20 agents and 2 sites and show that minor perturbations in the environment, such as agent addition or attrition do not significantly affect performance predictions.
+% \absbreak
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\rsbreak
+
+%%%%%%%%%% Insert the texts which can accomdate on firstpage in the tag "fmtext" %%%%%
+
+\section{Introduction and Related Work}
+%%%% Insert A head here
+
+
+Agent-based modeling is a way to understand how  multi-agent systems behave by designing at the scale of a single agent and then using simulations to explore emergent behavior. Agent-based models often use state machines to generate agent behavior. Agent-based models are often used in empirically oriented experiments to explore how various configuration settings affect the way problems are solved and collective behaviors emerge~\cite{dorigo2018ant,valentini_best-n_2017}. These types of models lead to conclusions that apply to finite numbers of agents, such as those typically encountered in multi-robot systems. 
+
+
+
+% CBRNE~\cite{}\pj{adams cbrne}
+
+Distributed swarm systems provide a robust and adaptive solution approach to many optimization problems. Instead of using one really sophisticated agent, multiple smaller less sophisticated agents can provide the flexibility to evaluate more options and still provide a “good” answer.
+
+
+\pj{need to bring in: ‘examples of applied swarm systems, current or future.’}
+
+Bio-inspired swarming is a branch of the field of distributed systems. Distributed systems depict environments where the computation/sensing is spread across multiple resources. Distributed systems are being used to solve practical problems including (a) improving accuracy in predicting horse races, soccer or NBA games, Oscar awards or financial markets~\cite{swarmAIpapers,swarmAI_socialoptima, swarmAI_vegas, swarmAI_finance},  (b) surveillance~\cite{valera2005intelligent}, and (c) optimization~\cite{rabbat2004distributed,dorigo1991distributed,boyd2011distributed,passino2002biomimicry}. Tasks involving humans that collaborate with multiple robots include Chemical, Biological, Radiological, Nuclear or Explosive (CBRNE) incident response~\cite{humphrey2009robotic}, managing cooperating robot teams~\cite{wang2007human}, managing multiple UAVs~\cite{cummings2007automation}, and assembly~\cite{chen2013optimal,caraballo2017block}.
+
+Many of these tasks, especially those like construction-site management and CBRNE response, can be seen as  Best-of-N or Best-M-of-N problems, where the agents need to prioritize which $M$ areas out of $N$ possibilities should receive resources. The motivation for solving the best-M-of-N problem comes out of the need (a) to discover multiple good options in a scenario, (b) to increase the robustness of the system and make it easier to switch between tasks, and (c) to allocate group members to do multiple tasks at the same time.
+
+
+Best-of-N problems are usually characterized by two  entities: \textit{agents} and \textit{solutions}.  \textit{Agents} actively explore the world, communicate with other agents, and participate in distributed decision making.  Since many best-of-N solutions correspond to decisions about physical locations, we refer to solutions as \textit{sites}.
+
+The benefit of using graphs to model swarms comes from the graphs being able to generate analytical predictions for finite sized swarms in different configurations, which can be relatively easy for humans to interpret. Agent based models (ABMs) fail to provide analytical or closed form solutions to problems being solved (best-of-N in our case). Population models on the other hand do a lousy job with finite population effects.
+
+
+The main contributions of this paper are as follows: \\ a) A framework to provide predictions of time and success for a colony solving the best-of-N problem, b) generalizing the predictions for multiple colony sizes, c) providing real-time estimates of the swarm state in a lower-dimensional space for providing information about the state of the swarm, relative to potential success or failure.
+
+
+
+%%%%%%%%%%%%%%% End of first page %%%%%%%%%%%%%%%%%%%%%
+
+\maketitle
+
+\section{Graphs from the Best-of-N Model}
+We use the model and formalisms from~\cite{} in this paper for the best-of-N problem. The agents in this model behave only on the information at the current step. Thus a memory less agent model helps us depict the simulation as a markovian process. We use graphs to depict edges between each step, with the nodes of the graphs being a snapshot of the simualtion at any time step. 
+
+This section presents describes the formulation graph from the agent-based model.
+
+\subsection{Best-of-N Problem}
+% \begin{figure}[h]
+%       \centering
+%     \includegraphics[width=0.5\linewidth]{figures/fifty_agents_two_sites.png}
+%          \caption{Best-of-N problem with two sites (circles) and 50 agents (triangles). The hexagon represents the hub.}
+%          \label{fig:exampleenv}
+% \end{figure}
+\begin{figure}[h]
+      \centering
+    \includegraphics[width=0.5\linewidth]{figures/4agentsystem.png}
+         \caption{Best-of-N problem with four sites (hollow circles) and 10 agents (dots). The center circle represents the hub.}
+         \label{fig:exampleenv}
+\end{figure}
+The best-of-N problem is illustrated in Fig.~\ref{fig:exampleenv} for a problem with four  sites, ten agents, and a central hub. The agents, which are represented as dots, explore the world. When agents find a site of interest, they return to the hub to inform other agents. If they don't find a site, they return to the hub and observe other agents. Agents travel between a site of interest and the hub to assess the site and to recruit other agents to the site. Agents recruiting for a site can sense when a quorum of agents are at the hub, and when a quorum is reached the collective decides that the site is the best solution to the problem~\cite{cdcpaper}. 
+
+\subsection{Agent Based Model (ABM)}
+\begin{figure}[h!]
+      \centering      
+      \includegraphics[width=0.8\linewidth]{figures/State_Diagram-10.pdf}
+         \caption{Agent-Based Model~\cite{cdcpaper}}
+         \label{fig:main1}
+\end{figure}
+
+The parameters used to run the simulations for the agent-based models are listed in the Table~\ref{tab:sims}.
+
+
+\subsection{Graph Formulation}
+
+A compressed representation of the swarm state is used as the node feature. The relational table~\ref{tab:relation} we use to get the state of the agent includes the quality of the site it is attached to (if any), along with its current state, and the estimate of time in that current state. The state vector is one row of this table and for multiple agents, these rows are concatenated together to form the state vector, sorted in the order defined in the table (quality highest priority, then state). The example given in Table~\ref{tab:relation} is of a four agent system.
+\begin{table}[!h]
+    \caption{Relation representing the individual states.~\cite{cdcpaper}}
+    \label{tab:relation}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}\hline
+        $Q$ & $R$ & $A$ & $T_{H_R}$ & $T_S$ & $O$ & 
+ $E$ & $T_{H_O}$ &  $ID$ \\
+ \hline\hline
+1.0	& 0	& 0	& 0 & 1 & 0 & 0 & 0  & 2\\
+0.5 & 1 & 0 & 0 & 0 & 0 & 0 & 0  & 0\\
+0.5 & 0 & 1 & 0 & 0 & 0 & 0 & 0  & 3\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 1  & 1 \\
+\hline
+    \end{tabular}
+\vspace*{-4pt}
+\end{table}
+
+For larger systems with multiple environments, we remove the time in state aspect from the node feature, and instead of one-hot encoding, use a scaled state value between zero and one as: $R=0/6$, $A=1/6$, $T_{H_R}=2/6$, $T_S = 3/6$, $O=4/6$, $E=5/6$, and $T_{H_O}=6/6$. 
+
+Edges are added between nodes when they occur next to each other in the simulation. We do not include edge weights in our graphs for this paper.
+
+
+%%%End of the table
+% \begin{figure}[h!]
+%       \centering      
+%       \includegraphics[width=0.8\linewidth]{figures/State_Diagram-10.pdf}
+%          \caption{Agent-Based Model}
+%          \label{fig:main1}
+% \end{figure}
+
+
+
+\section{Design for Low-Dimensional Embeddings and Predictions}
+
+Following from the work in~\cite{cdcpaper}, we use Graph Attention Networks~\cite{gatpaper} to learn the embeddings. We incorporate tree-based gradient boosting methods as well to generate predictions of success and time for single graphs.
+
+\subsection{Low-Dimensional Embeddings}
+
+
+\begin{figure}[h!]
+      \centering      
+      \includegraphics[width=0.8\linewidth]{figures/GNN.pdf}
+         \caption{Graph Attention Network for generating embeddings and success/time classification.}
+         \label{fig:single_graph_model}
+\end{figure}
+
+Embeddings are generated for all parameters listed in Table~\ref{tab:sims}.
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|}
+     \hline
+\textbf{Parameter} &\textbf{Values} \\
+\hline
+\hline
+x & $2/(2 + e^{-7q})$ \\
+\hline
+y & $q\delta(r-r_S)$ \\
+\hline
+z & $\delta(p_r)/|R|$ \\
+\hline
+$p_r$ & binomial($|R|$,0.1) \\
+\hline
+$p_1$ & binomial(1,0.01) \\
+\hline
+$p_2$ & binomial(1,0.99) \\
+\hline
+$p_3$ & binomial(1,0.02) \\
+\hline
+$p_4$ & binomial(1,0.1) \\
+\hline
+$\gamma$ & $q^{0.5}$ \\
+\hline
+Threshold $\tau$ & 0.5 \\
+\hline
+Constraints of  & $|q_{s_1}-q_{s_2}| < 0.5$ \\
+Quality of Sites & min$(q_{s_1},q_{s_2}) > 0.5$ \\
+\hline
+Simulation run-times $T$ &  $T \in  \{1000, 10000, 35000\}$\\
+\hline
+Distance of Sites & $d_{site} \in \{100, 150, 200\}$\\
+\hline
+Maximum Distance & $1000$\\
+\hline
+Number of Agents & $K \in \{5, 10\}$\\
+\hline
+Number of Sites & $N \in \{2, 3, 4\}$\\
+
+\hline
+    \end{tabular}
+    \caption{Parameters for the ABM and Simulations.}
+    \label{tab:sims}
+\end{table}
+
+
+\subsection{Predicting Time and Success Probability}
+Our model is shown in Figure~\ref{fig:single_graph_model}. 
+
+
+% \pj{steps listed todo}
+1. extract 1 configuration graph simulations. store the time to converge for each node, edges from each node, and node indexes.
+
+% class GAT(torch.nn.Module):
+%     def init(self, dim_in, dim_h, dim_out, heads = 8):
+%         super().init()
+%         self.gat1 = GATv2Conv(dim_in, dim_h4, heads = heads)
+%         self.gat2 = GATv2Conv(dim_h4heads, dim_h2, heads = heads)
+%         self.gat3 = GATv2Conv(dim_h2heads, dim_h, heads = 1)
+%         self.output = Linear(dim_h, dim_out)
+
+%     def forward(self, x, edge_index):
+%         h = F.dropout(x, p=0.6, training = self.training)
+%         h = self.gat1(h, edge_index)
+%         h = F.elu(h)
+%         h = F.dropout(h, p=0.6, training = self.training)
+%         h = self.gat2(h, edge_index)
+%         h = F.elu(h)
+%         h = F.dropout(h, p=0.6, training = self.training)
+%         h = self.gat3(h, edge_index)
+%         h = F.elu(h)
+%         embedding = h
+%         out = self.output(h)
+%         out = F.log_softmax(h, dim=1)
+%         return out, embedding # both the learned class and the embedding are returned. 
+% def fit(self, data, epochs):
+%         optimizer = torch.optim.Adam(self.parameters(), lr=0.01, weightdecay=0.01)
+%         criterion = torch.nn.CrossEntropyLoss()
+
+%         self.train()
+%         for epoch in range(epochs+1):
+%             optimizer.zero_grad()
+%             out,  = self(data.feature, data.edgeindex)
+%             loss = criterion(out[data.train_mask], data.y[data.train_mask])
+%             acc = accuracy(out[data.train_mask].argmax(dim=1), data.y[data.train_mask])
+%             loss.backward()
+%             optimizer.step()
+
+%             # Every now and then print out progress reports
+%             if epoch % 20 == 0:
+%                 val_loss = criterion(out[data.test_mask], data.y[data.test_mask])
+%                 val_acc = accuracy(out[data.test_mask].argmax(dim=1), data.y[data.test_mask])
+%                 print(f"Epoch {epoch:>3} | Train Loss: {loss:.3f} | Train Acc: {acc100:>5.2f}% | Val Loss {val_loss: .2f} | Val Acc: {val_acc100:.2f}%")
+    % def test(self, data):
+    %     self.eval()
+    %     out,  = self(data.feature, data.edge_index)
+    %     acc = accuracy(out.argmax(dim=1)[data.test_mask], data.y[data.test_mask])
+    %     return acc
+% z = TSNE(n_components=2).fit_transform(h.detach().cpu().numpy())
+
+% def fit(self, data, epochs):
+%         # Compute weights
+%         y = data.y.detach()
+%         class_weight = compute_class_weight(class_weight="balanced", classes=np.unique(y), y=y.numpy())
+%         class_weight = torch.tensor(class_weight, dtype=torch.float32)
+%         print(f"The class weighting is {class_weight}")
+
+%         optimizer = torch.optim.Adam(self.parameters(), lr=0.01, weight_decay=0.01)
+%         criterion = torch.nn.CrossEntropyLoss(weight=class_weight, reduction='mean')
+
+
+
+For transductive - load this whole file as a graph - and use xgboost. $$class est = GradientBoostingClassifier(n_estimators=200, max_depth=5)$$
+
+For inductive/multiple simulations, load a file, use time labels from all simulations for supervised learning - show embedding (maybe) and time/success.
+
+
+\section{Experiments}
+
+\textbf{Experiment 1}: Do low dimensional embeddings of swarms make sense relative to the best-of-N task?\\ \textbf{Experiment 2}: How do we predict the performance of the swarm?\\ \textbf{Experiment 3}: Can we make performance predictions for multiple colony sizes and varying environments?
+
+% Result 1:
+% \vspace*{-7pt}
+
+
+% \noindent The output for table is:\vspace*{-7pt}
+
+
+\section{Results and Discussion}
+
+% \vspace*{-5pt}
+
+
+% Result 3:\vspace*{-7pt}
+Classification of success in 4 bins - each defining how frequently the node ends up in success is shown in Figure~\ref{fig:classification_success_one}. This is a 2D representation of the classification using t-SNE. We can see clusters of the different success zones. 
+
+% \begin{figure}[!h]
+% \centering\includegraphics[angle=270,width=0.5\linewidth]{figures/GAT_embedding_success.pdf}
+% %%% where xxxxxx name represents "figurename.eps"
+% \caption{2D plot for success classification using a 3 layer GAT. 2D plot was generated by using t-SNE over the 4D output of the classification.}
+% \label{fig:classification_success_one}
+% \end{figure}
+
+\begin{figure}[!h]
+\centering\includegraphics[angle=270,width=0.5\linewidth]{figures/10_1_0p5_0p3_embed.pdf}
+%%% where xxxxxx name represents "figurename.eps"
+\caption{2D plot for success classification using a 3 layer GAT. 2D plot was generated by using t-SNE for visualization over the 4D output of the GAT.}
+\label{fig:embedding_success_one}
+\end{figure}
+
+\begin{figure}[!h]
+\centering\includegraphics[angle=270,width=0.4\linewidth]{figures/10_1_0p5_0p3_morethan5.pdf} \includegraphics[angle=270,width=0.4\linewidth]{figures/10_1_0p5_0p3_morethan5.pdf}
+%%% where xxxxxx name represents "figurename.eps"
+\caption{Percentage Success classification for a single configuration using XGBoost over the 4D GAT output.}
+\label{fig:classification_success_one}
+\end{figure}
+
+
+
+Figure~\ref{fig:classification_time_one} shows that time classification (slow vs fast) can be achieved using the network for a  simulation with 4 sites and 10 agents. 
+
+\begin{figure}[!h]
+\centering\includegraphics[width=0.5\linewidth]{figures/time_class.png}
+%%% where xxxxxx name represents "figurename.eps"
+\caption{Confusion matrix for classification of speed of making a decision from a node for a single configuration of 10 agents and 4 sites.}
+\label{fig:classification_time_one}
+\end{figure}
+
+% \vspace*{-5pt}
+
+Figure~\ref{fig:3D_Embed} shows the embeddings of one configuration using GraphSage.
+\begin{figure}[!h]
+\centering\includegraphics[width=0.5\linewidth]{figures/plot_one_embedding.png}
+\caption{3D embedding (time to converge included in state vector) for a single configuration of 10 agents and 4 sites. Green is success, Red is failure, Black is Hub, and Blue intermediate.}
+\label{fig:3D_Embed}
+\end{figure}
+
+
+% \vspace*{-5pt}
+
+
+\section{Conclusion and Future Work}
+\pj{need to extrapolate to: ‘way forward in swarm systems’}\\
+\pj{Talk about self proficiency assessment and human-swarm interaction}
+Best-of-N models can be represented in a lower dimension where the position in the lower dimension (3D) can be represent how far (in time) or close the simulation is to a solution (success or failure). \vskip6pt
+
+\enlargethispage{20pt}
+
+\ack{The work was supported by the US Office of Naval Research under grant N00014-21-1-2190. The work does not represent opinions of the sponsor.}
+
+
+%%%%%%%%%% Insert bibliography here %%%%%%%%%%%%%%
+
+\vskip2pc
+
+% \noindent {\bf Please follow the coding for references as shown below.}
+
+% \begin{thebibliography}{9}
+
+% \bibitem{1} Allwood JM, Cullen JM. 2011 \textit{Sustainable materials:  with both eyes open}.
+% Cambridge, UK: UIT Cambridge. See \href{http://www.withbotheyesopen.com}{http://www.withbotheyesopen.com}.
+
+% \bibitem{2}  MacKay DJC. 2008  \textit{Sustainable energy:  without the hot air}.
+%  Cambridge, UK: UIT Cambridge. See \href{http://www.withouthotair.com}{http://www.withouthotair.com}.
+
+% \bibitem{3} Gallman PG. 2011  \textit{Green alternatives and national energy strategy: the facts
+%  behind the headlines}.  Baltimore,\ MD: Johns Hopkins University Press.
+
+% \bibitem{4} MacKay DJC. 2013.  Solar energy in the context of energy use, energy transportation, and
+%  energy storage. \textit{Proc. R. Soc. A} \textbf{371}.
+
+% \end{thebibliography}
+
+% \noindent If maintaining .bib file for references, then please use "RS.bst" to generate the references.
+
+% \noindent Example:
+
+% \verb+
+\bibliographystyle{RS}+ %%%% .BST file
+
+% \verb+
+\bibliography{references}+ %%%%% .Bib file
+
+\end{document}
+
+
+
+\begin{theorem}\label{T0.1}
+Assume that $\alpha>0, \gamma>1, \beta>\frac{\gamma+1}{\gamma-1}$.
+Then there exists a small $\tau_1>0$, such that for $\tau\in
+[0,\tau_1)$, if $c$ crosses $c(\tau)$ from the direction of
+to  a small amplitude periodic traveling wave solution of
+(2.1), and the period of $(\check{u}^p(s),\check{w}^p(s))$ is
+\[
+\check{T}(c)=c\cdot \left[\frac{2\pi}{\omega(\tau)}+O(c-c(\tau))\right].
+\]
+\end{theorem}
+
+
+
+
+\begin{table}[!h]
+\caption{An Example of a Table}%%%Table caption goes here
+\label{table_example}
+\begin{tabular}{llll}%%%The number of columns has to be defined here
+\hline
+date &Dutch policy &date &European policy \\
+\hline
+1988 &Memorandum Prevention &1985 &European Directive (85/339) \\
+1991--1997 &{\bf Packaging Covenant I} & & \\
+1994 &Law Environmental Management &1994 &European Directive (94/62) \\
+1997 &Agreement Packaging and Packaging Waste & & \\\hline
+\end{tabular}
+\vspace*{-4pt}
+\end{table}%%%End of the table
+
+
+
+Sample equations.
+
+%%% Numbered equation
+\begin{align}\label{1.1}
+\begin{split}
+\frac{\partial u(t,x)}{\partial t} &= Au(t,x) \left(1-\frac{u(t,x)}{K}\right)-B\frac{u(t-\tau,x) w(t,x)}{1+Eu(t-\tau,x)},\\
+\frac{\partial w(t,x)}{\partial t} &=\delta \frac{\partial^2w(t,x)}{\partial x^2}-Cw(t,x)+D\frac{u(t-\tau,x)w(t,x)}{1+Eu(t-\tau,x)},
+\end{split}
+\end{align}
+
+\begin{align}\label{1.2}
+\begin{split}
+\frac{dU}{dt} &=\alpha U(t)(\gamma -U(t))-\frac{U(t-\tau)W(t)}{1+U(t-\tau)},\\
+\frac{dW}{dt} &=-W(t)+\beta\frac{U(t-\tau)W(t)}{1+U(t-\tau)}.
+\end{split}
+\end{align}
+
+%%%% Unnumbered equation
+\begin{eqnarray}
+\frac{\partial(F_1,F_2)}{\partial(c,\omega)}_{(c_0,\omega_0)} = \left|
+\begin{array}{ll}
+\frac{\partial F_1}{\partial c} &\frac{\partial F_1}{\partial \omega} \\\noalign{\vskip3pt}
+\frac{\partial F_2}{\partial c}&\frac{\partial F_2}{\partial \omega}
+\end{array}\right|_{(c_0,\omega_0)}\notag\\
+=-4c_0q\omega_0 -4c_0\omega_0p^2 =-4c_0\omega_0(q+p^2)>0.
+\end{eqnarray}

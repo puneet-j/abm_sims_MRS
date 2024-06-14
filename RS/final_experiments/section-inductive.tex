@@ -1,0 +1,37 @@
+
+\subsection{Experiment 3: Inductive Learning of Low-Dimensional Embedding}
+
+The two previous experiments assumed that we have access to the entire graph and sufficient memory to store it. 
+However, these assumptions may not hold in scenarios like run-time inference or large swarms navigating complex environments. 
+In such cases, the node label prediction task transforms into an inductive learning problem. 
+This section demonstrates how the same graph formalism, as applied in experiments 1 and 2, can be applied to inductive learning with minor modifications.
+
+Following the network architecture described in Figure \ref{fig:single_graph_model}, 
+we obtain a 4 dimensional latent embedding as the output of the last linear layer, 
+and pass it through a fully connected network that forms the classification head. 
+The end to end network is trained with cross entropy objective, 
+where the true node classes form the labels that are compared against logits predicted by the classification head.
+We apply a Dropout of 0.2 at the penultimate layer during training, and a weight decay of 5e-4. 
+
+In addition to the cross-entropy objective, we present results using reconstruction loss alone and 
+a combination of reconstruction and cross-entropy loss. 
+\cd{If the combined loss produces better results} We hypothesize that reconstruction loss acts as a regularizer, 
+preventing the network from overfitting to the classification objective by enforcing the graph topology in the latent space. 
+This class-agnostic structure enhances the network's generalization ability, a crucial aspect in the inductive setting, 
+where partially observed graphs may introduce noise during training. The notion of combining classification and reconstruction loss 
+has previously been explored in the context of image classification in \cite{robert2018hybridnet}. 
+
+
+In case of ABMs, each simulation can run for different time steps, and can visit multiple different nodes. If we consider each simulation a graph, the graphs can be of varying sizes. This task was trained considering one simulation as a graph, and a batch size of one. This enables us inductively learn graph embeddings without explicitly processing node neighbourhoods and batches, while keeping memory requirements low.
+
+(in case results aren't as good) Results show that the task performance using inductive learners, without explicit batch processing to ensure frequent nodes, as discussed in the Section~\ref{sec:motivateGAT}, 
+yields poor classification results. Another factor in the poor classification is the disbalance between classes, which makes nodes in class 3 (Fast/Failure) have poor results. 
+
+(in case they do work)
+Results show that the task performance using inductive learner based on GAT, without explicit batch processing, but using frequent nodes, is still able to have comparable performance to 
+transductive learning. This tells us that we can do real-time prediction and learning for multi-agent swarms, based on new graphs and nodes as they show up in simulations. 
+
+We also see that the GAT based classifier has similar performance as the GradientBoostingClassifier on the penultimate layer, which further motivates the use 
+of GAT for learning the classes from graphs. Using the current framework, any size of graph can be input to the model to further train it and make predictions. 
+
+Training without frequent node filtering (including all nodes) slightly reduces the performance of the classification task, which is expected. 

@@ -115,7 +115,14 @@ class GraphDataset(Dataset):
         # time_feature = torch.tensor([self.meta[node[1]['x']] for node in G.nodes(data=True)], dtype=torch.float)
         #time_feature = torch.tensor([node[1]['time'] for node in G.nodes(data=True)], dtype=torch.float)
         edge_features = torch.tensor([G[u][v]['weight'] for u, v in G.edges], dtype=torch.float)
-        times = torch.tensor([self.get_timeclass(node[1]['AvgTime']) for node in G.nodes(data=True)], dtype=torch.long)
+        try:
+            times = torch.tensor([self.get_timeclass(node[1]['AvgTime']) for node in G.nodes(data=True)], dtype=torch.long)
+        except Exception as e:
+            print(e)
+            print(self.folder)
+            print(self.file_paths[idx])
+            print(G.nodes[0])
+            # pdb.set_trace()
         successes = torch.tensor([self.get_succclass(node[1]['AvgSucc']) for node in G.nodes(data=True)], dtype=torch.long)
         timesucc = torch.tensor([self.get_succtimeclass(node[1]['AvgSucc'], node[1]['AvgTime']) for node in G.nodes(data=True)], dtype=torch.long)
         quals = [node[1]['quals'] for node in G.nodes(data=True)]

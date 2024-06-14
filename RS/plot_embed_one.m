@@ -10,7 +10,7 @@ close all;
 
 %%
 % vals{1}
-arr = load('test.mat');
+arr = load('./single_graph_things/NEW_with_self_loops_with_residual_test_all_3d_embed.mat');
 
 %%
 f = figure(1);
@@ -42,5 +42,16 @@ end
 
 
 %%
-scatter3(arr.x, arr.y, arr.z, arr.sz, new.', 'o', 'filledww');
+scatter3(arr.x, arr.y, arr.z, arr.sz, new.', 'o', 'filled');
+%%
+
+% P = [arr.x;arr.y;arr.z];
+% [~,~,V]=svd(P-mean(P));
+% N=V(:,3);
+%%
+% P - P(1, :)
+%%
+% RankP      = rank(P - P(1, :));
+%%
+% isHyperplane = RankP < 6   % [EDITED] "coplanar" was a clumsy term
 
