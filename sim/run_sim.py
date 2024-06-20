@@ -98,9 +98,10 @@ if __name__ == '__main__':
     sims_per_distance = 1 
     sim_repeats = 10 # 10
     num_samples_per_starting_condition = 10 # 10
-    maxTimes = [1000, 10000, 35000]
-    fold_name = 'graphsage_results/CDC/multiple_agent_env_results/'
-    fname_metadata = './' + fold_name + '/metadata.csv'
+    maxTimes = [35000]
+    # maxTimes = [1000, 10000, 35000]
+    fold_name = 'AAAI/data/'
+    fname_metadata = './' + fold_name + 'metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
     empty = pd.DataFrame([], columns=df_metadata_cols)
     file_exists = os.path.exists(fname_metadata)
