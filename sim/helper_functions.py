@@ -9,7 +9,8 @@ def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
     agent_dict_list.append(get_all_OBSERVE(agents))
     agent_dict_list.append(get_half_explore(agents))
-    agent_dict_list.append(get_10perc_dancing_bad(agents, site_quals))
+    for i in get_10_to_40perc_dancing_good_to_bad(agents, site_quals):
+        agent_dict_list.append(i)
     return agent_dict_list
 
 def get_all_OBSERVE(agents):
@@ -41,6 +42,7 @@ def get_half_explore(agents):
             new_dict['site'] = None
             new_dict['dir'] = [0.0, 1.0]
         new_list.append(new_dict)
+        pdb.set_trace()
     return new_list
 
 def get_10perc_dancing_bad(agents, site_quals):
@@ -65,6 +67,31 @@ def get_10perc_dancing_bad(agents, site_quals):
             new_dict['dir'] = [0.0, 1.0]
         new_list.append(new_dict)
     return new_list
+
+def get_10_to_40perc_dancing_good_to_bad(agents, site_quals):
+    listoflist = []
+    new_list = []
+    agents_dancing_bad = int(np.floor(0.2*agents))
+    dancing_and_other = [1]*agents_dancing_bad + [0]*(agents - agents_dancing_bad)
+    random.shuffle(dancing_and_other)
+    for a in dancing_and_other:
+        new_dict = {}
+        if a==1:
+            new_dict['pose'] = [0.0, 0.0]
+            new_dict['state'] = 'RECRUIT'
+            new_dict['speed'] = 0.0
+            bad_site = np.argmin(site_quals)
+            new_dict['site'] = bad_site
+            new_dict['dir'] = [0.0, 1.0]
+        else:
+            new_dict['pose'] = [0.0, 0.0]
+            new_dict['state'] = 'OBSERVE'
+            new_dict['speed'] = 0.0
+            new_dict['site'] = None
+            new_dict['dir'] = [0.0, 1.0]
+        new_list.append(new_dict)
+    listoflist.append(new_list)
+    return listoflist
 
 # def get_valid_qualities_fixed_2(num_configs):
 #     quals = qualities2[:num_configs]
