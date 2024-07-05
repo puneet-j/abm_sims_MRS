@@ -71,14 +71,16 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
                             w_init = [sites, qual, poses, agents, agent_init, TIME_LIMIT] 
                             worlds.append(w_init)
                             # pdb.set_trace()
-                            w = World(w_init, fname, save=False)
-                            w.simulate()
+                            # w = World(w_init, fname, save=False)
+                            # w.simulate()
                             init_configs = []
                             init_configs.append(agent_init)
-                            init_configs += get_init_condition_from_df(w.list_for_df, starts)
+                            # init_configs += get_init_condition_from_df(w.list_for_df, starts)
                             for init in init_configs:
                                 for mtime in mTimes:
                                     for _ in range(0,sim_repeats):
+                                        # print(agents)
+                                        # qual = 
                                         worlds.append([sites, qual, poses, agents, init, mtime])
                             
     return worlds
@@ -93,14 +95,14 @@ def simulate_world(sim, world):
 if __name__ == '__main__':
     site_configs = [4]#[2, 3, 4] #[2, 3]#[2, 3, 4]#[2, 3, 4] #[2, 3, 4]
     distances = [150]#[100, 200, 150] #[100, 200]#, 300]#, 300]
-    agent_configs = [100]#[100, 50, 20, 10, 5] #[5, 10, 20] #[5, 20, 50, 100, 200]
+    agent_configs = [10]#[100, 50, 20, 10, 5] #[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 1 #10 
     sims_per_distance = 1 
     sim_repeats = 10 # 10
-    num_samples_per_starting_condition = 10 # 10
+    num_samples_per_starting_condition = 0 # 10
     maxTimes = [35000]
     # maxTimes = [1000, 10000, 35000]
-    fold_name = 'AAAI/data/quorumsims/'
+    fold_name = 'AAAI/data/quorum_sims_all/'
     fname_metadata = './' + fold_name + 'metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
     empty = pd.DataFrame([], columns=df_metadata_cols)

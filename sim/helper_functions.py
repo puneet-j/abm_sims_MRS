@@ -1,6 +1,8 @@
 import numpy as np
 from params import *
 import random
+from collections import defaultdict
+
 MAX_DIST=ENVIRONMENT_BOUNDARY_X[-1]
 STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
           'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
@@ -8,9 +10,11 @@ STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0,
 def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
     agent_dict_list.append(get_all_OBSERVE(agents))
-    agent_dict_list.append(get_half_explore(agents))
-    for i in get_10_to_40perc_dancing_good_to_bad(agents, site_quals):
+    # agent_dict_list.append(get_half_explore(agents))
+    for i in get_10_to_40perc_dancing_good_to_bad_all(agents, site_quals, site_poses):
+        # pdb.set_trace()
         agent_dict_list.append(i)
+    print('returned start states')
     return agent_dict_list
 
 def get_all_OBSERVE(agents):
@@ -42,7 +46,7 @@ def get_half_explore(agents):
             new_dict['site'] = None
             new_dict['dir'] = [0.0, 1.0]
         new_list.append(new_dict)
-        pdb.set_trace()
+        # pdb.set_trace()
     return new_list
 
 def get_10perc_dancing_bad(agents, site_quals):
@@ -68,29 +72,118 @@ def get_10perc_dancing_bad(agents, site_quals):
         new_list.append(new_dict)
     return new_list
 
+def get_random_state(site_poses, site_quals):
+    states = ['EXPLORE', 'OBSERVE', 'ASSESS']
+    # for state in states:
+    new_dict = {}
+    if np.random.choice(states) == 'OBSERVE':
+        new_dict['pose'] = [0.0, 0.0]
+        new_dict['state'] = 'OBSERVE'
+        new_dict['speed'] = 0.0
+        new_dict['site'] = None
+        new_dict['dir'] = [0.0, 1.0]
+    elif np.random.choice(states) == 'EXPLORE':
+        new_dict['pose'] = [2000.0 * np.random.random() - 1000.0, 2000.0 * np.random.random() - 1000.0]
+        new_dict['state'] = 'EXPLORE'
+        new_dict['speed'] = AGENT_SPEED
+        new_dict['site'] = None
+        dirs = [np.random.random(), np.random.random()]
+        new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+    else:
+        # pdb.set_trace()
+        id = np.random.choice(range(0,len(site_poses)))
+        site = site_poses[id]
+        new_dict['pose'] = [site[0], site[1]]
+        new_dict['state'] = 'ASSESS'
+        new_dict['speed'] = AGENT_SPEED
+        new_dict['site'] = id
+        dirs = [np.random.random(), np.random.random()]
+        new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+
+    return new_dict
+
+def get_10_to_40perc_dancing_good_to_bad_all(agents, site_quals, site_poses):
+    listoflist = []
+    ten2forty = [0.1, 0.2, 0.3, 0.4]
+    cases = ['explore', 'observe', 'random']
+    for percentage_ags in ten2forty:
+        list1 = []
+        for bad_site in np.argsort(site_quals)[::-1]:
+            for case_ in cases:
+                new_list = []
+                agents_dancing_bad = int(np.floor(percentage_ags*agents))
+                dancing_and_other = [1]*agents_dancing_bad + [0]*(agents - agents_dancing_bad)
+                random.shuffle(dancing_and_other)
+                for a in dancing_and_other:
+                    new_dict = {}
+                    if a==1:
+                        new_dict['pose'] = [0.0, 0.0]
+                        new_dict['state'] = 'RECRUIT'
+                        new_dict['speed'] = 0.0
+                        # bad_site = np.argmin(site_quals)
+                        new_dict['site'] = bad_site
+                        new_dict['dir'] = [0.0, 1.0]
+                    else:
+                        if case_ == 'explore':
+                            # if np.random.random() > 0.2:
+                            new_dict['pose'] = [2000.0 * np.random.random() - 1000.0, 2000.0 * np.random.random() - 1000.0]
+                            new_dict['state'] = 'EXPLORE'
+                            new_dict['speed'] = AGENT_SPEED
+                            new_dict['site'] = None
+                            dirs = [np.random.random(), np.random.random()]
+                            new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+                        elif case_ == 'observe':
+                            new_dict['pose'] = [0.0, 0.0]
+                            new_dict['state'] = 'OBSERVE'
+                            new_dict['speed'] = 0.0
+                            new_dict['site'] = None
+                            new_dict['dir'] = [0.0, 1.0]
+                        elif case_ == 'random':
+                            new_dict = get_random_state(site_poses, site_quals)
+                    new_list.append(new_dict)
+                    # print(len(new_list))
+                # print(len(new_list))
+                listoflist.append(new_list)
+    return listoflist
+
 def get_10_to_40perc_dancing_good_to_bad(agents, site_quals):
     listoflist = []
-    new_list = []
-    agents_dancing_bad = int(np.floor(0.2*agents))
-    dancing_and_other = [1]*agents_dancing_bad + [0]*(agents - agents_dancing_bad)
-    random.shuffle(dancing_and_other)
-    for a in dancing_and_other:
-        new_dict = {}
-        if a==1:
-            new_dict['pose'] = [0.0, 0.0]
-            new_dict['state'] = 'RECRUIT'
-            new_dict['speed'] = 0.0
-            bad_site = np.argmin(site_quals)
-            new_dict['site'] = bad_site
-            new_dict['dir'] = [0.0, 1.0]
-        else:
-            new_dict['pose'] = [0.0, 0.0]
-            new_dict['state'] = 'OBSERVE'
-            new_dict['speed'] = 0.0
-            new_dict['site'] = None
-            new_dict['dir'] = [0.0, 1.0]
-        new_list.append(new_dict)
-    listoflist.append(new_list)
+    
+    ten2forty = [0.1, 0.2, 0.3, 0.4]
+    for percentage_ags in ten2forty:
+        list1 = []
+        for bad_site in np.argsort(site_quals)[::-1]:
+            new_list = []
+            agents_dancing_bad = int(np.floor(percentage_ags*agents))
+            dancing_and_other = [1]*agents_dancing_bad + [0]*(agents - agents_dancing_bad)
+            random.shuffle(dancing_and_other)
+            for a in dancing_and_other:
+                new_dict = {}
+                if a==1:
+                    new_dict['pose'] = [0.0, 0.0]
+                    new_dict['state'] = 'RECRUIT'
+                    new_dict['speed'] = 0.0
+                    # bad_site = np.argmin(site_quals)
+                    new_dict['site'] = bad_site
+                    new_dict['dir'] = [0.0, 1.0]
+                else:
+                    # if np.random.random() > 0.2:
+                    new_dict['pose'] = [2000.0 * np.random.random() - 1000.0, 2000.0 * np.random.random() - 1000.0]
+                    new_dict['state'] = 'EXPLORE'
+                    new_dict['speed'] = AGENT_SPEED
+                    new_dict['site'] = None
+                    dirs = [np.random.random(), np.random.random()]
+                    new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+                    # else:
+                    #     new_dict['pose'] = [0.0, 0.0]
+                    #     new_dict['state'] = 'OBSERVE'
+                    #     new_dict['speed'] = 0.0
+                    #     new_dict['site'] = None
+                    #     new_dict['dir'] = [0.0, 1.0]
+                new_list.append(new_dict)
+                # list1.append(new_list)
+            # pdb.set_trace()
+            listoflist.append(new_list)
     return listoflist
 
 # def get_valid_qualities_fixed_2(num_configs):
@@ -101,7 +194,8 @@ def get_valid_qualities(num_sites, num_configs):
     qual_arr = []
     for config in range(0,num_configs):
         quals = np.random.random(num_sites) #[0.8, 0.3] #
-        while np.max(quals) < 0.5:
+        sortedq = np.sort(quals)
+        while sortedq[-1] < 0.5 or sortedq[-1] - sortedq[-2] > 0.2:
             quals = np.random.random(num_sites)
         qual_arr.append(quals)
     return qual_arr
@@ -167,6 +261,60 @@ def getSiteID(site):
         return -1
     else:
         return site
+    
+def new_state_from_old(old_):
+    # pdb.set_trace()
+    # qindices = 
+    old = copy.deepcopy(old_)
+    # pdb.set_trace()
+    nA = int(len(old)/4)
+    oldarr = np.reshape(old, (nA, 4)).tolist()
+    sites_state = [1.0, 1.0, 0.0]*4
+    unique_sites = defaultdict(int)
+    # oldarr[:,0] = 0
+    # oldarr_unique = np.unique(oldarr, axis=0)
+    new = np.zeros((7,6))
+    # counter_sites = [0, 0, 0, 0]*7
+    # counter = 
+    for i in oldarr:
+        site = tuple(i[1:])
+        unique_sites[site] += 1
+    # print('1')
+    
+    sitelist = [i for i in unique_sites if i!= (1.0, 1.0, 0.0)]
+    # quals = [i[2] for i in sitelist]
+    # pdb.set_trace()
+    sites = sorted(sitelist, key=lambda x: x[2] , reverse=True)
+    site_to_id = dict()
+    # print('2')
+    for id, site in enumerate(sites):
+        sites_state[id*3] = site[0]
+        sites_state[id*3+1] = site[1]
+        sites_state[id*3+2] = site[2]
+        site_to_id[site] = id
+
+    # print('3')
+    for i in oldarr:
+        id_state = int(np.round(6.0*i[0]))
+        # print(id_state)
+        if id_state >=5 :
+            new[id_state,4] += 1.0/nA
+        elif id_state == 4:
+            new[id_state,5] += 1.0/nA
+        else:
+            site = tuple(i[1:])
+            new[id_state, site_to_id[site]] += 1.0/nA
+            if id_state == 0:
+                new[id_state,5] += 1.0/nA
+            else:
+                new[id_state,4] += 1.0/nA
+    # pdb.set_trace()
+    try:
+        returnval = round_function_tuple(tuple(np.concatenate((np.reshape(new, (1,np.shape(new)[0]*np.shape(new)[1]))[0], sites_state), axis=0).tolist()), 3)
+    except:
+        pdb.set_trace()
+    # pdb.set_trace()
+    return returnval
 
 def get_current_state(astates, asites, aposes, sposes, squals):
     # try:
@@ -219,8 +367,17 @@ def get_current_state(astates, asites, aposes, sposes, squals):
 
 import copy
 
+def round_function_tuple(x, d):
+    new = []
+    for r in x:
+        new.append(np.round(r,decimals=d))
+    # pdb.set_trace()
+    return tuple(new)
+
+
 def round_function(x, d):
     new = []
+    # pdb.set_trace()
     for r in copy.deepcopy(x):
         # if 
         # pdb.set_trace()

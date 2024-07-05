@@ -14,6 +14,7 @@ class World:
     def __init__(self, params, fold_name, save=True):
         # params = (num_sites, site_quals, site_poses, num_agents)
         # print(params)
+        
         self.save = save
         self.num_sites = params[0]
         self.site_qualities = params[1]
@@ -32,10 +33,11 @@ class World:
         self.fname = './' + fold_name + '/' + self.file_time + '.csv'
         self.fname_metadata = './' + fold_name + '/' + 'metadata.csv'
         self.df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime']
-        self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites', 'node']
+        self.df_cols = ['time', 'agent_positions', 'agent_directions', 'agent_states', 'agent_sites', 'node', 'new_node']
         self.converged_to_site = None
         self.threshold = COMMIT_THRESHOLD
         self.list_for_df = []
+        print('running sim: ', self.file_time)
 
     def save_metadata(self):
         # pdb.set_trace()
@@ -86,6 +88,9 @@ class World:
         self.list_for_df.append(to_save[:])
         while self.time < self.timeLimit:
             # shuffle(self.agents)
+            # pdb.set_trace()
+            # np.sum([1.0 for i in agent_states if i=='RECRUIT'])
+            # np.sum([1.0 for i in agent_states if i=='EXPLORE'])
             for iter in range(0, self.num_agents):
                 ag = self.agents[iter]#copy.deepcopy()
                 # print('world itme: ', self.time)
@@ -108,12 +113,14 @@ class World:
             rounded_dirs = round_function(copy.deepcopy(agent_dirs[:]), 3)
             rounded_quals = tuple(np.round(copy.deepcopy(self.site_qualities), 3))
             rounded_s_poses = tuple(round_function(copy.deepcopy(self.site_poses), 3))
-            to_save = [self.time, rounded_poses, rounded_dirs, copy.deepcopy(agent_states), copy.deepcopy(agent_sites), 
-                       get_current_state(copy.deepcopy(agent_states), copy.deepcopy(agent_sites), rounded_poses, rounded_s_poses, rounded_quals)]
+            copy_node = get_current_state(copy.deepcopy(agent_states), copy.deepcopy(agent_sites), rounded_poses, rounded_s_poses, rounded_quals)
+            new_copy_node = new_state_from_old(copy_node)
+            to_save = [self.time, rounded_poses, rounded_dirs, copy.deepcopy(agent_states), copy.deepcopy(agent_sites), copy_node, copy.deepcopy(new_copy_node)]
             self.list_for_df.append(to_save[:])
             # print('after appending to list: ', agent.pos, agent.state)
             RECRUITrs = get_RECRUITrs_by_site_for_world(self)
             # print('after getting RECRUITrs: ', agent.pos, agent.state)
+            # pdb.set_trace()
             if np.max(RECRUITrs) > self.threshold*self.num_agents:
                 self.converged_to_site = self.sites[np.argmax(RECRUITrs)].quality
                 break

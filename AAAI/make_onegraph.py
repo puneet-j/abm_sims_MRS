@@ -321,6 +321,7 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph1, f
     try:
         # IDLookup, _ = get_unique_IDs(fl, IDLookup, nodeSize, IDLookupnew)
         IDLookup, IDLookupnew, reversedict = get_unique_IDs(fl, IDLookup, nodeSize, IDLookupnew, reversedict)
+        # IDLookup, IDLookupnew, r = get_unique_IDs(fl, IDLookup, nodeSize, IDLookupnew, reversedict)
 
     except Exception as e:
         print(e)
@@ -347,7 +348,7 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph1, f
     ''' ADD NODES, NODE SIZES, and EDGES WITH WEIGHTS'''
     for nodePos, nodeID in IDLookupnew.items():
         # pdb.set_trace()
-        graph.add_node(nodeID, x=nodePos, success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID]), classes=get_class(np.mean(success_dict[nodeID]), np.mean(time_dict[nodeID])))#, sz=nodeSize[nodePos])#, success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID][0]), time_now=np.mean(time_dict[nodeID][1]))
+        graph.add_node(nodeID, x=nodePos, xold = newtoold[nodePos], success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID]), classes=get_class(np.mean(success_dict[nodeID]), np.mean(time_dict[nodeID])))#, sz=nodeSize[nodePos])#, success=np.mean(success_dict[nodeID]), time=np.mean(time_dict[nodeID][0]), time_now=np.mean(time_dict[nodeID][1]))
 
 
     # print('done this')
@@ -364,29 +365,33 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph1, f
     # print("time now 8: ", now - prev)
     
     # pdb.set_trace()
+    nA = len(fl.agent_positions.iloc[0])
+    # pdb.set_trace()
     colors = 'b'
+    nx.set_node_attributes(graph, nA, 'agents')
     nx.set_node_attributes(graph, colors, 'colors')
     nx.set_node_attributes(graph, qrounded, 'quals')
     nx.set_node_attributes(graph, entry[1].iloc[1], 'poses')
-    # nx.set_node_attributes(graph, success_now, 'success')
+    nx.set_node_attributes(graph, success_now, 'success')
     nx.set_node_attributes(graph, time_conv, 'times_conved')
     nx.set_node_attributes(graph, 0, 'global_info')
 
 
     try:
         for node_dance in graph.nodes(data=True):
-            graph.nodes[node_dance[0]]['global_info'] = dancers_at_hub(newtoold[node_dance[1]['x']], qrounded)
+            graph.nodes[node_dance[0]]['global_info'] = dancers_at_hub(node_dance[1]['xold'], qrounded)
+            # graph.nodes[node_dance[0]]['global_info'] = dancers_at_hub(node_dance[1]['x'], qrounded)
     except Exception as e:
         print(e)
         pdb.set_trace() 
 
     # node_to_color_black = tuple([0.0, 1.0])
-    id_to_color = [z for z,y in graph.nodes(data=True) if node_to_color_black(newtoold[y['x']])]
+    id_to_color = [z for z,y in graph.nodes(data=True) if node_to_color_black(y['xold'])]
     for node_c in id_to_color:
             graph.nodes[node_c]['colors'] = 'k'
     # print('black nodes: ', len(id_to_color))
-    id_of_goal1 = [z for z,y in graph.nodes(data=True) if node_to_color_green(newtoold[y['x']], qrounded)]
-    id_of_goal2 = [z for z,y in graph.nodes(data=True) if node_to_color_red(newtoold[y['x']], qrounded)]
+    id_of_goal1 = [z for z,y in graph.nodes(data=True) if node_to_color_green(y['xold'], qrounded)]
+    id_of_goal2 = [z for z,y in graph.nodes(data=True) if node_to_color_red(y['xold'], qrounded)]
     # pdb.set_trace()
     for node in id_of_goal1:
         graph.nodes[node]['colors'] = 'g'
@@ -417,14 +422,14 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph1, f
     return "Processed", fileName
 
 def main():
-    folder = './AAAI/onegraph_files/test/'
+    folder = './AAAI/data/quorumsims_test_small/test/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph1 = './AAAI/onegraph_files/graphs_newtype/test/'
-    folder_graph2 = './AAAI/onegraph_files/graphs_newtype/test/'
+    folder_graph1 = './AAAI/data/quorumsims_test_small/graphs/test/'
+    folder_graph2 = './AAAI/data/quorumsims_test_small/graphs/test/'
     # files.remove('metadata.csv')
     # submeta = pd.DataFrame([],columns=metadata_file.columns)
 
@@ -459,6 +464,7 @@ def main():
         #     continue
         print(entry)
         # print(entry[1].iloc[3], entry[1].iloc[5], entry[1].iloc[6])
+        # pdb.set_trace()
         files_to_process = [(fileName, site_conv, time_conv, entry, folder, folder_graph1, folder_graph2) 
                             for fileName, site_conv, time_conv in zip(entry[1].iloc[4], entry[1].iloc[6], entry[1].iloc[7])]
         # break
