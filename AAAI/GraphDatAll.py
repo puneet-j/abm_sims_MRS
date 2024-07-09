@@ -7,7 +7,7 @@ import numpy as np
 STATES_LIST = ['RECRUIT', 'ASSESS', 'TRAVEL_HOME_TO_RECRUIT', 'TRAVEL_SITE', 'OBSERVE', 'EXPLORE', 'TRAVEL_HOME_TO_OBSERVE']
 STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
           'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
-TIME_LIMIT = 400
+TIME_LIMIT = 2500
 SUCC_LIMIT = 0.95
 # def get_complete_global():
 #     return
@@ -41,20 +41,20 @@ class GraphDataset(Dataset):
             return 1
         
     def get_succclass(self, s):
-        if s < SUCC_LIMIT:
+        if s <= SUCC_LIMIT:
             return 0
         else:
             return 1
     
     def get_succtimeclass(self, s, t, fl):
         
-        if s < SUCC_LIMIT and t > TIME_LIMIT:
+        if s <= SUCC_LIMIT and t > TIME_LIMIT:
             return 0 # slow fail
-        elif s >= SUCC_LIMIT and t > TIME_LIMIT:
+        elif s > SUCC_LIMIT and t > TIME_LIMIT:
             return 1 # slow success
-        elif s < SUCC_LIMIT and t <= TIME_LIMIT:
+        elif s <= SUCC_LIMIT and t <= TIME_LIMIT:
             return 2 # fast fail
-        elif s >= SUCC_LIMIT and t <= TIME_LIMIT:
+        elif s > SUCC_LIMIT and t <= TIME_LIMIT:
             return 3 # fast success
         else:
             print(s, t, fl)

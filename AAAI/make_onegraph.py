@@ -422,14 +422,14 @@ def process_file(fileName, site_conv, time_conv, entry, folder, folder_graph1, f
     return "Processed", fileName
 
 def main():
-    folder = './AAAI/data/quorumsims_test_small/test/'
+    folder = './AAAI/data/quorum_sims_all/test/'
     files = os.listdir(folder)
     files = [file for file in files if file.endswith('.csv') and file.startswith('1')]
     files = np.sort(files)
     # data_files = []
     metadata_file = folder + 'metadata.csv'
-    folder_graph1 = './AAAI/data/quorumsims_test_small/graphs/test/'
-    folder_graph2 = './AAAI/data/quorumsims_test_small/graphs/test/'
+    folder_graph1 = './AAAI/data/quorum_sims_all/graphs/test/'
+    folder_graph2 = './AAAI/data/quorum_sims_all/graphs/test/'
     # files.remove('metadata.csv')
     # submeta = pd.DataFrame([],columns=metadata_file.columns)
 
