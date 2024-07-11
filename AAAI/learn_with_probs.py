@@ -179,9 +179,8 @@ def class_loss(reconstructed_x, original_x):
     # arr = [7360, 4321, 6313, 5469]
     # arr = [96700, 574801, 1770, 4105]
     # arr = [31638, 159420, 66832, 419486]
-    # arr = [79848, 403710, 18672, 175146]
+    arr = [79848, 403710, 18672, 175146]
     # arr = [12210,7490,1296,2467]
-    arr = [120.0 ,15.0, 40.0, 90.0]
     const = np.sum(arr)
     # arr = [const, const, const, const]
     weights = torch.log(torch.tensor([const/a for a in arr], dtype=torch.float))
@@ -189,6 +188,10 @@ def class_loss(reconstructed_x, original_x):
 
     return F.cross_entropy(reconstructed_x, original_x, weight=weights)  
   
+def new_class_loss(reconstructed_x, original_x):
+    return F.MSELoss(reconstructed_x, original_x)
+
+
 def cosine_loss(adj, emb, ew):
     # pdb.set_trace()
     norms = torch.norm(emb, p=2, dim=1, keepdim=True)
@@ -202,7 +205,8 @@ def cosine_loss(adj, emb, ew):
 
 def total_loss_func(adj, emb, ew, reconstructed_x, original_x):
     cs = cosine_loss(adj, emb, ew)
-    cls = class_loss(reconstructed_x, original_x)
+    # cls = class_loss(reconstructed_x, original_x)
+    cls = new_class_loss(reconstructed_x, original_x)
     alpha = 0.8
     return alpha * cls + (1.0 - alpha) * cs
 
@@ -215,39 +219,12 @@ def train(model, data_loader, optimizer, device):
     # agents = []
     # printlosses = []
     classes = []
-    for feat, edge, ew, _, _, _, _, tS in dataloader:
+    for feat, edge, ew, _, _, _, _, _, tS in dataloader:
         optimizer.zero_grad()
-        # pdb.set_trace()
-        # print(np.shape(feat), np.shape(edges))
-        # print('in main: ', np.shape(feat), np.shape(edges))
-        # print()
         features = feat.squeeze_(0).to(device)
-        # globalInfo = glob.squeeze_(0).to(device)
         edges = edge.squeeze_(0).to(device)
-        # ew = edge_weight.squeeze_(0).to(device)
-        # embed = model(torch.cat([globalInfo, features], dim=1), edges)
         origs.append(tS)
-        # from torch_geometric.data.data import Data 
-        # dat = Data(x=features, edge_index=edges) 
-        # print(dat.is_directed())
-        # exit()
-        # print(np.shape(embed), np.shape(data[2][0]))
-        # print()
-        # print(data[2][0][0], embed[0].detach())
-        # loss = lossfunc(embed, data[2][0].to(device))
-        # print(np.shape(embed), np.shape(data[2][0]), np.shape(data[0][0]), np.shape(data[1][0]))
-        # loss = loss_function(embed, data[2][0].to(device)) #cosine_loss(data[1][0].to(device), embed)
         cl, embed = model(features, edges)
-        # try:
-        #     if tS.dim() == 1:
-        #         tS = tS.unsqueeze(1)
-
-        # except Exception as e:
-        #     pdb.set_trace()
-        # pdb.set_trace()
-        # print(np.shape(cl), np.shape(embed), np.shape(tS))
-        # print(tS)
-        # loss = class_loss(cl, tS.squeeze_(0).to(device))
 
         loss = total_loss_func(edges, embed, ew, cl, tS.squeeze_(0).to(device))
         # pdb.set_trace()
@@ -272,7 +249,7 @@ def validate(model, data_loader, device):
     origs = []
     # memory = torch.zeros((10,1))
     with torch.no_grad():
-        for feat, edge, ew, _, _, q, nA, ts in data_loader:
+        for feat, edge, ew, _, _, q, nA, _, ts in data_loader:
             counter += 1
             features = feat.squeeze_(0).to(device)
             edges = edge.squeeze_(0).to(device)
@@ -284,8 +261,8 @@ def validate(model, data_loader, device):
             validation_classes.append(cl.detach())
             # if counter < 5:
             #     print(embed)
-            loss = class_loss(cl, ts.squeeze_(0))
-            # loss = total_loss_func(edges, embed, ew, cl, ts.squeeze_(0))
+            # loss = class_loss(cl, ts.squeeze_(0))
+            loss = total_loss_func(edges, embed, ew, cl, ts.squeeze_(0))
             # loss = cosine_loss(edges, embed, ew)
             total_loss += loss.item()
     return total_loss / len(data_loader), validation_embeddings, origs, qs, agents, validation_classes
@@ -304,17 +281,13 @@ if __name__ == '__main__':
     # files_test = os.listdir(folder_test)
     # files_test = [file for file in files_test if file.endswith('.pickle') and file.startswith('(')] #and (file not in files_test)
 
-    # folder_graph = './AAAI/data/quorum_sims_60_40_split/graphs/train_means/'
-    folder_graph = './RS/final_experiments/allGraphs_train/' #./AAAI/data/quorum_sims_60_40_split/graphs/train_means/'
-
+    folder_graph = './AAAI/data/quorum_sims_60_40_split/graphs/train_means/'
     files = os.listdir(folder_graph)
     files = [file for file in files if file.endswith('.pickle') and file.startswith('(')] #and (file not in files_test)
 
 
     # fname = 'small_graphs.pth'
-    # valfolder = './AAAI/data/quorum_sims_60_40_split/graphs/test_means/'
-    valfolder = './RS/final_experiments/allGraphs_test/' #'./AAAI/data/quorum_sims_60_40_split/graphs/test_means/'
-
+    valfolder = './AAAI/data/quorum_sims_60_40_split/graphs/test_means/'
     files_val= os.listdir(valfolder)
     files_val = [file for file in files_val if file.endswith('.pickle') and file.startswith('(')]
 
@@ -330,8 +303,8 @@ if __name__ == '__main__':
 # hidden count:  16 drops:  0.6 lr:  0.01 decays:  0.01
     # train_loss_end = []
     # test_loss_end = []
-    for hC in [8]:#[8, 16]: #[8, 64]:#[8, 16, 32, 64]:#[8, 16, 32, 64]:
-        for drops in [0.2]:#[0.4, 0.6]: #[0.2, 0.4, 0.6, 0.8]:#[0.2, 0.4, 0.6, 0.8]:
+    for hC in [32]:#[8, 16]: #[8, 64]:#[8, 16, 32, 64]:#[8, 16, 32, 64]:
+        for drops in [0.6]:#[0.4, 0.6]: #[0.2, 0.4, 0.6, 0.8]:#[0.2, 0.4, 0.6, 0.8]:
             for lrate in [0.01]:#[0.001, 0.01]:#[0.001, 0.05, 0.005, 0.01]: #[0.01, 0.05, 0.001, 0.005]:
                 for decays in [5e-4]:#[5e-4, 0.01]:#[0.01, 0.0]: #[0]: #[5e-5, 0]:#[5e-4, 5e-5, 5e-3, 0.0]:
                     
@@ -343,14 +316,14 @@ if __name__ == '__main__':
                     embeddings = []
                     outchannels = 4
                     # validation_loss = 100
-                    model = GATNet(inC, hC, outchannels, drops, h=8).to(device)
+                    model = GATNet(inC, hC, outchannels, drops, h=16).to(device)
                     optimizer = optim.AdamW(model.parameters(), lr=lrate, weight_decay=decays)
                     # scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=3, verbose=True)
                     # losses = []
                     # embeds = []
                     # torch.autograd.set_detect_anomaly(True)
                     # acts = []
-                    for epoch in range(1, 3):  # Number of epochs
+                    for epoch in range(1, 5):  # Number of epochs
                         # loss, embed, orig = train(model, dataloader, optimizer, device)
                         loss, embed, tsclass, pred_class = train(model, dataloader, optimizer, device)
                         # embeds.append(embed)
@@ -361,15 +334,22 @@ if __name__ == '__main__':
                             # total_loss / len(data_loader), validation_embeddings, origs, qs, agents
                             validation_loss, ve, TSve, qs, ags, vc  = validate(model, dataloader_val, device)
                             # validation_loss, _, _, _, _  = validate(model, dataloader_test, device)
-                            print(f'Validation Loss: {validation_loss:.4f}')
+                            # print(f'Validation Loss: {validation_loss:.4f}')
                     print('end train and val loss: ', loss, validation_loss)
     
     model.eval()
     encoder_state_dict = model.state_dict()
     optim_state_dict = optimizer.state_dict()
+
+
     CLIST =  ["Slow/Failure", "Slow/Success", "Fast/Failure", "Fast/Success"]
+    
+    
     y_from_network = []
+    
     y = []
+
+
     for vv, tsts in zip(vc, TSve):
         # print(vv, tsts)
         # break

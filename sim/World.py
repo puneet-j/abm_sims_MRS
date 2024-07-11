@@ -82,9 +82,9 @@ class World:
         rounded_dirs = round_function(copy.deepcopy(agent_dirs[:]), 3)
         rounded_quals = tuple(np.round(copy.deepcopy(self.site_qualities), 3))
         rounded_s_poses = tuple(round_function(copy.deepcopy(self.site_poses), 3))
-        # pdb.set_trace()
-        to_save = [self.time, rounded_poses, rounded_dirs, copy.deepcopy(agent_states), copy.deepcopy(agent_sites), 
-                   get_current_state(copy.deepcopy(agent_states), copy.deepcopy(agent_sites), rounded_poses, rounded_s_poses, rounded_quals)]
+        copy_node = get_current_state(copy.deepcopy(agent_states), copy.deepcopy(agent_sites), rounded_poses, rounded_s_poses, rounded_quals)
+        new_copy_node = new_state_from_old(copy_node)# pdb.set_trace()
+        to_save = [self.time, rounded_poses, rounded_dirs, copy.deepcopy(agent_states), copy.deepcopy(agent_sites), copy_node, copy.deepcopy(new_copy_node)]
         self.list_for_df.append(to_save[:])
         while self.time < self.timeLimit:
             # shuffle(self.agents)

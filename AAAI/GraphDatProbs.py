@@ -7,13 +7,8 @@ import numpy as np
 STATES_LIST = ['RECRUIT', 'ASSESS', 'TRAVEL_HOME_TO_RECRUIT', 'TRAVEL_SITE', 'OBSERVE', 'EXPLORE', 'TRAVEL_HOME_TO_OBSERVE']
 STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
           'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
-
-TIME_LIMIT = 800
-SUCC_LIMIT = 0.8
-
-# TIME_LIMIT = 2500
-# SUCC_LIMIT = 0.95
-
+TIME_LIMIT = 2500
+SUCC_LIMIT = 0.95
 # def get_complete_global():
 #     return
 class GraphDataset(Dataset):
@@ -64,8 +59,6 @@ class GraphDataset(Dataset):
         else:
             print(s, t, fl)
             pdb.set_trace()
-
-            
     # def get_succclass(self, s):
     #     if s < 0.25:
     #         return 0
@@ -135,14 +128,14 @@ class GraphDataset(Dataset):
         #     # pdb.set_trace()
         
         # successes = torch.tensor([self.get_succclass(node[1]['AvgSucc']) for node in G.nodes(data=True)], dtype=torch.long)
-        # if self.flag == 'train':
-        timesucc = torch.tensor([self.get_succtimeclass(node[1]['AvgSucc'], node[1]['AvgTime'], f) for node in G.nodes(data=True)], dtype=torch.long)
-        times = torch.tensor([self.get_timeclass(node[1]['AvgTime']) for node in G.nodes(data=True)], dtype=torch.long)
-        successes = torch.tensor([self.get_succclass(node[1]['AvgSucc']) for node in G.nodes(data=True)], dtype=torch.long)
-        # else:
-        #     timesucc = torch.tensor([self.get_succtimeclass(node[1]['success'], node[1]['times_conved'], f) for node in G.nodes(data=True)], dtype=torch.long)
-        #     times = torch.tensor([self.get_timeclass(node[1]['times_conved']) for node in G.nodes(data=True)], dtype=torch.long)
-        #     successes = torch.tensor([self.get_succclass(node[1]['success']) for node in G.nodes(data=True)], dtype=torch.long)
+        if self.flag == 'train':
+            timesucc = torch.tensor([self.get_succtimeclass(node[1]['AvgSucc'], node[1]['AvgTime'], f) for node in G.nodes(data=True)], dtype=torch.long)
+            times = torch.tensor([self.get_timeclass(node[1]['AvgTime']) for node in G.nodes(data=True)], dtype=torch.long)
+            successes = torch.tensor([self.get_succclass(node[1]['AvgSucc']) for node in G.nodes(data=True)], dtype=torch.long)
+        else:
+            timesucc = torch.tensor([self.get_succtimeclass(node[1]['success'], node[1]['times_conved'], f) for node in G.nodes(data=True)], dtype=torch.long)
+            times = torch.tensor([self.get_timeclass(node[1]['times_conved']) for node in G.nodes(data=True)], dtype=torch.long)
+            successes = torch.tensor([self.get_succclass(node[1]['success']) for node in G.nodes(data=True)], dtype=torch.long)
 
 
         quals = [node[1]['quals'] for node in G.nodes(data=True)]
