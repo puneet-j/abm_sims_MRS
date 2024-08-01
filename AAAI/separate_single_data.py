@@ -24,14 +24,14 @@ def get_succtimeclass(s, t, fl):
         print(s, t, fl)
         pdb.set_trace()
 
-folder_main = './AAAI/data/quorum_sims_60_40_split/'
-dataset = 'test'
+folder_main = './AAAI/data/1000_len_sims/'
+dataset = 'train'
 # folder = folder_main + dataset + '/'
 def get_ratio(time, succ):
     class_arr = []
 
     for times, successes in zip(time, succ):
-        class_arr.append(get_succtimeclass(times, successes, ''))
+        class_arr.append(get_succtimeclass(successes, times, ''))
 
     percent_class = [0]*4
     for i in class_arr:
@@ -96,9 +96,9 @@ if __name__ == '__main__':
             for node in G.nodes(data=True):
                 entry = round_function(node[1]['xold'], 3)
                 # pdb.set_trace()
-                if len(metatime[entry]) < 5:
-                    nodes_to_remove.append(node[0])
-                #     # G.remove_node(node[0])
+                # if len(metatime[entry]) < 30:
+                #     nodes_to_remove.append(node[0])
+                    # G.remove_node(node[0])
                 #     continue
                 # pdb.set_trace()
                 # try:
@@ -112,28 +112,30 @@ if __name__ == '__main__':
                 #     print(e)
                 #     pdb.set_trace()
 
-            for node in nodes_to_remove:
-                G.remove_node(node)
+            # for node in nodes_to_remove:
+            #     G.remove_node(node)
 
-            old_labels = list(G.nodes)
-            new_labels = list(range(len(old_labels)))
-            mapping = dict(zip(old_labels, new_labels))
+            # old_labels = list(G.nodes)
+            # new_labels = list(range(len(old_labels)))
+            # mapping = dict(zip(old_labels, new_labels))
 
-            # # Relabel nodes
-            G = nx.relabel_nodes(G, mapping)
+            # # # Relabel nodes
+            # G = nx.relabel_nodes(G, mapping)
 
-            # print(list(G.nodes))
-            # print(list(G.edges))
-            # pdb.set_trace()
-            # if sorted_quals[-1] - sorted_quals[-2] > 0.5:
-            #     continue
-            # if len(G.nodes) < 50:
-            #     continue
+            if nx.is_connected(G):
 
-            print('dumping this file')
-            fil =  open(new+file, 'wb')
-            pickle.dump(G, fil)   
-            fil.close() 
+                # print(list(G.nodes))
+                # print(list(G.edges))
+                # pdb.set_trace()
+                # if sorted_quals[-1] - sorted_quals[-2] > 0.5:
+                #     continue
+                # if len(G.nodes) < 50:
+                #     continue
+
+                print('dumping this file')
+                fil =  open(new+file, 'wb')
+                pickle.dump(G, fil)   
+                fil.close() 
         # else:
         #     print('skipped')
 

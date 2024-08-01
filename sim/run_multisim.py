@@ -48,14 +48,22 @@ def convert_to_init_agent(arr):
             pdb.set_trace()
     return arr2
 
-def get_init_condition_from_df(df, starts):
+def get_init_condition_from_df(dflist, df_cols, starts):
     init_condition = []
-    print('total sim length for sampling: ', len(df), starts)
-    ids = np.random.choice(range(len(df)), starts, replace=False)
+    df = pd.DataFrame(dflist, columns = df_cols)
+    unique_node_ids = df['node'].unique()
+
+    # Dictionary to store indices for each unique node feature
+    ids = [df.index[df['node'] == feature].tolist()[0] for feature in unique_node_ids]
+    print('total sim length for sampling and samples: ', len(df), len(ids))
+
+    # pdb.set_trace()
+    # ids = np.random.choice(range(len(df)), starts, replace=False)
     for id in ids:
         # pdb.set_trace()
-        dat = copy.deepcopy(df[id])
-        init_condition.append(convert_to_init_agent(dat))
+        dat = copy.deepcopy(dflist[id])
+        # pdb.set_trace()
+        init_condition.append(convert_to_init_agent(dat)+ [id, len(df)])
     return init_condition
 
 def generate_world_configs_from_init_sims(site_configs, distances, agent_configs, sims_per_config, sims_per_distance, sim_repeats, starts, fname, mTimes):
@@ -84,16 +92,18 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
                             w.simulate()
                             print('simulated first world')
                             init_configs = []
-                            init_configs.append(agent_init)
-                            init_configs += get_init_condition_from_df(w.list_for_df, starts)
+                            # init_configs.append(agent_init)
+                            init_configs += get_init_condition_from_df(w.list_for_df, w.df_cols, starts)
                             print('total init configs from random sampling: ', len(init_configs))
                             for init in init_configs:
                                 # print(len(init_))
                                 for mtime in mTimes:
-                                    for _ in range(0,sim_repeats):
+                                    samples = int(init[-2]/init[-1]*L_CONST)
+                                    # print(samples)
+                                    for _ in range(0,samples):
                                         # print(agents)
                                         # qual = 
-                                        worlds.append([sites, qual, poses, agents, init, mtime])
+                                        worlds.append([sites, qual, poses, agents, init[:-2], mtime])
     # print('got all init configs: ', len(worlds))                         
     return worlds
     # return worlds
@@ -110,12 +120,12 @@ if __name__ == '__main__':
     agent_configs = [10]#[100, 50, 20, 10, 5] #[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 1 #10 
     sims_per_distance = 1 
-    sim_repeats = 10 # 10
+    sim_repeats = 30 # 10
     num_samples_per_starting_condition = 100 # 10
-    maxTimes = [35000]
+    maxTimes = [20000]
     
     # maxTimes = [1000, 10000, 35000]
-    fold_name = 'AAAI/data/1000_len_sims/'
+    fold_name = 'AAAI/data/multirunsims/'
     fname_metadata = './' + fold_name + 'metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime', 'timelimitsave']
     empty = pd.DataFrame([], columns=df_metadata_cols)

@@ -11,9 +11,9 @@ def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
     agent_dict_list.append(get_all_OBSERVE(agents))
     # agent_dict_list.append(get_half_explore(agents))
-    for i in get_10_to_40perc_dancing_good_to_bad_all(agents, site_quals, site_poses):
+    # for i in get_10_to_40perc_dancing_good_to_bad_all(agents, site_quals, site_poses):
         # pdb.set_trace()
-        agent_dict_list.append(i)
+        # agent_dict_list.append(i)
     print('returned start states')
     return agent_dict_list
 
@@ -197,6 +197,8 @@ def get_valid_qualities(num_sites, num_configs):
         sortedq = np.sort(quals)
         while sortedq[-1] < 0.5 or sortedq[-1] - sortedq[-2] > 0.2:
             quals = np.random.random(num_sites)
+            sortedq = np.sort(quals)
+            # print(quals)
         qual_arr.append(quals)
     return qual_arr
 

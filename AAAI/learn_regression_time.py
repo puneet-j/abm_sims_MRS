@@ -26,7 +26,9 @@ from sklearn.neighbors import kneighbors_graph
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 # from torch_geometric.data import Data
 # from newGraphDat import GraphDataset
-from GraphDatAll import GraphDataset
+# from GraphDatAll import GraphDataset
+from GraphDatRegr import GraphDataset
+
 from sklearn.manifold import TSNE
 import matplotlib as mpl
 from sklearn.ensemble import GradientBoostingClassifier
@@ -142,10 +144,12 @@ class GATNet(torch.nn.Module):
         # Define the third GAT convolution layer
         self.conv3 = GATConv(hidden_channels*2 * h, out_channels, heads=1, concat=True, dropout=p)
         # Define a linear layer to refine the outputs to the desired size
-        self.linear = nn.Linear(out_channels, hidden_channels)
-        self.linear2 = nn.Linear(hidden_channels, out_channels)
+        self.linear = nn.Linear(out_channels, out_channels)
+        self.linear2 = nn.Linear(out_channels, out_channels)
         self.shortcut = nn.Linear(in_channels, out_channels)
         self.p = p
+        # self.sigm = nn.Sigmoid()
+        # self.ta = nn.Tanh()
 
     def forward(self, x, edge_index):
         init = x
@@ -167,19 +171,54 @@ class GATNet(torch.nn.Module):
         embed = x
         x = self.linear2(x)
         
+        # x[:,0] = self.sigm(x[:,0])
+        # x[:,0] = self.ta(x[:,0] + 1)/2.0
         return x, embed
-    
+
+class MLPNet(nn.Module):
+    def __init__(self, in_channels, hidden_channels, out_channels, p):
+        super(MLPNet, self).__init__()
+        # Define the first linear layer
+        self.linear1 = nn.Linear(in_channels, hidden_channels * 4)
+        # Define the second linear layer
+        self.linear2 = nn.Linear(hidden_channels * 4, hidden_channels * 2)
+        # Define the third linear layer
+        self.linear3 = nn.Linear(hidden_channels * 2, hidden_channels)
+        # Define additional linear layers for refinement
+        self.linear4 = nn.Linear(hidden_channels, out_channels)
+        self.linear5 = nn.Linear(out_channels, out_channels)
+        self.shortcut = nn.Linear(in_channels, hidden_channels)
+        self.p = p
+
+    def forward(self, x):
+        init = x
+        # Apply dropout to the input features and pass through the first linear layer
+        x = F.elu(self.linear1(x))
+        x = F.dropout(x, p=self.p, training=self.training)
+        # Pass through the second linear layer
+        x = F.elu(self.linear2(x))
+        x = F.dropout(x, p=self.p, training=self.training)
+        # Pass through the third linear layer
+        x = self.linear3(x)
+        x = x + self.shortcut(init)
+
+        x = F.dropout(self.linear4(x), p=self.p, training=self.training)
+        embed = x
+        x = self.linear5(x)
+
+        return x, embed
+
 def class_loss(reconstructed_x, original_x):
     # const = 200000.0 
     # arr = [1428, 1710, 84, 812]
     # arr = [106607, 49738, 3644, 77311]
     # arr = [46846, 77476, 3225, 84662]
     # arr = [113157, 238960, 25874, 288376]
-    # arr = [1.0, 1.0, 1.0, 1.0]
+    arr = [1.0, 1.0, 1.0, 1.0]
     # arr = [7360, 4321, 6313, 5469]
     # arr = [96700, 574801, 1770, 4105]
     # arr = [31638, 159420, 66832, 419486]
-    arr = [79848, 403710, 18672, 175146]
+    # arr = [79848, 403710, 18672, 175146]
     # arr = [12210,7490,1296,2467]
     const = np.sum(arr)
     # arr = [const, const, const, const]
@@ -188,9 +227,11 @@ def class_loss(reconstructed_x, original_x):
 
     return F.cross_entropy(reconstructed_x, original_x, weight=weights)  
   
-def new_class_loss(reconstructed_x, original_x):
-    return F.MSELoss(reconstructed_x, original_x)
+# def new_class_loss(reconstructed_x, original_x):
+#     return F.MSELoss(reconstructed_x, original_x)
 
+# def regression_loss(reconstructed_x, original_x):
+#     return F.MSELoss(reconstructed_x, original_x)
 
 def cosine_loss(adj, emb, ew):
     # pdb.set_trace()
@@ -206,8 +247,14 @@ def cosine_loss(adj, emb, ew):
 def total_loss_func(adj, emb, ew, reconstructed_x, original_x):
     cs = cosine_loss(adj, emb, ew)
     # cls = class_loss(reconstructed_x, original_x)
-    cls = new_class_loss(reconstructed_x, original_x)
-    alpha = 0.8
+    reg_loss = nn.MSELoss()
+    cls = reg_loss(reconstructed_x, original_x)
+    # print(cls)
+    # pdb.set_trace()
+    # penalty1 = torch.mean(torch.relu(reconstructed_x[:, 0] - 1))
+    # penalty0 = torch.mean(torch.relu(-reconstructed_x[:, 0]))  
+    # cls = cls + (penalty1 + penalty0)*10
+    alpha = 1.0
     return alpha * cls + (1.0 - alpha) * cs
 
 def train(model, data_loader, optimizer, device):
@@ -218,15 +265,22 @@ def train(model, data_loader, optimizer, device):
     # qs = []
     # agents = []
     # printlosses = []
+    actuals = []
     classes = []
-    for feat, edge, ew, _, _, _, _, _, tS in dataloader:
+    for feat, edge, ew, _, _, _, _, tS in dataloader:
         optimizer.zero_grad()
         features = feat.squeeze_(0).to(device)
         edges = edge.squeeze_(0).to(device)
         origs.append(tS)
         cl, embed = model(features, edges)
+        # cl, embed = model(features)#, edges)
+        actuals.append(features.detach())
+        # cl[:, 0] = torch.clamp(cl[:, 0], max=1.0)
 
-        loss = total_loss_func(edges, embed, ew, cl, tS.squeeze_(0).to(device))
+        loss = total_loss_func(edges, embed, ew, cl.squeeze_(1), tS.squeeze_(0).to(device))
+
+        # loss = total_loss_func(edges, embed, ew, cl, tS.squeeze_(0).to(device))
+        # loss = regression_loss(cl, )
         # pdb.set_trace()
         # loss = cosine_loss(edges, embed, ew)
         loss.backward()
@@ -235,7 +289,7 @@ def train(model, data_loader, optimizer, device):
         embeddings.append(embed.detach())
         classes.append(cl.detach())
         # print(total_loss)
-    return total_loss / len(data_loader), embeddings, origs, classes
+    return total_loss / len(data_loader), embeddings, origs, classes, actuals
 
 # Copy code
 def validate(model, data_loader, device):
@@ -247,25 +301,33 @@ def validate(model, data_loader, device):
     qs = []
     agents = []
     origs = []
+    embeds = []
+    act_feats = []
     # memory = torch.zeros((10,1))
     with torch.no_grad():
-        for feat, edge, ew, _, _, q, nA, _, ts in data_loader:
+        for feat, edge, ew, _, _, q, nA, ts in data_loader:
             counter += 1
             features = feat.squeeze_(0).to(device)
             edges = edge.squeeze_(0).to(device)
             cl, embed = model(features, torch.empty((2,0), dtype=torch.int64))
+            # cl, embed = model(features)#, torch.empty((2,0), dtype=torch.int64))
+
             validation_embeddings.append(embed.detach())
             qs.append(q)
             agents.append(nA)
             origs.append(ts.detach())
+            embeds.append(embed.detach())
             validation_classes.append(cl.detach())
+            act_feats.append(features.detach())
             # if counter < 5:
             #     print(embed)
             # loss = class_loss(cl, ts.squeeze_(0))
-            loss = total_loss_func(edges, embed, ew, cl, ts.squeeze_(0))
+            # loss = total_loss_func(edges, embed, ew, cl, ts.squeeze_(0))
+            loss = total_loss_func(edges, embed, ew, cl.squeeze_(1), ts.squeeze_(0))
+
             # loss = cosine_loss(edges, embed, ew)
             total_loss += loss.item()
-    return total_loss / len(data_loader), validation_embeddings, origs, qs, agents, validation_classes
+    return total_loss / len(data_loader), validation_embeddings, origs, qs, agents, validation_classes, embeds, act_feats
 
 # alidation_loss, ve, TSve, qs, ags
 
@@ -292,18 +354,18 @@ if __name__ == '__main__':
     files_val = [file for file in files_val if file.endswith('.pickle') and file.startswith('(')]
 
 
-    dataset = GraphDataset(folder_graph, files, 'train')
+    dataset = GraphDataset(folder_graph, files, 'train', 'time')
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=nW)
 
     # dataset_test = GraphDataset(folder_test, files_test)
     # dataloader_test = DataLoader(dataset_test, batch_size=1, shuffle=True, num_workers=nW)
 
-    dataset_val = GraphDataset(valfolder, files_val, 'test')
+    dataset_val = GraphDataset(valfolder, files_val, 'test', 'time')
     dataloader_val = DataLoader(dataset_val, batch_size=1, shuffle=True, num_workers=nW)
 # hidden count:  16 drops:  0.6 lr:  0.01 decays:  0.01
     # train_loss_end = []
     # test_loss_end = []
-    for hC in [32]:#[8, 16]: #[8, 64]:#[8, 16, 32, 64]:#[8, 16, 32, 64]:
+    for hC in [128]:#[8, 16]: #[8, 64]:#[8, 16, 32, 64]:#[8, 16, 32, 64]:
         for drops in [0.6]:#[0.4, 0.6]: #[0.2, 0.4, 0.6, 0.8]:#[0.2, 0.4, 0.6, 0.8]:
             for lrate in [0.01]:#[0.001, 0.01]:#[0.001, 0.05, 0.005, 0.01]: #[0.01, 0.05, 0.001, 0.005]:
                 for decays in [5e-4]:#[5e-4, 0.01]:#[0.01, 0.0]: #[0]: #[5e-5, 0]:#[5e-4, 5e-5, 5e-3, 0.0]:
@@ -314,9 +376,11 @@ if __name__ == '__main__':
                     actuals = []
                     final_loss = []
                     embeddings = []
-                    outchannels = 4
+                    outchannels = 1
                     # validation_loss = 100
-                    model = GATNet(inC, hC, outchannels, drops, h=16).to(device)
+                    # model = MLPNet(inC, hC, outchannels, drops).to(device)
+
+                    model = GATNet(inC, hC, outchannels, drops, h=4).to(device)
                     optimizer = optim.AdamW(model.parameters(), lr=lrate, weight_decay=decays)
                     # scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=3, verbose=True)
                     # losses = []
@@ -325,63 +389,76 @@ if __name__ == '__main__':
                     # acts = []
                     for epoch in range(1, 5):  # Number of epochs
                         # loss, embed, orig = train(model, dataloader, optimizer, device)
-                        loss, embed, tsclass, pred_class = train(model, dataloader, optimizer, device)
+                        loss, embed, tsclass, pred_class, trainacts = train(model, dataloader, optimizer, device)
                         # embeds.append(embed)
                         # acts.append(orig)
                         print(f'Epoch {epoch}, Loss: {loss:.4f}')
-                        if epoch % 2 == 0:
+                        if epoch % 4 == 0:
                             # In your main training loop:
                             # total_loss / len(data_loader), validation_embeddings, origs, qs, agents
-                            validation_loss, ve, TSve, qs, ags, vc  = validate(model, dataloader_val, device)
+                            validation_loss, ve, TSve, qs, ags, vc, emb, acts  = validate(model, dataloader_val, device)
                             # validation_loss, _, _, _, _  = validate(model, dataloader_test, device)
-                            # print(f'Validation Loss: {validation_loss:.4f}')
+                            print(f'Validation Loss: {validation_loss:.4f}')
                     print('end train and val loss: ', loss, validation_loss)
     
     model.eval()
     encoder_state_dict = model.state_dict()
     optim_state_dict = optimizer.state_dict()
+    torch.save(TSve, 'originals_time.pickle')
+    torch.save(vc, 'model_out_time.pickle')
+    torch.save(emb, 'embeddings_time.pickle')
+    torch.save(acts, 'actuals_time.pickle')
+
+    torch.save(tsclass, 'train_originals_time.pickle')
+    torch.save(pred_class, 'train_model_out_time.pickle')
+    torch.save(embed, 'train_embeddings_time.pickle')
+    torch.save(trainacts, 'train_actuals_time.pickle')
 
 
-    CLIST =  ["Slow/Failure", "Slow/Success", "Fast/Failure", "Fast/Success"]
+    # torch.save(TSve, 'originals_means.pickle')
+    # torch.save(vc, 'model_out_means.pickle')
+    # torch.save(emb, 'embeddings_means.pickle')
+
+    # CLIST =  ["Slow/Failure", "Slow/Success", "Fast/Failure", "Fast/Success"]
     
     
-    y_from_network = []
+    # y_from_network = []
     
-    y = []
+    # y = []
 
 
-    for vv, tsts in zip(vc, TSve):
-        # print(vv, tsts)
-        # break
-    # pdb.set_trace()
-        for v in vv:
-            y_from_network.append(v.tolist())
-        y+=tsts[0].tolist()     
-    # pdb.set_trace()
+    # for vv, tsts in zip(vc, TSve):
+    #     # print(vv, tsts)
+    #     # break
+    # # pdb.set_trace()
+    #     for v in vv:
+    #         y_from_network.append(v.tolist())
+    #     y+=tsts[0].tolist()     
+    # # pdb.set_trace()
 
-    y_pred_indices = np.argmax(y_from_network, axis=1)
-    cm = confusion_matrix(y, y_pred_indices)
-    # for y_ in y_from_network(v.)
-    # Plotting the confusion matrix
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt="d", cmap='Blues', xticklabels=CLIST, yticklabels=CLIST)
-    plt.xlabel('Predicted Labels')
-    plt.ylabel('True Labels')
-    plt.title('Confusion Matrix')
-    plt.show()
-    f1_each_class = f1_score(y, y_pred_indices, average=None)
-    print("F1 Score for each class:", f1_each_class)
+    # y_pred_indices = np.argmax(y_from_network, axis=1)
+    # cm = confusion_matrix(y, y_pred_indices)
+    # # for y_ in y_from_network(v.)
+    # # Plotting the confusion matrix
+    # plt.figure(figsize=(8, 6))
+    # sns.heatmap(cm, annot=True, fmt="d", cmap='Blues', xticklabels=CLIST, yticklabels=CLIST)
+    # plt.xlabel('Predicted Labels')
+    # plt.ylabel('True Labels')
+    # plt.title('Confusion Matrix')
+    # plt.show()
+    # f1_each_class = f1_score(y, y_pred_indices, average=None)
+    # print("F1 Score for each class:", f1_each_class)
 
-    # Calculate macro-average F1 score (unweighted average across all classes)
-    f1_macro = f1_score(y, y_pred_indices, average='macro')
-    print("Macro-average F1 Score:", f1_macro)
+    # # Calculate macro-average F1 score (unweighted average across all classes)
+    # f1_macro = f1_score(y, y_pred_indices, average='macro')
+    # print("Macro-average F1 Score:", f1_macro)
 
-    # Calculate micro-average F1 score (weighted by support, considers overall precision and recall)
-    f1_micro = f1_score(y, y_pred_indices, average='micro')
-    print("Micro-average F1 Score:", f1_micro)
+    # # Calculate micro-average F1 score (weighted by support, considers overall precision and recall)
+    # f1_micro = f1_score(y, y_pred_indices, average='micro')
+    # print("Micro-average F1 Score:", f1_micro)
 
-    # Calculate weighted-average F1 score (weighted by the number of true instances for each class)
-    f1_weighted = f1_score(y, y_pred_indices, average='weighted')
-    print("Weighted-average F1 Score:", f1_weighted)
+    # # Calculate weighted-average F1 score (weighted by the number of true instances for each class)
+    # f1_weighted = f1_score(y, y_pred_indices, average='weighted')
+    # print("Weighted-average F1 Score:", f1_weighted)
 
 

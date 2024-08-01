@@ -175,14 +175,18 @@ def class_loss(reconstructed_x, original_x):
     # arr = [106607, 49738, 3644, 77311]
     # arr = [46846, 77476, 3225, 84662]
     # arr = [113157, 238960, 25874, 288376]
+    # arr = [120474, 329366, 7958, 119426]
+    # arr = [327878, 121962, 11026, 116358]
     # arr = [1.0, 1.0, 1.0, 1.0]
+    arr = [42020, 13191, 19580, 2628]
+    # arr = [5933, 12528, 11749, 21006]
     # arr = [7360, 4321, 6313, 5469]
     # arr = [96700, 574801, 1770, 4105]
     # arr = [31638, 159420, 66832, 419486]
     # arr = [79848, 403710, 18672, 175146]
     # arr = [12210,7490,1296,2467]
-    arr = [120.0 ,15.0, 40.0, 90.0]
-    const = np.sum(arr)
+    # arr = [120.0 ,15.0, 40.0, 90.0]
+    const = np.sum(arr)*1.0
     # arr = [const, const, const, const]
     weights = torch.log(torch.tensor([const/a for a in arr], dtype=torch.float))
     # weights = torch.tensor([const/(4.0*a) for a in arr], dtype=torch.float)
@@ -290,13 +294,18 @@ def validate(model, data_loader, device):
             total_loss += loss.item()
     return total_loss / len(data_loader), validation_embeddings, origs, qs, agents, validation_classes
 
-# alidation_loss, ve, TSve, qs, ags
-
+def extract_nodes_by_class(data,class_number):
+        index_list = []
+        # pdb.set_trace()
+        for index, item in enumerate(data):
+            if data[index] == class_number:
+                index_list.append(index)
+        return index_list
 
 if __name__ == '__main__':
     device = "cpu"
 
-    inC = 40
+    inC = 54
 
     nW = 8
 
@@ -304,16 +313,16 @@ if __name__ == '__main__':
     # files_test = os.listdir(folder_test)
     # files_test = [file for file in files_test if file.endswith('.pickle') and file.startswith('(')] #and (file not in files_test)
 
-    # folder_graph = './AAAI/data/quorum_sims_60_40_split/graphs/train_means/'
-    folder_graph = './RS/final_experiments/allGraphs_train/' #./AAAI/data/quorum_sims_60_40_split/graphs/train_means/'
+    folder_graph = './AAAI/data/multirunsims/graphs/train_means/'
+    # folder_graph = './RS/final_experiments/allGraphs_train/' #./AAAI/data/quorum_sims_60_40_split/graphs/train_means/'
 
     files = os.listdir(folder_graph)
     files = [file for file in files if file.endswith('.pickle') and file.startswith('(')] #and (file not in files_test)
 
 
     # fname = 'small_graphs.pth'
-    # valfolder = './AAAI/data/quorum_sims_60_40_split/graphs/test_means/'
-    valfolder = './RS/final_experiments/allGraphs_test/' #'./AAAI/data/quorum_sims_60_40_split/graphs/test_means/'
+    valfolder = './AAAI/data/multirunsims/graphs/test_means/'
+    # valfolder = './RS/final_experiments/allGraphs_test/' #'./AAAI/data/quorum_sims_60_40_split/graphs/test_means/'
 
     files_val= os.listdir(valfolder)
     files_val = [file for file in files_val if file.endswith('.pickle') and file.startswith('(')]
@@ -343,14 +352,14 @@ if __name__ == '__main__':
                     embeddings = []
                     outchannels = 4
                     # validation_loss = 100
-                    model = GATNet(inC, hC, outchannels, drops, h=8).to(device)
+                    model = GATNet(inC, hC, outchannels, drops, h=4).to(device)
                     optimizer = optim.AdamW(model.parameters(), lr=lrate, weight_decay=decays)
                     # scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.1, patience=3, verbose=True)
                     # losses = []
                     # embeds = []
                     # torch.autograd.set_detect_anomaly(True)
                     # acts = []
-                    for epoch in range(1, 3):  # Number of epochs
+                    for epoch in range(1, 5):  # Number of epochs
                         # loss, embed, orig = train(model, dataloader, optimizer, device)
                         loss, embed, tsclass, pred_class = train(model, dataloader, optimizer, device)
                         # embeds.append(embed)
@@ -403,5 +412,64 @@ if __name__ == '__main__':
     # Calculate weighted-average F1 score (weighted by the number of true instances for each class)
     f1_weighted = f1_score(y, y_pred_indices, average='weighted')
     print("Weighted-average F1 Score:", f1_weighted)
+    CLIST =  ["Slow/Failure", "Slow/Success", "Fast/Failure", "Fast/Success"]
+    X = []
+    y = []
+    for vv, tsts in zip(ve, TSve):
+        # print(vv, tsts)
+        # break
+    # pdb.set_trace()
+        for v in vv:
+            X.append(v.tolist())
+        y+=tsts[0].tolist()     
+    # pdb.set_trace()
 
+    trainX = []
+    trainy = []
+    for vv, tsts in zip(embed, tsclass):
+        # print(vv, tsts)
+        # break
+    # pdb.set_trace()
+        for v in vv:
+            trainX.append(v.tolist())
+        try:
+            trainy+=tsts.tolist()  
+        except Exception as e:
+            print(e)
+            pdb.set_trace()
+
+    
+
+    for class_number in range(4):
+        index_list = extract_nodes_by_class(trainy, class_number)
+        print(len(index_list))
+
+    for class_number in range(4):
+        index_list = extract_nodes_by_class(y, class_number)
+        print(len(index_list))
+
+
+    trainX = []
+    trainy = []
+    for vv, tsts in zip(pred_class, tsclass):
+        # print(vv, tsts)
+        # break
+    # pdb.set_trace()
+        for v in vv:
+            trainX.append(v.tolist())
+        try:
+            trainy+=tsts.tolist()  
+        except Exception as e:
+            print(e)
+            pdb.set_trace()
+    y_pred_indices = np.argmax(trainX, axis=1)
+    cm = confusion_matrix(trainy, y_pred_indices)
+    # for y_ in y_from_network(v.)
+    # Plotting the confusion matrix
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt="d", cmap='Blues', xticklabels=CLIST, yticklabels=CLIST)
+    plt.xlabel('Predicted Labels')
+    plt.ylabel('True Labels')
+    plt.title('Confusion Matrix')
+    plt.show()
 
