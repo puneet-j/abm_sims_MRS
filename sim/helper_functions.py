@@ -7,14 +7,80 @@ MAX_DIST=ENVIRONMENT_BOUNDARY_X[-1]
 STATES = {'RECRUIT':0.0/6.0, 'ASSESS':1.0/6.0, 'TRAVEL_HOME_TO_RECRUIT':2.0/6.0, 'TRAVEL_SITE':3.0/6.0, 
           'OBSERVE':4.0/6.0, 'EXPLORE':5.0/6.0, 'TRAVEL_HOME_TO_OBSERVE':6.0/6.0}
 
+def get_completely_random_world(agents, site_poses):
+    states = [s for s in STATES]
+    new_list = []
+    for agNum in range(0,agents):
+        new_dict = {}
+        rState = np.random.choice(states)
+        if rState == 'RECRUIT':
+            id = np.random.choice(range(0,len(site_poses)))
+            site = site_poses[id]
+            new_dict['pose'] = [0.0, 0.0]
+            new_dict['state'] = 'RECRUIT'
+            new_dict['speed'] = 0.0
+            new_dict['site'] = id
+            dirs = [np.random.random(), np.random.random()]
+            new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+        elif rState == 'ASSESS':
+            id = np.random.choice(range(0,len(site_poses)))
+            site = site_poses[id]
+            new_dict['pose'] = [site[0], site[1]]
+            new_dict['state'] = 'ASSESS'
+            new_dict['speed'] = 0.0
+            new_dict['site'] = id
+            dirs = [np.random.random(), np.random.random()]
+            new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+        elif rState == 'TRAVEL_HOME_TO_RECRUIT':
+            id = np.random.choice(range(0,len(site_poses)))
+            site = site_poses[id]
+            rand_dist_const = np.random.random()
+            new_dict['pose'] = [rand_dist_const*site[0], rand_dist_const*site[1]]
+            new_dict['state'] = 'TRAVEL_HOME_TO_RECRUIT'
+            new_dict['speed'] = AGENT_SPEED
+            new_dict['site'] = id
+            new_dict['dir'] = get_home_dir(new_dict['pose'])
+        elif rState == 'TRAVEL_SITE':
+            id = np.random.choice(range(0,len(site_poses)))
+            site = site_poses[id]
+            rand_dist_const = np.random.random()
+            new_dict['pose'] = [rand_dist_const*site[0], rand_dist_const*site[1]]
+            new_dict['state'] = 'TRAVEL_SITE'
+            new_dict['speed'] = AGENT_SPEED
+            new_dict['site'] = id
+            site = site_poses[id]
+            new_dict['dir'] = get_site_dir(new_dict['pose'], [site[0], site[1]])
+        elif np.random.choice(states) == 'OBSERVE':
+            new_dict['pose'] = [0.0, 0.0]
+            new_dict['state'] = 'OBSERVE'
+            new_dict['speed'] = 0.0
+            new_dict['site'] = None
+            new_dict['dir'] = [0.0, 1.0]
+        elif np.random.choice(states) == 'EXPLORE':
+            new_dict['pose'] = [2000.0 * np.random.random() - 1000.0, 2000.0 * np.random.random() - 1000.0]
+            new_dict['state'] = 'EXPLORE'
+            new_dict['speed'] = AGENT_SPEED
+            new_dict['site'] = None
+            dirs = [np.random.random(), np.random.random()]
+            new_dict['dir'] = [dir/np.sum(dirs) for dir in dirs]
+        elif np.random.choice(states) == 'TRAVEL_HOME_TO_OBSERVE':
+            new_dict['pose'] = [2000.0 * np.random.random() - 1000.0, 2000.0 * np.random.random() - 1000.0]
+            new_dict['state'] = 'TRAVEL_HOME_TO_OBSERVE'
+            new_dict['speed'] = AGENT_SPEED
+            new_dict['site'] = None
+            new_dict['dir'] = get_home_dir(new_dict['pose'])
+        new_list.append(new_dict)
+    return new_list
+
 def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
-    agent_dict_list.append(get_all_OBSERVE(agents))
+    # agent_dict_list.append(get_all_OBSERVE(agents))
+    agent_dict_list.append(get_completely_random_world(agents, site_poses))
     # agent_dict_list.append(get_half_explore(agents))
     # for i in get_10_to_40perc_dancing_good_to_bad_all(agents, site_quals, site_poses):
         # pdb.set_trace()
         # agent_dict_list.append(i)
-    print('returned start states')
+    # print('returned start states')
     return agent_dict_list
 
 def get_all_OBSERVE(agents):

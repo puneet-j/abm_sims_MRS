@@ -75,7 +75,7 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
             # pdb.set_trace()
                 # qualities = quals[sim]
             for agents in agent_configs:
-                qualities = np.array([[0.191, 0.59, 0.51, 0.564]])#get_valid_qualities(sites, sims_per_config)
+                qualities = np.array([[0.913, 0.196, 0.388, 0.893]])#get_valid_qualities(sites, sims_per_config)
                 print('got qualities')
                 for qual in qualities:
                     for distance in distances:
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     total_repeats = 1
     
     # maxTimes = [1000, 10000, 35000]
-    fold_name = 'AAAI/data/lots_of_node_samples/test_new/'
+    fold_name = 'AAAI/data/lots_of_node_samples/test_new_2/'
     fname_metadata = './' + fold_name + 'metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime', 'timelimitsave', 'node', 'sims_spider', 'sims_train']
     empty = pd.DataFrame([], columns=df_metadata_cols)
