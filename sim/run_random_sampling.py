@@ -74,7 +74,7 @@ def generate_world_configs_from_init_sims(site_configs, distances, agent_configs
                                     w = World(w_init, fname, save=True)
                                     w.simulate()
                                     # print('simulated first world')
-                                    samples = get_number_of_sims(sim_repeats, w.list_for_df, w.df_cols)
+                                    samples = sim_repeats #get_number_of_sims(sim_repeats, w.list_for_df, w.df_cols)
                                     for _ in range(0, samples):
                                         worlds.append([sites, qual, poses, agents, agent_init, mTime, 0])
         return worlds
@@ -90,14 +90,14 @@ if __name__ == '__main__':
     distances = [150]#[100, 200, 150] #[100, 200]#, 300]#, 300]
     agent_configs = [10]#[100, 50, 20, 10, 5] #[5, 10, 20] #[5, 20, 50, 100, 200]
     sims_per_config = 1 #10 
-    sims_per_distance = 3000 # how many random nodes we want to sample
-    sim_repeats = 30 # 10 # how many times we go out from each node.
+    sims_per_distance = 100 # how many random nodes we want to sample
+    sim_repeats = 60 # 10 # how many times we go out from each node.
     num_samples_per_starting_condition = 1 # 10 # number of starting points
     maxTimes = [64]
     total_repeats = 1
     
     # maxTimes = [1000, 10000, 35000]
-    fold_name = 'AAAI/data/lots_of_node_samples/train_new_random_sample_64/'
+    fold_name = 'AAAI/data/lots_of_node_samples/test_new_random_sample_64/'
     fname_metadata = './' + fold_name + 'metadata.csv'
     df_metadata_cols = ['file_name', 'site_qualities', 'site_positions', 'hub_position', 'num_agents', 'site_converged', 'time_converged', 'start_state', 'maxTime', 'timelimitsave', 'node', 'sims_spider', 'sims_train']
     empty = pd.DataFrame([], columns=df_metadata_cols)
@@ -115,7 +115,6 @@ if __name__ == '__main__':
     print('starting sims')
 
     # array = np.array(worlds)
-
     # np.savetxt('output_worlds.txt', array, fmt='%d')
 
     '''comment this for testing'''
