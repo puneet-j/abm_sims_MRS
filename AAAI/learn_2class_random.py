@@ -150,7 +150,6 @@ def binarize_labels(labels, threshold):
             else:
                 binary_labels.append(0)
 
-
     return torch.tensor(binary_labels)
 
 if __name__=='__main__':
@@ -161,7 +160,7 @@ if __name__=='__main__':
 
     nW = 8
 
-    folder_graph = './AAAI/data/lots_of_node_samples/train_traj_sample_128_easy/graphs/'
+    folder_graph = './AAAI/data/lots_of_node_samples/train_new_random_sample_64/graphs/'
     files = os.listdir(folder_graph)
     files = [file for file in files if file.endswith('.pickle') and file.startswith('1')] #and (file not in files_test)
 
@@ -181,7 +180,7 @@ if __name__=='__main__':
     #     print(n)
     #     break
     reg_loss = nn.MSELoss(reduction='mean')
-    alpha = 0.01#0.000001#1.000#0.00001
+    alpha = 1.0#0.000001#1.000#0.00001
 
     epochs = 5
     threshold = 400
@@ -237,7 +236,7 @@ if __name__=='__main__':
             
                     mse_loss_val = F.cross_entropy(out[label_mask], subdata.y[label_mask].long())
                 
-                    predictions_train.append(torch.argmax(out[label_mask], dim=1).cpu().numpy())
+                    predictions_train.append(torch.argmax(out[label_mask], dim=1).detach().numpy())
                     actuals_train.append(subdata.y[label_mask].detach().numpy())
                     nodes_trained.append(subdata.x[label_mask].detach().numpy())
                     mse_loss_val.backward()
@@ -253,9 +252,9 @@ if __name__=='__main__':
     encoder_state_dict = model.state_dict()
     # decoder_state_dict = model.decoder.state_dict()
     # Save the state dictionaries
-    torch.save(encoder_state_dict, './AAAI/128_train_model_traj_undirected_classification.pth')
+    torch.save(encoder_state_dict, './AAAI/64_train_model_new_random_undirected_classification.pth')
     # break
-    valfolder = './AAAI/data/lots_of_node_samples/test_traj_sample_128_easy/graphs/'
+    valfolder = './AAAI/data/lots_of_node_samples/test_new_random_sample_64/graphs/'
     files_val= os.listdir(valfolder)
     files_val = [file for file in files_val if file.endswith('.pickle') and file.startswith('1')]
 
@@ -409,7 +408,7 @@ if __name__=='__main__':
 
     # plt.show()
 
-    # folder_graph = './AAAI/data/lots_of_node_samples/train_traj_sample_128_easy/graphs/'
+    # folder_graph = './AAAI/data/lots_of_node_samples/test_new_random_sample_64/graphs/'
     # files = os.listdir(folder_graph)
     # files = [file for file in files if file.endswith('.pickle') and file.startswith('1')] #and (file not in files_test)
 

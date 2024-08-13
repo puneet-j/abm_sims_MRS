@@ -112,8 +112,10 @@ class GraphDataset(Dataset):
         # for node in G.nodes:
         #     print(node)
         # pdb.set_trace()
-        node_features = torch.tensor([node[1]['x'] for node in G.nodes(data=True)], dtype=torch.float)
-
+        try:
+            node_features = torch.tensor([node[1]['x'] for node in G.nodes(data=True)], dtype=torch.float)
+        except:
+            return self.file_paths[idx], self.file_paths[idx], self.file_paths[idx]
         # pdb.set_trace()
         # For edge features, assuming 'weight' attribute exists for each edge
         # Creating a tensor for edge indices and another for edge features

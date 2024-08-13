@@ -74,8 +74,8 @@ def get_completely_random_world(agents, site_poses):
 
 def get_agent_inits(agents, site_poses, site_quals):
     agent_dict_list = []
-    # agent_dict_list.append(get_all_OBSERVE(agents))
-    agent_dict_list.append(get_completely_random_world(agents, site_poses))
+    agent_dict_list.append(get_all_OBSERVE(agents))
+    # agent_dict_list.append(get_completely_random_world(agents, site_poses))
     # agent_dict_list.append(get_half_explore(agents))
     # for i in get_10_to_40perc_dancing_good_to_bad_all(agents, site_quals, site_poses):
         # pdb.set_trace()

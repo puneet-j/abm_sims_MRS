@@ -53,7 +53,7 @@ class GATNet(torch.nn.Module):
         # Define a linear layer to refine the outputs to the desired size
         self.linear = nn.Linear(hidden_channels, hidden_channels)
         self.linear2 = nn.Linear(hidden_channels, out_channels)
-        self.shortcut = nn.Linear(in_channels, hidden_channels)
+        self.shortcut = nn.Linear(in_channels, out_channels)
         self.p = p
         # self.sigm = nn.Sigmoid()
         # self.ta = nn.Tanh()
@@ -136,22 +136,7 @@ def convert_to_undirected_weights(directed_edge_weights):
    # Convert set back to list if needed
    return torch.tensor(list(undirected_weights), dtype=torch.float)
 
-def binarize_labels(labels, threshold):
-    # return torch.tensor([1 if label > threshold else 0 for label in labels])
 
-    binary_labels = []
-    for l in labels:
-        if torch.isnan(l):
-            binary_labels.append(float('nan'))
-            # print('got nan label')
-        else:
-            if l > threshold:
-                binary_labels.append(1)
-            else:
-                binary_labels.append(0)
-
-
-    return torch.tensor(binary_labels)
 
 if __name__=='__main__':
 
@@ -181,10 +166,10 @@ if __name__=='__main__':
     #     print(n)
     #     break
     reg_loss = nn.MSELoss(reduction='mean')
-    alpha = 0.01#0.000001#1.000#0.00001
+    alpha = 0.000001#1.000#0.00001
 
     epochs = 5
-    threshold = 400
+
     hC = 128
     drops = 0.0
     lrate = 0.001
@@ -192,7 +177,7 @@ if __name__=='__main__':
     predictions_train = []
     actuals_train = []
     nodes_trained = []
-    outchannels = 2
+    outchannels = 1
     model = GATNet(inC, hC, outchannels, drops, h=4).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=lrate, weight_decay=decays)
     model.train()
@@ -215,10 +200,10 @@ if __name__=='__main__':
                 if feature_tuple in node_labels_dict:
                     labels[i] = np.nanmean(node_labels_dict[feature_tuple])
                     # print(labels[i])
-            
-            binary_labels = binarize_labels(labels, threshold)
-
-            data = Data(x=features, edge_index=edges, y=binary_labels, edge_attr=edge_weights)
+                # break
+            # break
+            # print(np.shape(label))
+            data = Data(x=features, edge_index=edges, y=labels, edge_attr=edge_weights)
             loader = NeighborLoader(
                         data,
                         num_neighbors=[4] * 2,
@@ -230,14 +215,25 @@ if __name__=='__main__':
             for subdata in loader:
                 subdata = subdata.to(device)
                 # print(subdata)
+                # print(subdata)
                 label_mask = ~torch.isnan(subdata.y) 
                 if label_mask.any():
                     optimizer.zero_grad()
                     out, embed = model(subdata.x, subdata.edge_index)
-            
-                    mse_loss_val = F.cross_entropy(out[label_mask], subdata.y[label_mask].long())
+                # known_labels = tS[label_mask]  # Labels for nodes with known convergence time
                 
-                    predictions_train.append(torch.argmax(out[label_mask], dim=1).cpu().numpy())
+                #  TODO: Puneet, check if label mask works for subdata
+                # subdata_labels = labels[subdata.n_id]  # subdata.n_id gives the original node indices in the batch
+                # subdata_label_mask = ~torch.isnan(subdata_labels)
+                # print(subdata.edge_index.shape, embed.shape, subdata.edge_attr.shape)
+                
+                    mse_loss_val = alpha*reg_loss(out[label_mask], subdata.y[label_mask].unsqueeze_(1))
+                    # cos_loss_val = 0.0
+                    # cos_loss_val = cosine_loss(subdata.edge_index, embed, subdata.edge_attr) 
+                    # print('cos, mse loss : ', cos_loss_val, mse_loss_val) 
+                    # alpha = cos_loss_val / (mse_loss_val + cos_loss_val)
+                    # beta = mse_loss_val / (mse_loss_val + cos_loss_val)
+                    predictions_train.append(out[label_mask].detach().numpy())
                     actuals_train.append(subdata.y[label_mask].detach().numpy())
                     nodes_trained.append(subdata.x[label_mask].detach().numpy())
                     mse_loss_val.backward()
@@ -245,7 +241,14 @@ if __name__=='__main__':
                     # print('cos loss only: ', cos_loss_val)        
                     loss_for_one_graph += mse_loss_val.detach()
                     optimizer.step()
-                    
+                    # total_loss = alpha * mse_loss_val #+ (1-alpha) * cos_loss_val
+                # else:
+                    # cos_loss_val = cosine_loss(subdata.edge_index, embed, subdata.edge_attr) 
+                    # cos_loss_val = 0.0
+                    # total_loss =  (1-alpha) * cos_loss_val 
+                    # total_loss = 0.0
+                
+            # print('loss: ', loss_for_one_graph)
             allLoss += loss_for_one_graph
         print('EPOCH ', epoch, ' : ', allLoss)
     model.eval()
@@ -253,7 +256,7 @@ if __name__=='__main__':
     encoder_state_dict = model.state_dict()
     # decoder_state_dict = model.decoder.state_dict()
     # Save the state dictionaries
-    torch.save(encoder_state_dict, './AAAI/128_train_model_traj_undirected_classification.pth')
+    torch.save(encoder_state_dict, './AAAI/128_train_model_traj_undirected_reg.pth')
     # break
     valfolder = './AAAI/data/lots_of_node_samples/test_traj_sample_128_easy/graphs/'
     files_val= os.listdir(valfolder)
@@ -294,8 +297,8 @@ if __name__=='__main__':
                     labels[i] = np.nanmean(node_labels_dict[feature_tuple])
                     # print(labels[i])
                 # break
-            binary_labels = binarize_labels(labels, threshold)
-            data = Data(x=features, edge_index=edges, y=binary_labels, edge_attr=edge_weights)
+
+            data = Data(x=features, edge_index=edges, y=labels, edge_attr=edge_weights)
             loader = NeighborLoader(
                         data,
                         num_neighbors=[4] * 2,
@@ -312,198 +315,181 @@ if __name__=='__main__':
                 label_mask = ~torch.isnan(subdata.y) 
                 if label_mask.any():
                     nodes_labeled.append(subdata.x[label_mask].cpu().numpy())
-                    # predictions.append(out[label_mask].cpu().numpy())
-                    predictions.append(torch.argmax(out[label_mask], dim=1).cpu().numpy())
+                    predictions.append(out[label_mask].cpu().numpy())
                     actual_labels.append(subdata.y[label_mask].cpu().numpy())
-    # Confusion Matrix
+            
+    inp = []
+    outp = []
+    nodes_ = []
+
+
+
+    for p, a, n in zip(predictions, actual_labels, nodes_labeled):
+        for pp, aa, nn in zip(p, a, n):
+            inp.append(aa)
+            outp.append(pp[0])
+            nodes_.append(tuple(nn))
+            
+
+    df = pd.DataFrame({'nodes': nodes_, 'inputs': inp, 'outputs': outp})
+    grouped_data = df.groupby(by=['nodes'], as_index=False).agg(list)#.reset_index()
+    # print(grouped_data.nodes)
+
+    # print(df.inputs.tolist())
     plt.figure(0)
-    all_predictions = np.concatenate(predictions)
-    all_actuals = np.concatenate(actual_labels)
-    cm = confusion_matrix(all_actuals, all_predictions)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot(cmap=plt.cm.Blues)
+    # for row in 
+    error_fill1 = []
+    error_fill2 = []
+    meanpoints = []
+    ids = []
+    meanpreds = []
+    medianpoints = []
+    errpred25 = []
+    errpred75 = []
+    medianpreds = []
+    for id, (i, o, n) in enumerate(zip(grouped_data.inputs, grouped_data.outputs, grouped_data.nodes)):
+        # print(i)
+        # print(o)
+        # break
+        #  why is it missing from dict??
+        # print(tuple(n), node_labels_dict[str(tuple(n))])
+        # break
+        i = list(node_labels_dict[str(tuple(n))])
+        medianpoints.append(np.nanmedian(i))
+        perc25 = np.nanpercentile(i, 25)
+        # print(perc25)
+        perc75 = np.nanpercentile(i, 75)
+        error_fill1.append(perc25)
+        error_fill2.append(perc75)
+        meanpoints.append(np.nanmean(i))
+        ids.append(id)
+        meanpreds.append(np.nanmean(o))
+        errpred25.append(np.nanpercentile(o, 25))
+        errpred75.append(np.nanpercentile(o, 75))
+        medianpreds.append(np.nanmedian(o))
+
+
+
+    meanpoints = np.array(meanpoints)
+    arr = np.argsort(meanpoints)
+    meanpoints = meanpoints[arr]
+    # print(meanpoints)
+    # arr = ids
+    error_fill2 = np.array(error_fill2)[arr]
+    error_fill1 = np.array(error_fill1)[arr]
+    medianpoints = np.array(medianpoints)[arr]
+    meanpreds = np.array(meanpreds)[arr]
+    ids = np.array(ids)
+    errpred25 = np.array(errpred25)[arr]
+    errpred75 = np.array(errpred75)[arr]
+    medianpreds = np.array(medianpreds)[arr]
+    # print(errpred25[0] - medianpreds[0])
+    # print(medianpreds-errpred25)
+    plt.errorbar(ids, medianpreds, yerr=[medianpreds-errpred25, errpred75-medianpreds], fmt='', lw = 0.0, elinewidth=2.0)
+    # print(arr)
+    plt.plot(ids, medianpoints, 'ro-')
+    # print(medianpoints[0] - error_fill1[0], medianpoints[0] + error_fill2[0])
+    plt.fill_between(ids, error_fill1, error_fill2, color='red', alpha=0.2)
+    plt.plot(ids, meanpreds, 'b+')
+    plt.hlines(0.0, -5, len(ids) + 5, 'k', 'dashed')
+
     plt.show()
 
-    plt.figure(1)
-    all_predictions_train = np.concatenate(predictions_train)
-    all_actuals_train = np.concatenate(actuals_train)
-    cm = confusion_matrix(all_actuals_train, all_predictions_train)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot(cmap=plt.cm.Blues)
-    plt.show()
+    folder_graph = './AAAI/data/lots_of_node_samples/train_traj_sample_128_easy/graphs/'
+    files = os.listdir(folder_graph)
+    files = [file for file in files if file.endswith('.pickle') and file.startswith('1')] #and (file not in files_test)
 
-    # inp = []
-    # outp = []
-    # nodes_ = []
+    # nodelabels = pd.read_csv(folder_graph+'times.csv')
+    # # print(nodelabels['(0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0)'])
+
+    node_labels_dict = dict()
+    for n in nodelabels.columns:
+        if n != 'Unnamed: 0':
+            node_labels_dict[n] = nodelabels[n].tolist()
+
+    # for n in node_labels_dict:
+        # print(n)
+        # break
+
+
+    inp = []
+    outp = []
+    nodes_ = []
 
 
 
-    # for p, a, n in zip(predictions, actual_labels, nodes_labeled):
-    #     for pp, aa, nn in zip(p, a, n):
-    #         inp.append(aa)
-    #         outp.append(pp[0])
-    #         nodes_.append(tuple(nn))
+    for p, a, n in zip(predictions_train, actuals_train, nodes_trained):
+        for pp, aa, nn in zip(p, a, n):
+            inp.append(aa)
+            outp.append(pp[0])
+            nodes_.append(tuple(nn))
             
 
-    # df = pd.DataFrame({'nodes': nodes_, 'inputs': inp, 'outputs': outp})
-    # grouped_data = df.groupby(by=['nodes'], as_index=False).agg(list)#.reset_index()
-    # # print(grouped_data.nodes)
+    df = pd.DataFrame({'nodes': nodes_, 'inputs': inp, 'outputs': outp})
+    grouped_data = df.groupby(by=['nodes'], as_index=False).agg(list)#.reset_index()
+    # print(grouped_data.nodes)
 
-    # # print(df.inputs.tolist())
-    # plt.figure(0)
-    # # for row in 
-    # error_fill1 = []
-    # error_fill2 = []
-    # meanpoints = []
-    # ids = []
-    # meanpreds = []
-    # medianpoints = []
-    # errpred25 = []
-    # errpred75 = []
-    # medianpreds = []
-    # for id, (i, o, n) in enumerate(zip(grouped_data.inputs, grouped_data.outputs, grouped_data.nodes)):
-    #     # print(i)
-    #     # print(o)
-    #     # break
-    #     #  why is it missing from dict??
-    #     # print(tuple(n), node_labels_dict[str(tuple(n))])
-    #     # break
-    #     i = list(node_labels_dict[str(tuple(n))])
-    #     medianpoints.append(np.nanmedian(i))
-    #     perc25 = np.nanpercentile(i, 25)
-    #     # print(perc25)
-    #     perc75 = np.nanpercentile(i, 75)
-    #     error_fill1.append(perc25)
-    #     error_fill2.append(perc75)
-    #     meanpoints.append(np.nanmean(i))
-    #     ids.append(id)
-    #     meanpreds.append(np.nanmean(o))
-    #     errpred25.append(np.nanpercentile(o, 25))
-    #     errpred75.append(np.nanpercentile(o, 75))
-    #     medianpreds.append(np.nanmedian(o))
-
-
-
-    # meanpoints = np.array(meanpoints)
-    # arr = np.argsort(meanpoints)
-    # meanpoints = meanpoints[arr]
-    # # print(meanpoints)
-    # # arr = ids
-    # error_fill2 = np.array(error_fill2)[arr]
-    # error_fill1 = np.array(error_fill1)[arr]
-    # medianpoints = np.array(medianpoints)[arr]
-    # meanpreds = np.array(meanpreds)[arr]
-    # ids = np.array(ids)
-    # errpred25 = np.array(errpred25)[arr]
-    # errpred75 = np.array(errpred75)[arr]
-    # medianpreds = np.array(medianpreds)[arr]
-    # # print(errpred25[0] - medianpreds[0])
-    # # print(medianpreds-errpred25)
-    # plt.errorbar(ids, medianpreds, yerr=[medianpreds-errpred25, errpred75-medianpreds], fmt='', lw = 0.0, elinewidth=2.0)
-    # # print(arr)
-    # plt.plot(ids, medianpoints, 'ro-')
-    # # print(medianpoints[0] - error_fill1[0], medianpoints[0] + error_fill2[0])
-    # plt.fill_between(ids, error_fill1, error_fill2, color='red', alpha=0.2)
-    # plt.plot(ids, meanpreds, 'b+')
-    # plt.hlines(0.0, -5, len(ids) + 5, 'k', 'dashed')
-
-    # plt.show()
-
-    # folder_graph = './AAAI/data/lots_of_node_samples/train_traj_sample_128_easy/graphs/'
-    # files = os.listdir(folder_graph)
-    # files = [file for file in files if file.endswith('.pickle') and file.startswith('1')] #and (file not in files_test)
-
-    # # nodelabels = pd.read_csv(folder_graph+'times.csv')
-    # # # print(nodelabels['(0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0, 0.667, 1.0, 1.0, 0.0)'])
-
-    # node_labels_dict = dict()
-    # for n in nodelabels.columns:
-    #     if n != 'Unnamed: 0':
-    #         node_labels_dict[n] = nodelabels[n].tolist()
-
-    # # for n in node_labels_dict:
-    #     # print(n)
-    #     # break
+    # print(df.inputs.tolist())
+    plt.figure(0)
+    # for row in 
+    error_fill1 = []
+    error_fill2 = []
+    meanpoints = []
+    ids = []
+    meanpreds = []
+    medianpoints = []
+    errpred25 = []
+    errpred75 = []
+    medianpreds = []
+    for id, (i, o, n) in enumerate(zip(grouped_data.inputs, grouped_data.outputs, grouped_data.nodes)):
+        # print(i)
+        # print(o)
+        # print(n)
+        # break
+        #  why is it missing from dict??
+        # print(tuple(n), node_labels_dict[str(tuple(n))])
+        # break
+        i = list(node_labels_dict[str(tuple(n))])
+        medianpoints.append(np.nanmedian(i))
+        perc25 = np.nanpercentile(i, 25)
+        # print(perc25)
+        perc75 = np.nanpercentile(i, 75)
+        error_fill1.append(perc25)
+        error_fill2.append(perc75)
+        meanpoints.append(np.nanmean(i))
+        ids.append(id)
+        meanpreds.append(np.nanmean(o))
+        errpred25.append(np.nanpercentile(o, 25))
+        errpred75.append(np.nanpercentile(o, 75))
+        medianpreds.append(np.nanmedian(o))
 
 
-    # inp = []
-    # outp = []
-    # nodes_ = []
+        meanpoints = np.array(meanpoints)
+        arr = np.argsort(meanpoints)
+        meanpoints = meanpoints[arr]
+        # print(meanpoints)
 
-
-
-    # for p, a, n in zip(predictions_train, actuals_train, nodes_trained):
-    #     for pp, aa, nn in zip(p, a, n):
-    #         inp.append(aa)
-    #         outp.append(pp[0])
-    #         nodes_.append(tuple(nn))
-            
-
-    # df = pd.DataFrame({'nodes': nodes_, 'inputs': inp, 'outputs': outp})
-    # grouped_data = df.groupby(by=['nodes'], as_index=False).agg(list)#.reset_index()
-    # # print(grouped_data.nodes)
-
-    # # print(df.inputs.tolist())
-    # plt.figure(0)
-    # # for row in 
-    # error_fill1 = []
-    # error_fill2 = []
-    # meanpoints = []
-    # ids = []
-    # meanpreds = []
-    # medianpoints = []
-    # errpred25 = []
-    # errpred75 = []
-    # medianpreds = []
-    # for id, (i, o, n) in enumerate(zip(grouped_data.inputs, grouped_data.outputs, grouped_data.nodes)):
-    #     # print(i)
-    #     # print(o)
-    #     # print(n)
-    #     # break
-    #     #  why is it missing from dict??
-    #     # print(tuple(n), node_labels_dict[str(tuple(n))])
-    #     # break
-    #     i = list(node_labels_dict[str(tuple(n))])
-    #     medianpoints.append(np.nanmedian(i))
-    #     perc25 = np.nanpercentile(i, 25)
-    #     # print(perc25)
-    #     perc75 = np.nanpercentile(i, 75)
-    #     error_fill1.append(perc25)
-    #     error_fill2.append(perc75)
-    #     meanpoints.append(np.nanmean(i))
-    #     ids.append(id)
-    #     meanpreds.append(np.nanmean(o))
-    #     errpred25.append(np.nanpercentile(o, 25))
-    #     errpred75.append(np.nanpercentile(o, 75))
-    #     medianpreds.append(np.nanmedian(o))
-
-
-    #     meanpoints = np.array(meanpoints)
-    #     arr = np.argsort(meanpoints)
-    #     meanpoints = meanpoints[arr]
-    #     # print(meanpoints)
-
-    #     error_fill2 = np.array(error_fill2)[arr]
-    #     error_fill1 = np.array(error_fill1)[arr]
-    #     medianpoints = np.array(medianpoints)[arr]
-    #     meanpreds = np.array(meanpreds)[arr]
-    #     ids = np.array(ids)
-    #     errpred25 = np.array(errpred25)[arr]
-    #     errpred75 = np.array(errpred75)[arr]
-    #     medianpreds = np.array(medianpreds)[arr]
-    #     # print(errpred25[0] - medianpreds[0])
-    #     # print(medianpreds-errpred25)
-    #     yErr=[medianpreds-errpred25, errpred75-medianpreds]
-    #     plt.errorbar(ids, medianpreds, yerr=yErr, fmt='')
-    #     # plt.errorbar(ids, np.clip(meanpreds, a_min=0.001, a_max = 10000), yerr=[np.clip(medianpreds-errpred25, a_min=0.001, a_max=10000), np.clip(errpred75-medianpreds, a_min=0.001, a_max=10000)], fmt='')
-    #     # print(arr)
-    #     plt.plot(ids, medianpoints, 'ro-')
-    #     # print(medianpoints[0] - error_fill1[0], medianpoints[0] + error_fill2[0])
-    #     plt.fill_between(ids, error_fill1, error_fill2, color='red', alpha=0.2)
-    #     plt.hlines(0.0, -10, len(ids) + 10, 'k', 'dashed')
-    #     plt.plot(ids, meanpreds, 'b+')
-    #     plt.show()
-    #     # for m, e1, e2 in zip(medianpreds, errpred25, errpred75):
-    #     #     if m-e1 <= 0 :
-    #     #         print(m, e1, e2)
-    #     #         break
+        error_fill2 = np.array(error_fill2)[arr]
+        error_fill1 = np.array(error_fill1)[arr]
+        medianpoints = np.array(medianpoints)[arr]
+        meanpreds = np.array(meanpreds)[arr]
+        ids = np.array(ids)
+        errpred25 = np.array(errpred25)[arr]
+        errpred75 = np.array(errpred75)[arr]
+        medianpreds = np.array(medianpreds)[arr]
+        # print(errpred25[0] - medianpreds[0])
+        # print(medianpreds-errpred25)
+        yErr=[medianpreds-errpred25, errpred75-medianpreds]
+        plt.errorbar(ids, medianpreds, yerr=yErr, fmt='')
+        # plt.errorbar(ids, np.clip(meanpreds, a_min=0.001, a_max = 10000), yerr=[np.clip(medianpreds-errpred25, a_min=0.001, a_max=10000), np.clip(errpred75-medianpreds, a_min=0.001, a_max=10000)], fmt='')
+        # print(arr)
+        plt.plot(ids, medianpoints, 'ro-')
+        # print(medianpoints[0] - error_fill1[0], medianpoints[0] + error_fill2[0])
+        plt.fill_between(ids, error_fill1, error_fill2, color='red', alpha=0.2)
+        plt.hlines(0.0, -10, len(ids) + 10, 'k', 'dashed')
+        plt.plot(ids, meanpreds, 'b+')
+        plt.show()
+        # for m, e1, e2 in zip(medianpreds, errpred25, errpred75):
+        #     if m-e1 <= 0 :
+        #         print(m, e1, e2)
+        #         break
